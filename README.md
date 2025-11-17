@@ -2,13 +2,13 @@
 
 Stream audio from a source
 
-## 📖 Description
+## Description
 
 Audio Streamer is a Python application that captures audio from your physical audio sources and streams it over HTTP. Anyone can listen to your stream through a web browser with a simple, retro-styled interface.
 
 Perfect for creating a personal internet radio station, or broadcasting live music sessions.
 
-## ⚙️ Installation
+## ⚙Installation
 
 ### Prerequisites
 
@@ -22,7 +22,7 @@ Perfect for creating a personal internet radio station, or broadcasting live mus
 
 **Note for Windows users:** Installing PyAudio might require Microsoft Visual C++ 14.0 or greater. Alternatively, download a pre-compiled wheel from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio).
 
-## 🚀 Usage
+## Usage
 
 1 **Connect your audio source**
 
@@ -46,25 +46,25 @@ Open your web browser and navigate to:
 
 Click the Play button in the web interface to start streaming. Share the URL with friends to let them listen too!
 
-## 🌐 Remote Access
+## Remote Access
 
 To allow people outside your local network to listen:
 
 *   Configure port forwarding on your router (forward port 5000)
 *   Share your public IP address with listeners
 
-## 🛑 Stopping the Server
+## Stopping the Server
 
 Press `Ctrl+C` in the terminal to gracefully stop the streaming server.
 
-## 💡 Tips
+## Tips
 
 *   Adjust your amplifier/source volume to avoid distortion
 *   Test the audio levels before sharing with listeners
 *   The stream URL is: `http://your-address:5000/stream`
 *   Check listener count at: `http://your-address:5000/stats`
 
-## 📋 Technical Details
+## Technical Details
 
 *   **Sample Rate:** 44.1 kHz (CD quality)
 *   **Channels:** 2 (Stereo)
