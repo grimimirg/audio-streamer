@@ -15,16 +15,16 @@ class AudioStreamer:
         self.listeningClients = []
 
     def listAvailableDevices(self):
-        print("\n=== Available audio devices ===")
+        print("=== Available audio devices ===")
         for i in range(self.audioInterface.get_device_count()):
             info = self.audioInterface.get_device_info_by_index(i)
             if info['maxInputChannels'] > 0:
-                print(f"{i}: {info['name']} - Input channels: {info['maxInputChannels']}")
-        print("=" * 40 + "\n")
+                print(str(i) + ":" + info['name'] + " - Input channels: " + info['maxInputChannels'])
+        print("=" * 10)
 
-    def startAudioStream(self, listeningDeviceIndex: int, deviceName: str):
+    def startAudioStream(self, listeningDeviceIndex: int):
         if self.onAir:
-            print("Stream on " + deviceName + " is already OnAir")
+            print("Stream on " + str(listeningDeviceIndex) + " is already OnAir")
             return
 
         self.currentStream = self.audioInterface.open(
@@ -39,7 +39,7 @@ class AudioStreamer:
         self.onAir = True
         threading.Thread(target=self._captureAudioFromStream(), daemon=True).start()
 
-        print("Audio streaming on " + deviceName + " started")
+        print("Audio streaming on " + str(listeningDeviceIndex) + " started")
 
     def stopAudioStream(self):
         self.onAir = False

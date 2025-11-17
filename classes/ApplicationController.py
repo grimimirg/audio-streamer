@@ -34,9 +34,7 @@ class ApplicationController:
                 print("Using default")
                 return None
             else:
-                deviceIndex = int(choice)
-                print("Using " + deviceIndex)
-                return deviceIndex
+                return int(choice)
         except ValueError:
-            print("⚠️  Input non valido, uso dispositivo di default")
+            print("Invalid input")
             return None
