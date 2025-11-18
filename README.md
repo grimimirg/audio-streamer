@@ -4,11 +4,11 @@ Stream audio from a source
 
 ## Description
 
-Audio Streamer is a Python application that captures audio from your physical audio sources and streams it over HTTP. Anyone can listen to your stream through a web browser with a simple, retro-styled interface.
+Audio Streamer is a Python application that captures audio from your physical audio sources and streams it over HTTP. Anyone can listen to the stream through a web browser.
 
 Perfect for creating a personal internet radio station, or broadcasting live music sessions.
 
-## ⚙Installation
+## Installation
 
 ### Prerequisites
 
@@ -40,7 +40,7 @@ The application will list all available audio input devices. Enter the number co
 
 Open your web browser and navigate to:
 
-`http://localhost:5000`
+`http://localhost:4986`
 
 5 **Start listening**
 
@@ -50,7 +50,7 @@ Click the Play button in the web interface to start streaming. Share the URL wit
 
 To allow people outside your local network to listen:
 
-*   Configure port forwarding on your router (forward port 5000)
+*   Configure port forwarding on your router (forward port 4986)
 *   Share your public IP address with listeners
 
 ## Stopping the Server
@@ -61,12 +61,12 @@ Press `Ctrl+C` in the terminal to gracefully stop the streaming server.
 
 *   Adjust your amplifier/source volume to avoid distortion
 *   Test the audio levels before sharing with listeners
-*   The stream URL is: `http://your-address:5000/stream`
-*   Check listener count at: `http://your-address:5000/stats`
+*   The stream URL is: `http://your-address:4986/stream`
+*   Check listener count at: `http://your-address:4986/stats`
 
 ## Technical Details
 
 *   **Sample Rate:** 44.1 kHz (CD quality)
 *   **Channels:** 2 (Stereo)
 *   **Format:** WAV (uncompressed)
-*   **Port:** 5000 (HTTP)
+*   **Port:** 4986 (HTTP)
