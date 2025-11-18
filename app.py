@@ -1,5 +1,5 @@
 from classes.ApplicationController import ApplicationController
-from utils.Constants import HOST_ADDR, PORT, DEBUG
+from utilities.Constants import HOST_ADDR, PORT, DEBUG
 
 if __name__ == '__main__':
     app = ApplicationController()
