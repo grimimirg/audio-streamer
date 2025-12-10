@@ -20,6 +20,10 @@ class AudioHttpFacade:
         self.app.add_url_rule('/stream', 'stream', self._stream)
         self.app.add_url_rule('/stats', 'stats', self._stats)
 
+# As soon as a client (browser) opens a 
+# connection on the '/stream' route, the audio
+# stream starts sending audio chunk by chunk
+# to that client.
     def _generateAudioStream(self):
         clientQueue = queue.Queue(maxsize=100)
         self.audioStreamer.addClient(clientQueue)
