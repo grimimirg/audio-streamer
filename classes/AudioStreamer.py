@@ -22,9 +22,9 @@ class AudioStreamer:
                 print(str(i) + ":" + info['name'] + " - Input channels: " + info['maxInputChannels'])
         print("=" * 10)
 
-    def startAudioStream(self, listeningDeviceIndex: int):
+    def startAudioStream(self, listeningDeviceIndexes: List[int]):
         if self.onAir:
-            print("Stream on " + str(listeningDeviceIndex) + " is already OnAir")
+            print("Stream on " + str(listeningDeviceIndexes) + " already OnAir")
             return
 
         self.currentStream = self.audioInterface.open(
@@ -32,7 +32,7 @@ class AudioStreamer:
             channels=CHANNELS,
             rate=RATE,
             input=True,
-            input_device_index=listeningDeviceIndex,
+            input_device_index=listeningDeviceIndexes,
             frames_per_buffer=CHUNK
         )
 
