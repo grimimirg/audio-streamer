@@ -32,9 +32,11 @@ Connect your turntable, cassette deck, or amplifier to your computer's audio inp
 
 `python app.py`
 
-3 **Select your audio device**
+3 **Select your audio sources**
 
-The application will list all available audio input devices. Enter the number corresponding to your audio source, or press ENTER to use the default device.
+The application will list all available audio input devices. Enter the number corresponding to your audio source, or press ENTER to use the default device. Multiple indexes are allowed separated by a space.
+
+NOTE: Multiple sources will be mixed up together, rather useful when L and R flows are on different cables.
 
 4 **Open the player**
 
