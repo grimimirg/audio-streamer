@@ -29,7 +29,8 @@ class ApplicationController:
 
     def _askForDeviceIndex(self):
         try:
-            choice = input("Choose a device index to stream from (multiple indexes allowed, and separate by a space)").strip()
+            choice = input(
+                "Choose a device index to stream from (multiple indexes allowed, and separate by a space)").strip()
             if choice == "":
                 print("Using default")
                 return None
