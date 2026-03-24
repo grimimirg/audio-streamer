@@ -51,8 +51,12 @@
         }
 
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .controls {
@@ -106,6 +110,11 @@
             font-weight: bold;
         }
 
+        .loading {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
         .visualizer {
             height: 60px;
             display: flex;
@@ -122,18 +131,45 @@
             animation: pulse 0.8s ease-in-out infinite;
         }
 
-        .bar:nth-child(1) { animation-delay: 0s; }
-        .bar:nth-child(2) { animation-delay: 0.1s; }
-        .bar:nth-child(3) { animation-delay: 0.2s; }
-        .bar:nth-child(4) { animation-delay: 0.3s; }
-        .bar:nth-child(5) { animation-delay: 0.4s; }
-        .bar:nth-child(6) { animation-delay: 0.3s; }
-        .bar:nth-child(7) { animation-delay: 0.2s; }
-        .bar:nth-child(8) { animation-delay: 0.1s; }
+        .bar:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .bar:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .bar:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .bar:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .bar:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        .bar:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .bar:nth-child(7) {
+            animation-delay: 0.2s;
+        }
+
+        .bar:nth-child(8) {
+            animation-delay: 0.1s;
+        }
 
         @keyframes pulse {
-            0%, 100% { height: 10px; }
-            50% { height: 50px; }
+            0%, 100% {
+                height: 10px;
+            }
+            50% {
+                height: 50px;
+            }
         }
     </style>
 </head>
@@ -168,6 +204,8 @@
 
     <div class="status">
         🎧 Online listeners: <span class="listeners" id="listeners">0</span>
+        <br>
+        <span id="connectionStatus" class="loading">🔄 Ready to connect</span>
     </div>
 
     <audio id="audioPlayer" preload="none"></audio>
@@ -178,24 +216,101 @@
     const playBtn = document.getElementById('playBtn');
     const vinyl = document.getElementById('vinyl');
     const visualizer = document.getElementById('visualizer');
+    const connectionStatus = document.getElementById('connectionStatus');
     let isPlaying = false;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 3;
+
+    function updateStatus(message, type = 'loading') {
+        connectionStatus.textContent = message;
+        connectionStatus.className = type;
+    }
 
     function togglePlay() {
         if (!isPlaying) {
-            audio.src = '/stream';
-            audio.play();
-            playBtn.textContent = '⏸️ Pause';
-            playBtn.style.background = '#f43f5e';
-            vinyl.style.animationPlayState = 'running';
-            isPlaying = true;
+            startStreaming();
         } else {
-            audio.pause();
-            audio.src = '';
-            playBtn.textContent = '▶️ Play';
-            playBtn.style.background = '#667eea';
-            vinyl.style.animationPlayState = 'paused';
-            isPlaying = false;
+            stopStreaming();
         }
+    }
+
+    function startStreaming() {
+        updateStatus('🔄 Connecting to stream...', 'loading');
+        playBtn.disabled = true;
+        playBtn.textContent = '⏳ Connecting...';
+
+        audio.src = '/stream';
+
+        // Set up event listeners before playing
+        audio.addEventListener('loadstart', onLoadStart);
+        audio.addEventListener('canplay', onCanPlay);
+        audio.addEventListener('error', onError);
+        audio.addEventListener('stalled', onStalled);
+
+        audio.play().catch(onPlayError);
+    }
+
+    function stopStreaming() {
+        audio.pause();
+        audio.src = '';
+
+        // Remove event listeners
+        audio.removeEventListener('loadstart', onLoadStart);
+        audio.removeEventListener('canplay', onCanPlay);
+        audio.removeEventListener('error', onError);
+        audio.removeEventListener('stalled', onStalled);
+
+        playBtn.textContent = '▶️ Play';
+        playBtn.style.background = '#667eea';
+        playBtn.disabled = false;
+        vinyl.style.animationPlayState = 'paused';
+        isPlaying = false;
+        reconnectAttempts = 0;
+        updateStatus('🔄 Ready to connect', 'loading');
+    }
+
+    function onLoadStart() {
+        updateStatus('🔄 Buffering...', 'loading');
+    }
+
+    function onCanPlay() {
+        playBtn.textContent = '⏸️ Pause';
+        playBtn.style.background = '#f43f5e';
+        playBtn.disabled = false;
+        vinyl.style.animationPlayState = 'running';
+        isPlaying = true;
+        reconnectAttempts = 0;
+        updateStatus('🎵 Streaming', 'listeners');
+    }
+
+    function onError(e) {
+        console.error('Audio error:', e);
+
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            reconnectAttempts++;
+            updateStatus(`🔄 Connection failed, retrying... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`, 'error');
+
+            setTimeout(() => {
+                if (isPlaying) {
+                    audio.load(); // Reload and try again
+                    audio.play().catch(() => {
+                    });
+                }
+            }, 2000);
+        } else {
+            updateStatus('❌ Connection failed. Check if server is running.', 'error');
+            stopStreaming();
+        }
+    }
+
+    function onStalled() {
+        updateStatus('🔄 Buffering...', 'loading');
+    }
+
+    function onPlayError(error) {
+        console.error('Play error:', error);
+        updateStatus('❌ Failed to start playback', 'error');
+        stopStreaming();
     }
 
     function changeVolume(value) {
@@ -206,9 +321,26 @@
     // Update stats every 5 seconds
     setInterval(() => {
         fetch('/stats')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Stats request failed');
+                }
+                return response.json();
+            })
             .then(data => {
                 document.getElementById('listeners').textContent = data.listeners;
+
+                // Update status based on server state
+                if (isPlaying && !data.on_air) {
+                    updateStatus('⚠️ Server stopped streaming', 'error');
+                    stopStreaming();
+                }
+            })
+            .catch(error => {
+                console.error('Stats error:', error);
+                if (isPlaying) {
+                    updateStatus('⚠️ Connection to server lost', 'error');
+                }
             });
     }, 5000);
 
