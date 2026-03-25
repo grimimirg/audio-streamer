@@ -1,6 +1,7 @@
 import queue
 import logging
 import time
+import os
 from flask import Flask, render_template, Response
 from utilities.Constants import CLIENT_QUEUE_SIZE
 
@@ -18,7 +19,9 @@ class AudioHttpFacade:
         Args:
             audioStreamer: Instance of AudioStreamer for audio capture
         """
-        self.app = Flask(__name__)
+        # Get the project root directory (parent of classes folder)
+        template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
+        self.app = Flask(__name__, template_folder=template_dir)
         self.audioStreamer = audioStreamer
         self._add_routes()
 
