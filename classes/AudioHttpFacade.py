@@ -2,6 +2,7 @@ import queue
 import logging
 import time
 from flask import Flask, render_template, Response
+from utilities.Constants import CLIENT_QUEUE_SIZE
 
 
 class AudioHttpFacade:
@@ -20,7 +21,6 @@ class AudioHttpFacade:
         self.app = Flask(__name__)
         self.audioStreamer = audioStreamer
         self._add_routes()
-        logging.basicConfig(level=logging.INFO)
 
     def run(self, host: str, port: int, debug: bool):
         """Start the Flask HTTP server.
@@ -50,7 +50,7 @@ class AudioHttpFacade:
         Yields:
             bytes: Raw audio data chunks
         """
-        clientQueue = queue.Queue(maxsize=100)
+        clientQueue = queue.Queue(maxsize=CLIENT_QUEUE_SIZE)
         self.audioStreamer.addClient(clientQueue)
         logging.info("New audio stream client connected")
 

@@ -15,7 +15,6 @@ class ApplicationController:
         self.audioStreamer = AudioStreamer()
         self.audioHttpFacade = AudioHttpFacade(self.audioStreamer)
         self._setup_successful = False
-        logging.basicConfig(level=logging.INFO)
 
     def setup(self):
         """Setup audio streaming by selecting devices and starting capture.
@@ -75,6 +74,14 @@ class ApplicationController:
             logging.info("Application shutdown completed")
         except Exception as e:
             logging.error(f"Error during shutdown: {e}")
+
+    def __del__(self):
+        """Destructor to ensure proper cleanup."""
+        try:
+            if hasattr(self, 'audioStreamer') and self.audioStreamer:
+                self.audioStreamer.stopAudioStream()
+        except Exception:
+            pass  # Ignore errors during cleanup
 
     # -- PRIVATES --
 

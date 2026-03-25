@@ -23,7 +23,6 @@ class AudioStreamer:
         self.onAir = False         # Streaming state flag
         self.listeningClients = []  # List of client queues for audio distribution
         self._lock = threading.RLock()  # Thread-safe lock for client management
-        logging.basicConfig(level=logging.INFO)
 
     def listAvailableDevices(self):
         """Print all available audio input devices to the console.
@@ -83,7 +82,7 @@ class AudioStreamer:
         """Stop audio streaming and clean up resources safely.
         
         Sets the onAir flag to False to stop the capture thread,
-        then properly closes and cleans up the audio stream and interface.
+        then properly closes and cleans up the audio stream.
         """
         self.onAir = False  # Signal capture thread to stop
         
@@ -97,11 +96,8 @@ class AudioStreamer:
             finally:
                 self.currentStream = None  # Prevent dangling references
 
-        # Terminate the PyAudio interface
-        try:
-            self.audioInterface.terminate()
-        except Exception as e:
-            logging.error(f"Error terminating audio interface: {e}")
+        # Note: PyAudio interface is kept alive for potential restart
+        logging.info("Audio streaming stopped")
 
     def addClient(self, clientQueue: queue.Queue):
         """Add a new client queue to receive audio data.
@@ -151,8 +147,11 @@ class AudioStreamer:
         """
         while self.onAir:
             try:
+                if self.currentStream is None:
+                    break
+                    
                 # Read audio data from the input device
-                data = self.currentStream.read(CHUNK)
+                data = self.currentStream.read(CHUNK, exception_on_overflow=False)
                 
                 # Create a thread-safe snapshot of current clients
                 with self._lock:
@@ -166,8 +165,13 @@ class AudioStreamer:
                         # Client queue is full, drop this chunk to prevent blocking
                         logging.warning("Client queue full, dropping audio chunk")
                         
-            except Exception as e:
+            except OSError as e:
                 # Handle stream errors (device disconnect, etc.)
                 if self.onAir:  # Only log if we're supposed to be streaming
-                    logging.error(f"Error reading from audio stream: {e}")
+                    logging.error(f"Audio device error: {e}")
+                break  # Exit the loop on device error
+            except Exception as e:
+                # Handle other unexpected errors
+                if self.onAir:  # Only log if we're supposed to be streaming
+                    logging.error(f"Unexpected error in audio capture: {e}")
                 break  # Exit the loop on error
