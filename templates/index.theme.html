@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📻 Audio Streamer - Multi-Theme</title>
+  <style>
+    /* --- VARIABILI DI DEFAULT (MODERN) --- */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --container-bg: rgba(0, 0, 0, 0.7);
+      --text-color: #ffffff;
+      --accent-color: #667eea;
+      --accent-hover: #764ba2;
+      --font-main: 'Courier New', monospace;
+      --border-style: none;
+      --vinyl-filter: none;
+      --visualizer-color: linear-gradient(to top, #667eea, #764ba2);
+    }
+
+    /* --- TEMI SPECIFICI --- */
+    body.jazz {
+      --bg-gradient: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d);
+      --container-bg: rgba(0, 21, 36, 0.95);
+      --accent-color: #ffb703;
+      --accent-hover: #e6a600;
+      --font-main: 'Georgia', serif;
+      --border-style: 2px solid #ffb703;
+      --vinyl-filter: sepia(1) saturate(2);
+    }
+
+    body.pop {
+      --bg-gradient: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%);
+      --container-bg: rgba(255, 255, 255, 0.9);
+      --text-color: #ff4757;
+      --accent-color: #ff4757;
+      --accent-hover: #ff6b81;
+      --font-main: 'Trebuchet MS', sans-serif;
+      --visualizer-color: #ff4757;
+    }
+
+    body.electronica {
+      --bg-gradient: #050505;
+      --container-bg: rgba(0, 0, 0, 0.9);
+      --text-color: #00ff41;
+      --accent-color: transparent;
+      --accent-hover: #00ff41;
+      --font-main: 'Consolas', monospace;
+      --border-style: 1px solid #00ff41;
+      --visualizer-color: #00ff41;
+    }
+
+    body.rock {
+      --bg-gradient: #1a1a1a;
+      --container-bg: #000000;
+      --accent-color: #e63946;
+      --accent-hover: #b91d2a;
+      --font-main: 'Impact', sans-serif;
+      --border-style: 5px solid #e63946;
+    }
+
+    body.classica {
+      --bg-gradient: #2c1810;
+      --container-bg: #f4ece1;
+      --text-color: #2c1810;
+      --accent-color: #2c1810;
+      --accent-hover: #4e342e;
+      --font-main: 'Times New Roman', serif;
+      --border-style: 3px double #2c1810;
+      --visualizer-color: #8d6e63;
+    }
+
+    body.newage {
+      --bg-gradient: linear-gradient(to bottom, #e0eafc, #cfdef3);
+      --container-bg: rgba(255, 255, 255, 0.3);
+      --text-color: #445566;
+      --accent-color: rgba(255, 255, 255, 0.8);
+      --accent-hover: #ffffff;
+      --font-main: 'Arial Light', sans-serif;
+      --visualizer-color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* --- STILI BASE --- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-main);
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-color);
+      transition: all 0.5s ease;
+    }
+
+    /* Selettore Temi */
+    .theme-selector {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .theme-selector select {
+      background: #333;
+      color: white;
+      border: none;
+      padding: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .radio-container {
+      background: var(--container-bg);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      border: var(--border-style);
+      transition: all 0.5s ease;
+    }
+
+    h1 { font-size: 2.5em; margin-bottom: 10px; }
+    .subtitle { opacity: 0.7; margin-bottom: 30px; font-style: italic; }
+
+    .vinyl {
+      font-size: 100px;
+      animation: spin 3s linear infinite;
+      display: inline-block;
+      margin: 20px 0;
+      filter: var(--vinyl-filter);
+      animation-play-state: paused;
+    }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    button {
+      background: var(--accent-color);
+      color: inherit;
+      border: var(--border-style);
+      padding: 15px 40px;
+      font-size: 1.2em;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+      margin: 10px;
+      filter: brightness(1.1);
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+      transform: scale(1.05);
+      color: white;
+    }
+
+    .visualizer {
+      height: 60px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      margin: 20px 0;
+    }
+
+    .bar {
+      width: 8px;
+      background: var(--visualizer-color, var(--accent-color));
+      border-radius: 4px;
+      animation: pulse 0.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse { 0%, 100% { height: 10px; } 50% { height: 50px; } }
+
+    .status { margin: 20px 0; padding: 15px; background: rgba(125,125,125,0.1); border-radius: 10px; }
+    .listeners { color: #4ade80; font-weight: bold; }
+    input[type="range"] { width: 80%; margin-top: 10px; cursor: pointer; }
+  </style>
+</head>
+<body id="mainBody">
+
+<div class="theme-selector">
+  🎨 Tema:
+  <select id="themeDropdown" onchange="changeTheme(this.value)">
+    <option value="">Modern (Default)</option>
+    <option value="jazz">Jazz Night</option>
+    <option value="pop">Candy Pop</option>
+    <option value="electronica">Cyber Electronica</option>
+    <option value="rock">Grunge Rock</option>
+    <option value="classica">Grand Classica</option>
+    <option value="newage">New Age Zen</option>
+  </select>
+</div>
+
+<div class="radio-container">
+  <h1 id="title">📻 Audio Streamer</h1>
+  <p class="subtitle">Streaming live dai miei dispositivi analogici</p>
+
+  <div class="vinyl" id="vinyl">💿</div>
+
+  <div class="visualizer" id="visualizer">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+
+  <div class="controls">
+    <button id="playBtn" onclick="togglePlay()">▶️ Play</button>
+  </div>
+
+  <div class="volume-control">
+    🔊 Volume: <span id="volumeValue">70</span>%
+    <br>
+    <input type="range" id="volume" min="0" max="100" value="70" oninput="changeVolume(this.value)">
+  </div>
+
+  <div class="status">
+    🎧 Ascoltatori online: <span class="listeners" id="listeners">0</span>
+    <br>
+    <span id="connectionStatus">🔄 Pronto a connettere</span>
+  </div>
+
+  <audio id="audioPlayer" preload="none"></audio>
+</div>
+
+<script>
+  const audio = document.getElementById('audioPlayer');
+  const playBtn = document.getElementById('playBtn');
+  const vinyl = document.getElementById('vinyl');
+  const connectionStatus = document.getElementById('connectionStatus');
+  let isPlaying = false;
+
+  // --- FUNZIONE CAMBIO TEMA ---
+  function changeTheme(themeName) {
+    document.getElementById('mainBody').className = themeName;
+  }
+
+  function togglePlay() {
+    if (!isPlaying) startStreaming();
+    else stopStreaming();
+  }
+
+  function startStreaming() {
+    updateStatus('🔄 Connessione allo stream...', 'loading');
+    playBtn.disabled = true;
+    audio.src = '/stream';
+    audio.play().then(() => {
+      onCanPlay();
+    }).catch(onPlayError);
+  }
+
+  function stopStreaming() {
+    audio.pause();
+    audio.src = '';
+    playBtn.textContent = '▶️ Play';
+    playBtn.disabled = false;
+    vinyl.style.animationPlayState = 'paused';
+    isPlaying = false;
+    updateStatus('🔄 Pronto a connettere', '');
+  }
+
+  function onCanPlay() {
+    playBtn.textContent = '⏸️ Pause';
+    playBtn.disabled = false;
+    vinyl.style.animationPlayState = 'running';
+    isPlaying = true;
+    updateStatus('🎵 In onda', 'listeners');
+  }
+
+  function updateStatus(msg, cls) {
+    connectionStatus.textContent = msg;
+    connectionStatus.className = cls;
+  }
+
+  function onPlayError(e) {
+    console.error(e);
+    updateStatus('❌ Errore di connessione', 'error');
+    stopStreaming();
+  }
+
+  function changeVolume(value) {
+    audio.volume = value / 100;
+    document.getElementById('volumeValue').textContent = value;
+  }
+
+  // Stats Loop
+  setInterval(() => {
+    fetch('/stats')
+            .then(res => res.json())
+            .then(data => {
+              document.getElementById('listeners').textContent = data.listeners;
+              if (isPlaying && !data.on_air) stopStreaming();
+            })
+            .catch(() => {});
+  }, 5000);
+
+  audio.volume = 0.7;
+</script>
+</body>
+</html>
