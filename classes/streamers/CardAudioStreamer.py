@@ -1,6 +1,6 @@
+import logging
 import queue
 import threading
-import logging
 from typing import List, Optional
 
 import pyaudio
@@ -8,7 +8,47 @@ import pyaudio
 from utilities.Constants import FORMAT, CHANNELS, RATE, CHUNK
 
 
-class AudioStreamer:
+def get_supported_sample_rate(device_index, default_rate=44100):
+    """Try to find a supported sample rate for the given device."""
+    common_rates = [44100, 48000, 22050, 16000, 8000]
+    
+    # Try the default rate first
+    try:
+        audio = pyaudio.PyAudio()
+        device_info = audio.get_device_info_by_index(device_index)
+        audio.terminate()
+        
+        # If device reports a specific rate, try that first
+        if 'defaultSampleRate' in device_info:
+            suggested_rate = int(device_info['defaultSampleRate'])
+            if suggested_rate in common_rates:
+                common_rates.insert(0, suggested_rate)
+    except:
+        pass
+    
+    # Test each rate
+    for rate in common_rates:
+        try:
+            audio = pyaudio.PyAudio()
+            stream = audio.open(
+                format=FORMAT,
+                channels=CHANNELS,
+                rate=rate,
+                input=True,
+                input_device_index=device_index,
+                frames_per_buffer=CHUNK
+            )
+            stream.close()
+            audio.terminate()
+            logging.info(f"Device {device_index} supports sample rate: {rate}")
+            return rate
+        except Exception:
+            continue
+    
+    return default_rate  # Fallback to default
+
+
+class CardAudioStreamer:
     """Core audio streaming engine that captures audio from input devices
     and distributes it to connected clients via thread-safe queues."""
 
@@ -20,7 +60,7 @@ class AudioStreamer:
         """
         self.audioInterface = pyaudio.PyAudio()
         self.currentStream = None  # Active PyAudio stream object
-        self.onAir = False         # Streaming state flag
+        self.onAir = False  # Streaming state flag
         self.listeningClients = []  # List of client queues for audio distribution
         self._lock = threading.RLock()  # Thread-safe lock for client management
 
@@ -60,12 +100,20 @@ class AudioStreamer:
 
         # Open audio stream with error handling
         try:
+            # Find supported sample rate for this device
+            device_idx = listeningDeviceIndexes[0] if listeningDeviceIndexes else None
+            if device_idx is not None:
+                supported_rate = get_supported_sample_rate(device_idx, RATE)
+                logging.info(f"Using sample rate: {supported_rate} Hz for device {device_idx}")
+            else:
+                supported_rate = RATE
+                
             self.currentStream = self.audioInterface.open(
                 format=FORMAT,
                 channels=CHANNELS,
-                rate=RATE,
+                rate=supported_rate,
                 input=True,
-                input_device_index=listeningDeviceIndexes[0] if listeningDeviceIndexes else None,
+                input_device_index=device_idx,
                 frames_per_buffer=CHUNK
             )
         except Exception as e:
@@ -73,8 +121,11 @@ class AudioStreamer:
             return
 
         # Start the audio capture thread
+        logging.info("Starting audio capture thread...")
         self.onAir = True
-        threading.Thread(target=self._captureAudioFromStream, daemon=True).start()
+        capture_thread = threading.Thread(target=self._captureAudioFromStream, daemon=True)
+        capture_thread.start()
+        logging.info("Audio capture thread started successfully")
 
         logging.info(f"Audio streaming on {listeningDeviceIndexes} started")
 
@@ -85,7 +136,7 @@ class AudioStreamer:
         then properly closes and cleans up the audio stream.
         """
         self.onAir = False  # Signal capture thread to stop
-        
+
         # Safely close the audio stream if it exists
         if self.currentStream is not None:
             try:
@@ -105,9 +156,10 @@ class AudioStreamer:
         Args:
             clientQueue: Thread-safe queue for sending audio chunks to this client
         """
+        logging.info(f"Client connected")
         with self._lock:  # Thread-safe client list modification
             self.listeningClients.append(clientQueue)
-            logging.info("New connected client")
+            logging.info(f"New connected client. Number of connected clients: {len(self.listeningClients)}")
 
     def removeClient(self, clientQueue: queue.Queue):
         """Remove a client queue from the distribution list.
@@ -126,6 +178,7 @@ class AudioStreamer:
         Returns:
             dict: Contains streaming status, listener count, and audio parameters
         """
+        logging.info(f"Current stats: {self.onAir}, {len(self.listeningClients)}, {RATE}, {CHANNELS}")
         with self._lock:  # Thread-safe access to client count
             return {
                 'on_air': self.onAir,
@@ -145,18 +198,20 @@ class AudioStreamer:
         3. Distributes audio data to each client queue
         4. Handles queue overflow and stream errors gracefully
         """
+        logging.info("Audio capture thread started - beginning capture loop")
+        
         while self.onAir:
             try:
                 if self.currentStream is None:
                     break
-                    
+
                 # Read audio data from the input device
                 data = self.currentStream.read(CHUNK, exception_on_overflow=False)
-                
+
                 # Create a thread-safe snapshot of current clients
                 with self._lock:
                     clients_copy = self.listeningClients.copy()
-                
+
                 # Distribute audio data to all connected clients
                 for client in clients_copy:
                     try:
@@ -164,14 +219,17 @@ class AudioStreamer:
                     except queue.Full:
                         # Client queue is full, drop this chunk to prevent blocking
                         logging.warning("Client queue full, dropping audio chunk")
-                        
+
             except OSError as e:
                 # Handle stream errors (device disconnect, etc.)
                 if self.onAir:  # Only log if we're supposed to be streaming
                     logging.error(f"Audio device error: {e}")
+                    logging.error(f"Device info: {self.currentStream}")
                 break  # Exit the loop on device error
             except Exception as e:
                 # Handle other unexpected errors
                 if self.onAir:  # Only log if we're supposed to be streaming
-                    logging.error(f"Unexpected error in audio capture: {e}")
+                    logging.error(f"Unexpected error in audio capture: {type(e).__name__}: {e}")
+                    import traceback
+                    logging.error(f"Full traceback: {traceback.format_exc()}")
                 break  # Exit the loop on error

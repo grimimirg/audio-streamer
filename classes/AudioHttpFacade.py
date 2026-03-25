@@ -1,8 +1,9 @@
-import queue
 import logging
-import time
 import os
+import queue
+
 from flask import Flask, render_template, Response
+
 from utilities.Constants import CLIENT_QUEUE_SIZE
 
 
@@ -12,7 +13,7 @@ class AudioHttpFacade:
     Provides web interface and streaming endpoints for audio distribution.
     Handles client connections and audio data delivery with proper error handling.
     """
-    
+
     def __init__(self, audioStreamer):
         """Initialize the HTTP facade with audio streaming backend.
         
@@ -46,10 +47,10 @@ class AudioHttpFacade:
 
     def _generateAudioStream(self):
         """Generate audio stream data for HTTP response.
-        
+
         Creates a client queue, registers it with the audio streamer,
         and yields audio chunks as they become available.
-        
+
         Yields:
             bytes: Raw audio data chunks
         """
@@ -58,10 +59,13 @@ class AudioHttpFacade:
         logging.info("New audio stream client connected")
 
         try:
+            chunk_count = 0
             while True:
                 try:
                     # Use timeout to prevent indefinite blocking
                     data = clientQueue.get(timeout=1.0)
+                    chunk_count += 1
+                    logging.info(f"Yielding chunk {chunk_count}: {len(data)} bytes")
                     yield data
                 except queue.Empty:
                     # Check if streaming is still active
@@ -69,13 +73,20 @@ class AudioHttpFacade:
                         logging.info("Audio streaming stopped, closing client connection")
                         break
                     # Continue waiting for data
+                    logging.warning(f"Queue empty, waiting... (stream active: {self.audioStreamer.onAir})")
                     continue
-                    
+                except Exception as e:
+                    logging.error(f"Error while getting data from queue: {type(e).__name__}: {str(e)}")
+                    break
+
         except GeneratorExit:
             logging.info("Client disconnected from audio stream")
+        except Exception as e:
+            logging.error(f"Unexpected error in audio stream generator: {type(e).__name__}: {str(e)}")
         finally:
             # Ensure client is removed even on errors
             self.audioStreamer.removeClient(clientQueue)
+            logging.debug("Client queue removed from audio streamer")
 
     def _player(self):
         """Serve the main web player interface.
@@ -91,9 +102,37 @@ class AudioHttpFacade:
         Returns:
             Response: Flask response with audio stream data
         """
+        # Generate WAV header for streaming
+        import struct
+        
+        def generate_wav_stream():
+            # WAV header for 44100 Hz, 16-bit, stereo
+            sample_rate = 44100
+            channels = 2
+            bits_per_sample = 16
+            byte_rate = sample_rate * channels * bits_per_sample // 8
+            block_align = channels * bits_per_sample // 8
+            
+            # Simple WAV header
+            header = struct.pack('<4sL4s', b'RIFF', 0, b'WAVE')
+            header += struct.pack('<4sLHHLLHH4sL', 
+                                b'fmt ', 16, 1, channels, sample_rate, 
+                                byte_rate, block_align, bits_per_sample, b'data', 0)
+            
+            yield header
+            
+            # Stream audio data
+            for chunk in self._generateAudioStream():
+                yield chunk
+        
         return Response(
-            self._generateAudioStream(),
-            mimetype='audio/raw'  # Correct mimetype for raw PCM data
+            generate_wav_stream(),
+            mimetype='audio/wav',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*'
+            }
         )
 
     def _stats(self):

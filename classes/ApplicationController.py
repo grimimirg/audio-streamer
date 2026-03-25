@@ -1,7 +1,9 @@
 import logging
 from typing import Optional, List
-from classes.AudioHttpFacade import AudioHttpFacade
-from classes.AudioStreamer import AudioStreamer
+
+from .AudioHttpFacade import AudioHttpFacade
+from classes.streamers.CardAudioStreamer import CardAudioStreamer
+from classes.streamers.MicrophoneAudioStreamer import MicrophoneAudioStreamer
 
 
 class ApplicationController:
@@ -12,9 +14,49 @@ class ApplicationController:
 
     def __init__(self):
         """Initialize the application with audio streaming and HTTP components."""
-        self.audioStreamer = AudioStreamer()
-        self.audioHttpFacade = AudioHttpFacade(self.audioStreamer)
+        # We'll choose the best streamer based on device selection
+        self.audioStreamer = None
+        self.audioHttpFacade = None
         self._setup_successful = False
+
+    def _askForInputMethod(self):
+        """Ask user to choose between microphone and audio interface."""
+        while True:
+            try:
+                print("\n" + "=" * 50)
+                print("🎤 Choose your audio input method:")
+                print("1. Microphone (built-in or USB mic)")
+                print("2. Audio Interface (external sound card, line-in)")
+                print("=" * 50)
+
+                choice = input("Enter your choice (1 or 2): ").strip()
+
+                if choice == "1":
+                    logging.info("User selected: Microphone input")
+                    return "microphone"
+                elif choice == "2":
+                    logging.info("User selected: Audio interface input")
+                    return "interface"
+                else:
+                    print("❌ Invalid choice. Please enter 1 or 2.")
+                    continue
+
+            except (EOFError, KeyboardInterrupt):
+                logging.info("User interrupted, defaulting to microphone")
+                return "microphone"
+
+    def _createStreamer(self, input_method):
+        """Create the appropriate audio streamer based on user choice."""
+        if input_method == "microphone":
+            logging.info("Creating AudioStreamerAlternative for microphone input")
+            return MicrophoneAudioStreamer()
+        elif input_method == "interface":
+            logging.info("Creating AudioStreamer for audio interface input")
+            return CardAudioStreamer()
+        else:
+            # Fallback
+            logging.warning("Unknown input method, defaulting to microphone")
+            return MicrophoneAudioStreamer()
 
     def setup(self):
         """Setup audio streaming by selecting devices and starting capture.
@@ -23,24 +65,32 @@ class ApplicationController:
             self: Returns self for method chaining, or None if setup fails
         """
         try:
+            # First, ask user for input method
+            input_method = self._askForInputMethod()
+
+            # Create the appropriate streamer
+            self.audioStreamer = self._createStreamer(input_method)
+            self.audioHttpFacade = AudioHttpFacade(self.audioStreamer)
+
+            # List available devices and ask for selection
             self.audioStreamer.listAvailableDevices()
             deviceIndex = self._askForDeviceIndex()
-            
+
             if deviceIndex is None:
                 logging.warning("No device selected, using default")
-            
+
             # Start audio streaming
             self.audioStreamer.startAudioStream(deviceIndex)
-            
+
             # Verify streaming started successfully
             if not self.audioStreamer.onAir:
                 logging.error("Failed to start audio streaming")
                 return None
-                
+
             self._setup_successful = True
             logging.info("Application setup completed successfully")
             return self
-            
+
         except Exception as e:
             logging.error(f"Setup failed: {e}")
             return None
@@ -56,7 +106,7 @@ class ApplicationController:
         if not self._setup_successful:
             logging.error("Cannot start server: setup was not successful")
             return
-            
+
         try:
             self.audioHttpFacade.run(host=host, port=port, debug=debug)
         except KeyboardInterrupt:
@@ -95,11 +145,11 @@ class ApplicationController:
             try:
                 choice = input(
                     "Choose a device index to stream from (multiple indexes allowed, separated by space, or ENTER for default): ").strip()
-                
+
                 if choice == "":
                     logging.info("Using default audio device")
                     return None
-                    
+
                 # Parse and validate device indexes
                 device_indexes = []
                 for part in choice.split():
@@ -112,12 +162,13 @@ class ApplicationController:
                     except ValueError:
                         logging.error(f"Invalid device index: {part}")
                         raise ValueError
-                        
+
                 logging.info(f"Selected devices: {device_indexes}")
                 return device_indexes
-                
+
             except ValueError:
-                logging.error("Invalid input format. Please enter numbers separated by spaces, or press ENTER for default.")
+                logging.error(
+                    "Invalid input format. Please enter numbers separated by spaces, or press ENTER for default.")
                 # Continue the loop to ask again
                 continue
             except (EOFError, KeyboardInterrupt):

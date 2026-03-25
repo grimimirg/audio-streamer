@@ -5,6 +5,8 @@ Transform your computer into a professional radio station and broadcast your ana
 ## 🎯 What You Can Do
 
 - **Create Your Radio Station**: Stream from turntables, cassette decks, mixers, or any audio source
+- **Smart Audio Selection**: Choose between microphone or audio interface for optimal compatibility
+- **Beautiful Themed Interface**: 6 professional themes (Jazz, Classical, Rock, Pop, Electronic, New Age)
 - **Share with Listeners**: Anyone with a web browser can tune in to your broadcast
 - **Professional Features**: Auto-reconnect, error recovery, and real-time listener stats
 - **Zero Configuration**: Works out of the box with any audio device
@@ -13,12 +15,10 @@ Transform your computer into a professional radio station and broadcast your ana
 
 ### Step 1: Connect Your Audio Source
 ```
+Microphone → Computer
+OR
 Turntable/Mixer → Audio Interface → Computer
 ```
-Or connect any device with:
-- Line-in port
-- USB audio interface  
-- Built-in microphone
 
 ### Step 2: Install & Run
 ```bash
@@ -31,24 +31,48 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### Step 3: Go Live
-1. Choose your audio device when prompted
+### Step 3: Choose Your Input Method
+When you run the app, you'll see:
+```
+🎤 Choose your audio input method:
+1. Microphone (built-in or USB mic)
+2. Audio Interface (external sound card, line-in)
+==================================================
+
+Enter your choice (1 or 2):
+```
+
+### Step 4: Go Live
+1. Select your audio device from the list
 2. Open `http://localhost:4986` in your browser
 3. Click **Play** to start broadcasting
-4. Share the link with your listeners!
+4. Choose your favorite theme from the dropdown! 🎨
 
 ## 🎛️ Professional Features
+
+### 🎨 Multi-Theme Web Interface
+- **🎷 Jazz Night**: Warm colors, vintage feel with sepia filter
+- **🎼 Classical**: Elegant brown/beige, Times New Roman font
+- **🎸 Rock**: Dark theme with red accents, bold borders
+- **🎤 Pop**: Bright pastel colors, modern clean interface
+- **🎹 Electronic**: Cyberpunk style with green text on black
+- **🌊 New Age**: Ethereal blue gradients, minimal design
+- **Modern**: Default purple/blue gradient theme
 
 ### 🌐 Smart Web Player
 - **Auto-Reconnect**: Never lose a listener - automatic retry on connection issues
 - **Live Status**: Real-time connection indicators and listener count
 - **Buffering Display**: Visual feedback during connection setup
 - **Mobile Ready**: Works on phones, tablets, and desktops
+- **Theme Switcher**: Instant theme changes without page reload
 
-### 🔧 Broadcasting Engine
+### 🔧 Intelligent Audio Engine
+- **Dual Engine Support**: 
+  - **Microphone Mode**: Uses `arecord` for stable system audio capture
+  - **Interface Mode**: Uses `PyAudio` for professional audio interfaces
+- **Automatic Device Detection**: Smart selection based on your choice
 - **Thread-Safe**: Handle unlimited concurrent listeners
 - **Error Recovery**: Automatic recovery from audio device issues
-- **Memory Efficient**: Bounded queues prevent system overload
 - **Professional Audio**: 44.1kHz CD-quality stereo streaming
 
 ### 📊 Real-Time Analytics
@@ -58,13 +82,24 @@ python app.py
 
 ## 🏗️ Building Your Radio Station
 
-### Basic Setup (Perfect for Beginners)
+### Microphone Broadcasting (Perfect for Podcasts/Voice)
 ```bash
-# Just run it - defaults work great
 python app.py
+# Choose option 1: Microphone
+# Select your microphone device
+# Start broadcasting your voice!
 ```
 
-### Professional Setup (Advanced Users)
+### Professional Audio Interface Setup
+```bash
+python app.py
+# Choose option 2: Audio Interface
+# Connect your turntable/mixer/synth
+# Select your audio interface
+# Start professional streaming!
+```
+
+### Environment Configuration
 ```bash
 # Configure your station
 export AUDIO_STREAMER_HOST=0.0.0.0    # Accept connections from anywhere
@@ -112,10 +147,15 @@ server {
 
 ## 🎵 Use Cases & Inspiration
 
-### 🎧 Personal Radio Station
-- Broadcast your vinyl collection
-- Share mixtapes with friends
-- Create a bedroom radio station
+### 🎙️ Podcasting & Voice Broadcasting
+- **Podcast Recording**: Stream your voice directly to listeners
+- **Live Commentary**: Real-time commentary for events or gaming
+- **Voice Radio**: Personal radio station with microphone input
+
+### 🎧 Music & DJ Broadcasting
+- **Vinyl Streaming**: Broadcast your record collection
+- **DJ Sets**: Live DJ performances to global audience
+- **Music Production**: Share your creations instantly
 
 ### 🎪 Live Events
 - Stream parties and gatherings
@@ -178,26 +218,62 @@ Statistics: http://your-station:4986/stats
 
 ### Common Issues & Quick Fixes
 
-**"No sound is streaming"**
+#### Microphone Issues
+**"No sound from microphone"**
 ```bash
-# Check audio device is working
-python -c "import pyaudio; print('Devices:', pyaudio.PyAudio().get_device_count())"
+# Test microphone directly
+arecord -d 3 test.wav && aplay test.wav
 
-# Restart with different device
-python app.py  # Choose different device number
+# Check microphone permissions
+pactl list sources | grep -i microphone
+
+# Restart with correct device
+python app.py  # Choose microphone option
 ```
 
+**"Microphone quality is poor"**
+- Check microphone distance (6-12 inches optimal)
+- Reduce background noise
+- Use USB microphone for better quality
+- Adjust system input levels
+
+#### Audio Interface Issues
+**"Interface not detected"**
+```bash
+# Check if device is connected
+arecord -l
+
+# Test with PyAudio
+python -c "import pyaudio; print('Devices:', pyaudio.PyAudio().get_device_count())"
+
+# Restart with interface option
+python app.py  # Choose audio interface option
+```
+
+**"Audio sounds distorted"**
+- Lower input gain on interface
+- Check for clipping indicators
+- Use proper cable connections
+- Ensure sample rate compatibility
+
+#### Connection Issues
 **"Listeners can't connect"**
 ```bash
 # Check firewall settings
 sudo ufw allow 4986  # Linux
-# Or configure router port forwarding
+
+# Test local connection
+curl http://localhost:4986/stats
+
+# Check network accessibility
+netstat -tlnp | grep 4986
 ```
 
 **"Connection keeps dropping"**
 - The auto-reconnect will handle temporary issues
 - Check your internet connection stability
 - Verify audio device isn't being used by other apps
+- Monitor system resources
 
 ### Professional Monitoring
 ```bash
@@ -348,17 +424,27 @@ curl http://localhost:4986/stats
 - **Statistics**: `http://localhost:4986/stats`
 
 ### Audio Device Tips
-- List devices: Run app and see the list
-- Test device: Use system audio tester first
-- Multiple devices: Enter numbers separated by spaces
-- Quality: Use USB interfaces for best sound
+- **Microphone**: Choose option 1 for voice/podcasting
+- **Audio Interface**: Choose option 2 for music/turntables
+- **Test First**: Always test your device before going live
+- **Quality**: Use USB interfaces for best sound quality
 
 ---
 
 ## 🎙️ You're Ready to Broadcast!
 
-Your personal radio station is just 5 minutes away. Connect your audio source, run the application, and start sharing your sound with the world.
+Your personal radio station is just 5 minutes away. Choose your input method, select your device, pick your favorite theme, and start sharing your sound with the world.
 
 **Remember**: Great radio is about great content. Focus on what you want to share, and let Audio Streamer handle the technical details.
 
 Happy broadcasting! 📻🎵
+
+---
+
+## 🆕 What's New in This Version
+
+- ✨ **Smart Input Selection**: Choose between microphone and audio interface modes
+- 🎨 **6 Beautiful Themes**: Jazz, Classical, Rock, Pop, Electronic, New Age
+- 🔧 **Dual Audio Engines**: Optimized for both microphones and professional interfaces
+- 📱 **Enhanced Mobile Experience**: Better responsive design and theme switching
+- 🛠️ **Improved Reliability**: Better error handling and auto-reconnection
