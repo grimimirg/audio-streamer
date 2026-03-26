@@ -84,24 +84,24 @@ class AudioStreamerTest:
         try:
             while self.onAir:
                 # Generate one chunk of sine wave
-                chunk_data = bytearray()
+                chunkData = bytearray()
                 
                 for i in range(CHUNK):
                     # Generate sine wave sample
-                    sample_value = int(amplitude * 32767 * math.sin(2 * math.pi * frequency * phase / RATE))
+                    sampleValue = int(amplitude * 32767 * math.sin(2 * math.pi * frequency * phase / RATE))
                     
                     # Convert to 16-bit little-endian
-                    chunk_data.extend(sample_value.to_bytes(2, byteorder='little', signed=True))
+                    chunkData.extend(sampleValue.to_bytes(2, byteorder='little', signed=True))
                     
                     phase += 1
                 
                 # Distribute to clients
                 with self._lock:
-                    clients_copy = self.listeningClients.copy()
+                    clientsCopy = self.listeningClients.copy()
                 
-                for client in clients_copy:
+                for client in clientsCopy:
                     try:
-                        client.put_nowait(bytes(chunk_data))
+                        client.put_nowait(bytes(chunkData))
                     except queue.Full:
                         logging.warning("Client queue full, dropping audio chunk")
                 

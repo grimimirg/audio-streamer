@@ -1,22 +1,18 @@
 import logging
 import queue
-import threading
 import subprocess
-from typing import List, Optional
+import threading
 
 from utilities.Constants import CHANNELS, RATE, CHUNK
 
 
 class MicrophoneAudioStreamer:
-    """Alternative audio streaming engine using arecord instead of PyAudio.
-    
-    This version uses subprocess to call arecord for audio capture,
-    which is more stable on Linux systems.
-    """
+    """Audio streaming engine (arecord) that captures audio from input devices
+    and distributes it to connected clients via thread-safe queues."""
 
     def __init__(self):
         """Initialize the alternative audio streaming system."""
-        self.recording_process = None
+        self.recordingProcess = None
         self.onAir = False
         self.listeningClients = []
         self._lock = threading.RLock()
@@ -34,13 +30,8 @@ class MicrophoneAudioStreamer:
             logging.error(f"Error listing devices: {e}")
         logging.info("=" * 10)
 
-    def startAudioStream(self, listeningDeviceIndexes: Optional[List[int]]):
-        """Start capturing audio using arecord.
-        
-        Args:
-            listeningDeviceIndexes: List of device indexes (not used with arecord,
-                                    we use device names instead)
-        """
+    def startAudioStream(self):
+        """Start capturing audio using arecord."""
         if self.onAir:
             logging.info("Stream already onAir")
             return
@@ -50,30 +41,30 @@ class MicrophoneAudioStreamer:
             cmd = [
                 'arecord',
                 '-D', 'pulse',  # Use PulseAudio
-                '-f', 'cd',     # CD quality (16-bit, 44100 Hz, stereo)
+                '-f', 'cd',  # CD quality (16-bit, 44100 Hz, stereo)
                 '-c', str(CHANNELS),
                 '-r', str(RATE),
                 '--buffer-size', str(CHUNK),
-                '-t', 'raw',    # Raw PCM output
-                '-'             # Output to stdout
+                '-t', 'raw',  # Raw PCM output
+                '-'  # Output to stdout
             ]
-            
+
             logging.info(f"Starting arecord with command: {' '.join(cmd)}")
-            
+
             # Start arecord process
-            self.recording_process = subprocess.Popen(
+            self.recordingProcess = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 bufsize=0  # Unbuffered
             )
-            
+
             # Start the audio capture thread
             self.onAir = True
             threading.Thread(target=self._captureAudioFromProcess, daemon=True).start()
-            
+
             logging.info("Audio streaming started with arecord")
-            
+
         except Exception as e:
             logging.error(f"Failed to start arecord: {e}")
             return
@@ -81,17 +72,17 @@ class MicrophoneAudioStreamer:
     def stopAudioStream(self):
         """Stop audio streaming and clean up."""
         self.onAir = False
-        
-        if self.recording_process:
+
+        if self.recordingProcess:
             try:
-                self.recording_process.terminate()
-                self.recording_process.wait(timeout=5)
+                self.recordingProcess.terminate()
+                self.recordingProcess.wait(timeout=5)
                 logging.info("arecord process terminated")
             except Exception as e:
                 logging.error(f"Error terminating arecord: {e}")
-                self.recording_process.kill()
-            
-            self.recording_process = None
+                self.recordingProcess.kill()
+
+            self.recordingProcess = None
 
     def addClient(self, clientQueue: queue.Queue):
         """Add a client queue for audio distribution."""
@@ -117,21 +108,23 @@ class MicrophoneAudioStreamer:
                 'channels': CHANNELS
             }
 
+    # -- PRIVATES --
+
     def _captureAudioFromProcess(self):
         """Read audio data from arecord process and distribute to clients."""
         logging.info("Audio capture thread started - reading from arecord")
-        
+
         try:
-            while self.onAir and self.recording_process:
+            while self.onAir and self.recordingProcess:
                 # Read audio chunk from arecord
-                data = self.recording_process.stdout.read(CHUNK * 2)  # 2 bytes per sample for 16-bit
-                
+                data = self.recordingProcess.stdout.read(CHUNK * 2)  # 2 bytes per sample for 16-bit
+
                 if not data:
                     # Check if process ended
-                    if self.recording_process.poll() is not None:
-                        stderr = self.recording_process.stderr.read().decode()
-                        stdout = self.recording_process.stdout.read().decode()
-                        logging.error(f"arecord process ended with code {self.recording_process.returncode}")
+                    if self.recordingProcess.poll() is not None:
+                        stderr = self.recordingProcess.stderr.read().decode()
+                        stdout = self.recordingProcess.stdout.read().decode()
+                        logging.error(f"arecord process ended with code {self.recordingProcess.returncode}")
                         logging.error(f"arecord stderr: {stderr}")
                         logging.error(f"arecord stdout: {stdout}")
                         break
@@ -140,24 +133,24 @@ class MicrophoneAudioStreamer:
                         import time
                         time.sleep(0.01)
                         continue
-                
+
                 # Log first few chunks for debugging
-                if not hasattr(self, '_chunk_count'):
-                    self._chunk_count = 0
-                self._chunk_count += 1
-                if self._chunk_count <= 5:
-                    logging.info(f"Read chunk {self._chunk_count}: {len(data)} bytes")
-                
+                if not hasattr(self, '_chunkCount'):
+                    self._chunkCount = 0
+                self._chunkCount += 1
+                if self._chunkCount <= 5:
+                    logging.info(f"Read chunk {self._chunkCount}: {len(data)} bytes")
+
                 # Distribute to clients
                 with self._lock:
-                    clients_copy = self.listeningClients.copy()
-                
-                for client in clients_copy:
+                    clientsCopy = self.listeningClients.copy()
+
+                for client in clientsCopy:
                     try:
                         client.put_nowait(data)
                     except queue.Full:
                         logging.warning("Client queue full, dropping audio chunk")
-                        
+
         except Exception as e:
             logging.error(f"Error in audio capture thread: {e}")
             import traceback

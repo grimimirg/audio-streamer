@@ -17,14 +17,14 @@ class ApplicationController:
         # We'll choose the best streamer based on device selection
         self.audioStreamer = None
         self.audioHttpFacade = None
-        self._setup_successful = False
+        self._setupSuccessful = False
 
     def _askForInputMethod(self):
         """Ask user to choose between microphone and audio interface."""
         while True:
             try:
                 print("\n" + "=" * 50)
-                print("🎤 Choose your audio input method:")
+                print("Choose your audio input method:")
                 print("1. Microphone (built-in or USB mic)")
                 print("2. Audio Interface (external sound card, line-in)")
                 print("=" * 50)
@@ -38,7 +38,7 @@ class ApplicationController:
                     logging.info("User selected: Audio interface input")
                     return "interface"
                 else:
-                    print("❌ Invalid choice. Please enter 1 or 2.")
+                    print("Invalid choice. Please enter 1 or 2.")
                     continue
 
             except (EOFError, KeyboardInterrupt):
@@ -87,7 +87,7 @@ class ApplicationController:
                 logging.error("Failed to start audio streaming")
                 return None
 
-            self._setup_successful = True
+            self._setupSuccessful = True
             logging.info("Application setup completed successfully")
             return self
 
@@ -103,7 +103,7 @@ class ApplicationController:
             port: Port number to listen on
             debug: Enable Flask debug mode
         """
-        if not self._setup_successful:
+        if not self._setupSuccessful:
             logging.error("Cannot start server: setup was not successful")
             return
 

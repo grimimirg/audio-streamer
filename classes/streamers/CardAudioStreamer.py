@@ -8,48 +8,51 @@ import pyaudio
 from utilities.Constants import FORMAT, CHANNELS, RATE, CHUNK
 
 
-def get_supported_sample_rate(device_index, default_rate=44100):
+def getSupportedSampleRate(deviceIndex, defaultRate=44100):
     """Try to find a supported sample rate for the given device."""
-    common_rates = [44100, 48000, 22050, 16000, 8000]
-    
+    commonRates = [44100, 48000, 22050, 16000, 8000]
+
     # Try the default rate first
     try:
         audio = pyaudio.PyAudio()
-        device_info = audio.get_device_info_by_index(device_index)
+        deviceInfo = audio.get_device_info_by_index(deviceIndex)
         audio.terminate()
-        
+
         # If device reports a specific rate, try that first
-        if 'defaultSampleRate' in device_info:
-            suggested_rate = int(device_info['defaultSampleRate'])
-            if suggested_rate in common_rates:
-                common_rates.insert(0, suggested_rate)
+        if 'defaultSampleRate' in deviceInfo:
+            suggestedRate = int(deviceInfo['defaultSampleRate'])
+            if suggestedRate in commonRates:
+                commonRates.insert(0, suggestedRate)
     except:
         pass
-    
+
     # Test each rate
-    for rate in common_rates:
+    for rate in commonRates:
         try:
             audio = pyaudio.PyAudio()
+
             stream = audio.open(
                 format=FORMAT,
                 channels=CHANNELS,
                 rate=rate,
                 input=True,
-                input_device_index=device_index,
+                input_device_index=deviceIndex,
                 frames_per_buffer=CHUNK
             )
+
             stream.close()
             audio.terminate()
-            logging.info(f"Device {device_index} supports sample rate: {rate}")
+            logging.info(f"Device {deviceIndex} supports sample rate: {rate}")
+
             return rate
         except Exception:
             continue
-    
-    return default_rate  # Fallback to default
+
+    return defaultRate  # Fallback to default
 
 
 class CardAudioStreamer:
-    """Core audio streaming engine that captures audio from input devices
+    """Audio streaming engine (PyAudio)that captures audio from input devices
     and distributes it to connected clients via thread-safe queues."""
 
     def __init__(self):
@@ -93,27 +96,27 @@ class CardAudioStreamer:
 
         # Validate device indexes to prevent crashes
         if listeningDeviceIndexes is not None:
-            for device_idx in listeningDeviceIndexes:
-                if device_idx >= self.audioInterface.get_device_count() or device_idx < 0:
-                    logging.error(f"Invalid device index: {device_idx}")
+            for deviceIdx in listeningDeviceIndexes:
+                if deviceIdx >= self.audioInterface.get_device_count() or deviceIdx < 0:
+                    logging.error(f"Invalid device index: {deviceIdx}")
                     return
 
         # Open audio stream with error handling
         try:
             # Find supported sample rate for this device
-            device_idx = listeningDeviceIndexes[0] if listeningDeviceIndexes else None
-            if device_idx is not None:
-                supported_rate = get_supported_sample_rate(device_idx, RATE)
-                logging.info(f"Using sample rate: {supported_rate} Hz for device {device_idx}")
+            deviceIdx = listeningDeviceIndexes[0] if listeningDeviceIndexes else None
+            if deviceIdx is not None:
+                supportedRate = getSupportedSampleRate(deviceIdx, RATE)
+                logging.info(f"Using sample rate: {supportedRate} Hz for device {deviceIdx}")
             else:
-                supported_rate = RATE
-                
+                supportedRate = RATE
+
             self.currentStream = self.audioInterface.open(
                 format=FORMAT,
                 channels=CHANNELS,
-                rate=supported_rate,
+                rate=supportedRate,
                 input=True,
-                input_device_index=device_idx,
+                input_device_index=deviceIdx,
                 frames_per_buffer=CHUNK
             )
         except Exception as e:
@@ -199,7 +202,7 @@ class CardAudioStreamer:
         4. Handles queue overflow and stream errors gracefully
         """
         logging.info("Audio capture thread started - beginning capture loop")
-        
+
         while self.onAir:
             try:
                 if self.currentStream is None:
@@ -210,10 +213,10 @@ class CardAudioStreamer:
 
                 # Create a thread-safe snapshot of current clients
                 with self._lock:
-                    clients_copy = self.listeningClients.copy()
+                    clientsCopy = self.listeningClients.copy()
 
                 # Distribute audio data to all connected clients
-                for client in clients_copy:
+                for client in clientsCopy:
                     try:
                         client.put_nowait(data)  # Non-blocking put
                     except queue.Full:

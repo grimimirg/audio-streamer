@@ -59,13 +59,13 @@ class AudioHttpFacade:
         logging.info("New audio stream client connected")
 
         try:
-            chunk_count = 0
+            chunkCount = 0
             while True:
                 try:
                     # Use timeout to prevent indefinite blocking
                     data = clientQueue.get(timeout=1.0)
-                    chunk_count += 1
-                    logging.info(f"Yielding chunk {chunk_count}: {len(data)} bytes")
+                    chunkCount += 1
+                    logging.info(f"Yielding chunk {chunkCount}: {len(data)} bytes")
                     yield data
                 except queue.Empty:
                     # Check if streaming is still active
