@@ -42,7 +42,30 @@ When you run the app, you'll see:
 Enter your choice (1 or 2):
 ```
 
-### Step 4: Go Live
+### Step 4: Select Your Audio Device
+Depending on your choice, you'll see available devices:
+
+**For Microphone Mode:**
+```
+=== Available audio devices (arecord) ===
+Option 1: Built-in Microphone (default)
+Option 2: Line-in Jack (3.5mm)
+==================================================
+
+Choose a device index (1 for built-in mic, 2 for line-in, or ENTER for default):
+```
+
+**For Audio Interface Mode:**
+```
+=== Available Audio Devices ===
+0: Your Audio Interface Name
+1: Another Device...
+==================================================
+
+Choose device index(es) to stream from (or ENTER for default):
+```
+
+### Step 5: Go Live
 1. Select your audio device from the list
 2. Open `http://localhost:4986` in your browser
 3. Click **Play** to start broadcasting
@@ -68,9 +91,12 @@ Enter your choice (1 or 2):
 
 ### 🔧 Intelligent Audio Engine
 - **Dual Engine Support**: 
-  - **Microphone Mode**: Uses `arecord` for stable system audio capture
+  - **Microphone Mode**: Uses `arecord` for stable system audio capture with device selection
   - **Interface Mode**: Uses `PyAudio` for professional audio interfaces
-- **Automatic Device Detection**: Smart selection based on your choice
+- **Smart Device Selection**: 
+  - Built-in microphone for voice/podcasting
+  - Line-in jack (3.5mm) for external audio sources
+  - Professional audio interfaces for music production
 - **Thread-Safe**: Handle unlimited concurrent listeners
 - **Error Recovery**: Automatic recovery from audio device issues
 - **Professional Audio**: 44.1kHz CD-quality stereo streaming
@@ -86,8 +112,26 @@ Enter your choice (1 or 2):
 ```bash
 python app.py
 # Choose option 1: Microphone
-# Select your microphone device
+# Select device:
+#   1 = Built-in Microphone (for voice/podcasting)
+#   2 = Line-in Jack (for external audio sources)
 # Start broadcasting your voice!
+```
+
+### Line-in Audio Sources
+Perfect for connecting:
+- **Turntables** (with preamp)
+- **Cassette decks**
+- **Mixer outputs**
+- **Smartphones/MP3 players** via 3.5mm cable
+- **Musical instruments** with line-level output
+
+```bash
+python app.py
+# Choose option 1: Microphone
+# Select device 2: Line-in Jack
+# Connect your audio source to 3.5mm input
+# Start streaming!
 ```
 
 ### Professional Audio Interface Setup
@@ -221,20 +265,28 @@ Statistics: http://your-station:4986/stats
 #### Microphone Issues
 **"No sound from microphone"**
 ```bash
-# Test microphone directly
-arecord -d 3 test.wav && aplay test.wav
+# Test built-in microphone directly
+arecord -D default -d 3 test.wav && aplay test.wav
+
+# Test line-in jack directly
+arecord -D hw:0,2 -d 3 test.wav && aplay test.wav
 
 # Check microphone permissions
 pactl list sources | grep -i microphone
 
 # Restart with correct device
-python app.py  # Choose microphone option
+python app.py  # Choose microphone option, then device 1 or 2
 ```
 
+**"Choosing between built-in mic and line-in"**
+- **Device 1**: Built-in microphone - perfect for voice, podcasts, commentary
+- **Device 2**: Line-in jack (3.5mm) - for turntables, mixers, instruments
+- **Default**: Press ENTER to use built-in microphone
+
 **"Microphone quality is poor"**
-- Check microphone distance (6-12 inches optimal)
+- Check microphone distance (6-12 inches optimal for built-in mic)
 - Reduce background noise
-- Use USB microphone for better quality
+- Use line-in for better audio quality with external sources
 - Adjust system input levels
 
 #### Audio Interface Issues
@@ -424,10 +476,11 @@ curl http://localhost:4986/stats
 - **Statistics**: `http://localhost:4986/stats`
 
 ### Audio Device Tips
-- **Microphone**: Choose option 1 for voice/podcasting
-- **Audio Interface**: Choose option 2 for music/turntables
+- **Built-in Microphone**: Choose option 1, then device 1 for voice/podcasting
+- **Line-in Jack**: Choose option 1, then device 2 for external audio sources
+- **Audio Interface**: Choose option 2 for professional music production
 - **Test First**: Always test your device before going live
-- **Quality**: Use USB interfaces for best sound quality
+- **Quality**: Use line-in or audio interfaces for best sound quality with external sources
 
 ---
 
@@ -443,8 +496,10 @@ Happy broadcasting! 📻🎵
 
 ## 🆕 What's New in This Version
 
-- ✨ **Smart Input Selection**: Choose between microphone and audio interface modes
+- ✨ **Enhanced Device Selection**: Choose between built-in microphone and line-in jack (3.5mm)
+- 🎯 **Smart Device Detection**: Clear device labeling for easy selection
+- 🔧 **Improved Microphone Mode**: Better support for both voice and external audio sources
 - 🎨 **6 Beautiful Themes**: Jazz, Classical, Rock, Pop, Electronic, New Age
-- 🔧 **Dual Audio Engines**: Optimized for both microphones and professional interfaces
 - 📱 **Enhanced Mobile Experience**: Better responsive design and theme switching
 - 🛠️ **Improved Reliability**: Better error handling and auto-reconnection
+- 🎵 **Flexible Audio Sources**: Support for turntables, mixers, instruments via line-in

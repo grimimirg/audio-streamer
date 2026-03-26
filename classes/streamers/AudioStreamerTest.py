@@ -35,9 +35,9 @@ class AudioStreamerTest:
             # Start the test tone generation thread
             self.onAir = True
             threading.Thread(target=self._generateTestTone, daemon=True).start()
-            
+
             logging.info("Test tone streaming started")
-            
+
         except Exception as e:
             logging.error(f"Failed to start test tone: {e}")
             return
@@ -74,40 +74,40 @@ class AudioStreamerTest:
     def _generateTestTone(self):
         """Generate a 440 Hz sine wave test tone."""
         logging.info("Test tone generation started")
-        
+
         import math
-        
+
         frequency = 440  # A4 note
         amplitude = 0.3  # 30% of max volume
         phase = 0
-        
+
         try:
             while self.onAir:
                 # Generate one chunk of sine wave
                 chunkData = bytearray()
-                
+
                 for i in range(CHUNK):
                     # Generate sine wave sample
                     sampleValue = int(amplitude * 32767 * math.sin(2 * math.pi * frequency * phase / RATE))
-                    
+
                     # Convert to 16-bit little-endian
                     chunkData.extend(sampleValue.to_bytes(2, byteorder='little', signed=True))
-                    
+
                     phase += 1
-                
+
                 # Distribute to clients
                 with self._lock:
                     clientsCopy = self.listeningClients.copy()
-                
+
                 for client in clientsCopy:
                     try:
                         client.put_nowait(bytes(chunkData))
                     except queue.Full:
                         logging.warning("Client queue full, dropping audio chunk")
-                
+
                 # Small delay to control timing
                 time.sleep(CHUNK / RATE / 2)  # Half the chunk duration for smooth playback
-                
+
         except Exception as e:
             logging.error(f"Error in test tone generation: {e}")
             import traceback

@@ -1,9 +1,9 @@
 import logging
 from typing import Optional, List
 
-from .AudioHttpFacade import AudioHttpFacade
 from classes.streamers.CardAudioStreamer import CardAudioStreamer
 from classes.streamers.MicrophoneAudioStreamer import MicrophoneAudioStreamer
+from .AudioHttpFacade import AudioHttpFacade
 
 
 class ApplicationController:
@@ -80,7 +80,7 @@ class ApplicationController:
                 logging.warning("No device selected, using default")
 
             # Start audio streaming
-            self.audioStreamer.startAudioStream(deviceIndex)
+            self.audioStreamer.startAudioStream([deviceIndex] if deviceIndex is not None else None)
 
             # Verify streaming started successfully
             if not self.audioStreamer.onAir:

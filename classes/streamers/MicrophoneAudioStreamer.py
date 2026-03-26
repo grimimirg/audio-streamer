@@ -2,6 +2,7 @@ import logging
 import queue
 import subprocess
 import threading
+from typing import Optional, List
 
 from utilities.Constants import CHANNELS, RATE, CHUNK
 
@@ -24,23 +25,47 @@ class MicrophoneAudioStreamer:
             result = subprocess.run(['arecord', '-l'], capture_output=True, text=True)
             if result.returncode == 0:
                 logging.info(result.stdout)
+                # Parse and show device options
+                lines = result.stdout.split('\n')
+                device_count = 0
+                for line in lines:
+                    if 'card 0:' in line and 'device' in line:
+                        device_count += 1
+                        if 'device 0:' in line:
+                            logging.info(f"Option {device_count}: Built-in Microphone (default)")
+                        elif 'device 2:' in line:
+                            logging.info(f"Option {device_count}: Line-in Jack (3.5mm)")
             else:
                 logging.error("Failed to list devices with arecord")
         except Exception as e:
             logging.error(f"Error listing devices: {e}")
         logging.info("=" * 10)
 
-    def startAudioStream(self):
+    def startAudioStream(self, listeningDeviceIndexes: Optional[List[int]] = None):
         """Start capturing audio using arecord."""
         if self.onAir:
             logging.info("Stream already onAir")
             return
 
         try:
+            # Determine which device to use
+            device = 'default'  # Default to built-in microphone
+
+            if listeningDeviceIndexes and len(listeningDeviceIndexes) > 0:
+                device_choice = listeningDeviceIndexes[0]
+                if device_choice == 2:  # User chose line-in jack
+                    device = 'hw:0,2'
+                    logging.info("Using Line-in Jack (3.5mm)")
+                else:
+                    device = 'default'
+                    logging.info("Using Built-in Microphone")
+            else:
+                logging.info("No device specified, using Built-in Microphone (default)")
+
             # Build arecord command
             cmd = [
                 'arecord',
-                '-D', 'pulse',  # Use PulseAudio
+                '-D', device,
                 '-f', 'cd',  # CD quality (16-bit, 44100 Hz, stereo)
                 '-c', str(CHANNELS),
                 '-r', str(RATE),
