@@ -25,6 +25,14 @@ Turntable/Mixer → Audio Interface → Computer
 # Clone and install
 git clone <this-repository>
 cd audio-streamer
+
+# Option 1: Quick install (recommended for new systems)
+./install.sh
+
+# Option 2: Manual install
+# First install system dependencies for PyAudio:
+sudo apt update && sudo apt install -y python3-dev portaudio19-dev
+# Then install Python requirements:
 pip install -r requirements.txt
 
 # Start your radio station
