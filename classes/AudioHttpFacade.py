@@ -44,6 +44,7 @@ class AudioHttpFacade:
         self.app.add_url_rule('/', 'player', self._player)
         self.app.add_url_rule('/stream', 'stream', self._stream)
         self.app.add_url_rule('/stats', 'stats', self._stats)
+        self.app.add_url_rule('/dashboard', 'dashboard', self._dashboard)
 
     def _generateAudioStream(self):
         """Generate audio stream data for HTTP response.
@@ -142,3 +143,11 @@ class AudioHttpFacade:
             dict: Current streaming statistics as JSON
         """
         return self.audioStreamer.getStats()
+
+    def _dashboard(self):
+        """Serve the dashboard interface.
+        
+        Returns:
+            str: Rendered HTML template for the dashboard
+        """
+        return render_template('dashboard.html')

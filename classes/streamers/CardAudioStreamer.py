@@ -1,6 +1,7 @@
 import logging
 import queue
 import threading
+import time
 from typing import List, Optional
 
 import pyaudio
@@ -66,6 +67,12 @@ class CardAudioStreamer:
         self.onAir = False  # Streaming state flag
         self.listeningClients = []  # List of client queues for audio distribution
         self._lock = threading.RLock()  # Thread-safe lock for client management
+        
+        # Additional metrics
+        self.startTime = None  # When streaming started
+        self.totalDataTransferred = 0  # Total bytes sent
+        self.peakListeners = 0  # Maximum concurrent listeners
+        self.chunkCount = 0  # Total audio chunks processed
 
     def listAvailableDevices(self):
         """Print all available audio input devices to the console.
@@ -126,6 +133,9 @@ class CardAudioStreamer:
         # Start the audio capture thread
         logging.info("Starting audio capture thread...")
         self.onAir = True
+        self.startTime = time.time()  # Record start time
+        self.totalDataTransferred = 0  # Reset data counter
+        self.chunkCount = 0  # Reset chunk counter
         capture_thread = threading.Thread(target=self._captureAudioFromStream, daemon=True)
         capture_thread.start()
         logging.info("Audio capture thread started successfully")
@@ -162,7 +172,11 @@ class CardAudioStreamer:
         logging.info(f"Client connected")
         with self._lock:  # Thread-safe client list modification
             self.listeningClients.append(clientQueue)
-            logging.info(f"New connected client. Number of connected clients: {len(self.listeningClients)}")
+            # Update peak listeners
+            currentListeners = len(self.listeningClients)
+            if currentListeners > self.peakListeners:
+                self.peakListeners = currentListeners
+            logging.info(f"New connected client. Number of connected clients: {currentListeners}")
 
     def removeClient(self, clientQueue: queue.Queue):
         """Remove a client queue from the distribution list.
@@ -179,16 +193,53 @@ class CardAudioStreamer:
         """Get current streaming statistics.
         
         Returns:
-            dict: Contains streaming status, listener count, and audio parameters
+            dict: Contains streaming status, listener count, audio parameters, and additional metrics
         """
-        logging.info(f"Current stats: {self.onAir}, {len(self.listeningClients)}, {RATE}, {CHANNELS}")
-        with self._lock:  # Thread-safe access to client count
-            return {
+        with self._lock:  # Thread-safe access to all metrics
+            # Calculate uptime if streaming is active
+            uptime_seconds = 0
+            if self.startTime and self.onAir:
+                uptime_seconds = int(time.time() - self.startTime)
+            
+            # Format data transferred in human-readable format
+            data_mb = self.totalDataTransferred / (1024 * 1024)  # Convert to MB
+            
+            stats = {
                 'on_air': self.onAir,
                 'listeners': len(self.listeningClients),
                 'sample_rate': RATE,
-                'channels': CHANNELS
+                'channels': CHANNELS,
+                'uptime_seconds': uptime_seconds,
+                'uptime_formatted': self._formatUptime(uptime_seconds),
+                'total_data_mb': round(data_mb, 2),
+                'peak_listeners': self.peakListeners,
+                'chunks_processed': self.chunkCount,
+                'avg_chunk_size': round(self.totalDataTransferred / max(1, self.chunkCount), 0) if self.chunkCount > 0 else 0
             }
+            
+        logging.info(f"Current stats: {stats}")
+        return stats
+    
+    def _formatUptime(self, seconds):
+        """Format uptime seconds into human-readable string.
+        
+        Args:
+            seconds: Uptime in seconds
+            
+        Returns:
+            str: Formatted uptime string (e.g., "1h 23m 45s")
+        """
+        if seconds < 60:
+            return f"{seconds}s"
+        elif seconds < 3600:
+            minutes = seconds // 60
+            secs = seconds % 60
+            return f"{minutes}m {secs}s"
+        else:
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            secs = seconds % 60
+            return f"{hours}h {minutes}m {secs}s"
 
     # -- PRIVATES --
 
@@ -210,10 +261,16 @@ class CardAudioStreamer:
 
                 # Read audio data from the input device
                 data = self.currentStream.read(CHUNK, exception_on_overflow=False)
-
+                
+                # Update metrics
+                self.chunkCount += 1
+                chunkSize = len(data)
+                
                 # Create a thread-safe snapshot of current clients
                 with self._lock:
                     clientsCopy = self.listeningClients.copy()
+                    # Update total data transferred (chunk size * number of clients)
+                    self.totalDataTransferred += chunkSize * len(clientsCopy)
 
                 # Distribute audio data to all connected clients
                 for client in clientsCopy:

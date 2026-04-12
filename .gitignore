@@ -1,2 +1,54 @@
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
 .venv/
+venv/
+ENV/
+env/
+
+# Flask
+instance/
+.webassets-cache
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Environment variables
+.env
+.env.local
+.flaskenv
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+
+# Project specific
+*.wav
+*.mp3
+*.flac
+audio_recordings/
