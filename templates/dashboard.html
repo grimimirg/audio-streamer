@@ -244,329 +244,354 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
         }
 
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         @media (max-width: 768px) {
-            h1 { font-size: 2rem; }
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .status-bar { flex-direction: column; gap: 15px; text-align: center; }
-            .metric-value { font-size: 2rem; }
+            h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .metric-value {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📻 Dashboard Streamer</h1>
-            <p class="subtitle">Statistiche in Tempo Reale della Tua Radio</p>
-        </header>
+<div class="container">
+    <header>
+        <h1>📻 Dashboard Streamer</h1>
+        <p class="subtitle">Statistiche in Tempo Reale della Tua Radio</p>
+    </header>
 
-        <div class="status-bar">
-            <div class="status-indicator">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Caricamento...</span>
-            </div>
-            <div class="last-update">
-                Ultimo aggiornamento: <span id="lastUpdate">--:--:--</span>
-                <span class="refresh-indicator" id="refreshIndicator">🔄</span>
-            </div>
+    <div class="status-bar">
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Caricamento...</span>
         </div>
-
-        <div class="dashboard-grid">
-            <div class="card">
-                <div class="card-title">
-                    <span>👥</span> Ascoltatori
-                </div>
-                <div class="metric-value" id="listenersCount">0</div>
-                <div class="metric-label">Connessi ora (Picco: <span id="peakListeners">0</span>)</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <span>🎵</span> Qualità Audio
-                </div>
-                <div class="metric-value" id="sampleRate">44.1k</div>
-                <div class="metric-label">Sample Rate Hz</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <span>🔊</span> Canali
-                </div>
-                <div class="metric-value" id="channels">2</div>
-                <div class="metric-label">Stereo/Mono</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <span>⏱️</span> Tempo di Attività
-                </div>
-                <div class="metric-value" id="uptime">00:00</div>
-                <div class="metric-label">On Air</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <span>📊</span> Dati Trasferiti
-                </div>
-                <div class="metric-value" id="dataTransferred">0</div>
-                <div class="metric-label">MB Totali</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <span>🎚️</span> Chunk Processati
-                </div>
-                <div class="metric-value" id="chunksProcessed">0</div>
-                <div class="metric-label">Blocchi audio</div>
-            </div>
-        </div>
-
-        <div class="chart-container">
-            <div class="chart-title">📊 Andamento Ascoltatori</div>
-            <canvas id="listenersChart" width="400" height="100"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <div class="chart-title">🎛️ Informazioni Audio</div>
-            <div class="audio-info">
-                <div class="info-item">
-                    <div class="info-label">Stato Stream</div>
-                    <div class="info-value" id="streamStatus">---</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Bitrate Stimato</div>
-                    <div class="info-value" id="bitrate">---</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Formato Audio</div>
-                    <div class="info-value" id="format">WAV 16-bit</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Latenza</div>
-                    <div class="info-value" id="latency">~2s</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button class="btn" onclick="refreshStats()">🔄 Aggiorna Ora</button>
-            <button class="btn" onclick="toggleAutoRefresh()">⏸️ Pausa Auto</button>
-            <button class="btn" onclick="openPlayer()">🎵 Apri Player</button>
+        <div class="last-update">
+            Ultimo aggiornamento: <span id="lastUpdate">--:--:--</span>
+            <span class="refresh-indicator" id="refreshIndicator">🔄</span>
         </div>
     </div>
 
-    <script>
-        // Variabili globali
-        let autoRefresh = true;
-        let refreshInterval;
-        let listenersHistory = [];
-        let timeLabels = [];
-        let chart;
-        let errorCount = 0;
-        const MAX_ERRORS = 3;
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-title">
+                <span>👥</span> Ascoltatori
+            </div>
+            <div class="metric-value" id="listenersCount">0</div>
+            <div class="metric-label">Connessi ora (Picco: <span id="peakListeners">0</span>)</div>
+        </div>
 
-        // Inizializzazione
-        document.addEventListener('DOMContentLoaded', function() {
-            initChart();
-            refreshStats();
-            startAutoRefresh();
-        });
+        <div class="card">
+            <div class="card-title">
+                <span>🎵</span> Qualità Audio
+            </div>
+            <div class="metric-value" id="sampleRate">44.1k</div>
+            <div class="metric-label">Sample Rate Hz</div>
+        </div>
 
-        // Inizializza il grafico
-        function initChart() {
-            const ctx = document.getElementById('listenersChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: timeLabels,
-                    datasets: [{
-                        label: 'Ascoltatori',
-                        data: listenersHistory,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#667eea',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    }]
+        <div class="card">
+            <div class="card-title">
+                <span>🔊</span> Canali
+            </div>
+            <div class="metric-value" id="channels">2</div>
+            <div class="metric-label">Stereo/Mono</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>⏱️</span> Tempo di Attività
+            </div>
+            <div class="metric-value" id="uptime">00:00</div>
+            <div class="metric-label">On Air</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>📊</span> Dati Trasferiti
+            </div>
+            <div class="metric-value" id="dataTransferred">0</div>
+            <div class="metric-label">MB Totali</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>🎚️</span> Chunk Processati
+            </div>
+            <div class="metric-value" id="chunksProcessed">0</div>
+            <div class="metric-label">Blocchi audio</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">📊 Andamento Ascoltatori</div>
+        <canvas id="listenersChart" width="400" height="100"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">🎛️ Informazioni Audio</div>
+        <div class="audio-info">
+            <div class="info-item">
+                <div class="info-label">Stato Stream</div>
+                <div class="info-value" id="streamStatus">---</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Bitrate Stimato</div>
+                <div class="info-value" id="bitrate">---</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Formato Audio</div>
+                <div class="info-value" id="format">WAV 16-bit</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Latenza</div>
+                <div class="info-value" id="latency">~2s</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="refreshStats()">🔄 Aggiorna Ora</button>
+        <button class="btn" onclick="toggleAutoRefresh()">⏸️ Pausa Auto</button>
+        <button class="btn" onclick="openPlayer()">🎵 Apri Player</button>
+    </div>
+</div>
+
+<script>
+    // Variabili globali
+    let autoRefresh = true;
+    let refreshInterval;
+    let listenersHistory = [];
+    let timeLabels = [];
+    let chart;
+    let errorCount = 0;
+    const MAX_ERRORS = 3;
+
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', function () {
+        initChart();
+        refreshStats();
+        startAutoRefresh();
+    });
+
+    // Inizializza il grafico
+    function initChart() {
+        const ctx = document.getElementById('listenersChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Ascoltatori',
+                    data: listenersHistory,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#fff'
                         }
                     },
-                    scales: {
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#fff'
-                            }
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
                         },
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#fff',
-                                stepSize: 1
-                            }
+                        ticks: {
+                            color: '#fff',
+                            stepSize: 1
                         }
                     }
                 }
-            });
-        }
-
-        // Aggiorna le statistiche
-        async function refreshStats() {
-            const indicator = document.getElementById('refreshIndicator');
-            indicator.classList.add('active');
-
-            try {
-                const response = await fetch('/stats');
-                if (!response.ok) {
-                    throw new Error('Errore nel recupero delle statistiche');
-                }
-
-                const stats = await response.json();
-                updateUI(stats);
-                updateChart(stats.listeners);
-                errorCount = 0; // Reset on success
-
-            } catch (error) {
-                console.error('Errore stats:', error);
-                errorCount++;
-                if (errorCount >= MAX_ERRORS) {
-                    stopAutoRefresh();
-                    showError('Troppe connessioni fallite. Auto-refresh disabilitato.');
-                } else {
-                    showError('Errore di connessione (tentativo ' + errorCount + '/' + MAX_ERRORS + ')');
-                }
-            } finally {
-                indicator.classList.remove('active');
             }
-        }
-
-        // Aggiorna l'interfaccia
-        function updateUI(stats) {
-            // Stato
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            
-            if (stats.on_air) {
-                statusDot.className = 'status-dot on-air';
-                statusText.textContent = '🔴 ON AIR';
-            } else {
-                statusDot.className = 'status-dot off-air';
-                statusText.textContent = '⚫ OFF AIR';
-            }
-
-            // Metriche principali
-            document.getElementById('listenersCount').textContent = stats.listeners;
-            document.getElementById('peakListeners').textContent = stats.peak_listeners || 0;
-            document.getElementById('sampleRate').textContent = (stats.sample_rate / 1000).toFixed(1) + 'k';
-            document.getElementById('channels').textContent = stats.channels + (stats.channels === 2 ? ' (Stereo)' : ' (Mono)');
-            
-            // Nuove metriche
-            document.getElementById('uptime').textContent = stats.uptime_formatted || '00:00';
-            document.getElementById('dataTransferred').textContent = (stats.total_data_mb || 0).toFixed(1);
-            document.getElementById('chunksProcessed').textContent = (stats.chunks_processed || 0).toLocaleString();
-            
-            // Info audio
-            document.getElementById('streamStatus').textContent = stats.on_air ? '🟢 Attivo' : '🔴 Inattivo';
-            document.getElementById('bitrate').textContent = calculateBitrate(stats.sample_rate, stats.channels);
-
-            // Timestamp
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('it-IT');
-        }
-
-        // Calcola il bitrate
-        function calculateBitrate(sampleRate, channels) {
-            const bitrate = sampleRate * channels * 16; // 16-bit
-            return (bitrate / 1000).toFixed(0) + ' kbps';
-        }
-
-        // Aggiorna il grafico
-        function updateChart(listeners) {
-            const now = new Date();
-            const timeLabel = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-            // Mantieni solo gli ultimi 20 punti
-            if (timeLabels.length >= 20) {
-                timeLabels.shift();
-                listenersHistory.shift();
-            }
-
-            timeLabels.push(timeLabel);
-            listenersHistory.push(listeners);
-
-            chart.update();
-        }
-
-        // Auto refresh
-        function startAutoRefresh() {
-            if (autoRefresh) {
-                refreshInterval = setInterval(refreshStats, 5000); // Aggiorna ogni 5 secondi
-            }
-        }
-
-        function stopAutoRefresh() {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
-        }
-
-        function toggleAutoRefresh() {
-            autoRefresh = !autoRefresh;
-            const btn = event.target;
-            
-            if (autoRefresh) {
-                startAutoRefresh();
-                btn.textContent = '⏸️ Pausa Auto';
-            } else {
-                stopAutoRefresh();
-                btn.textContent = '▶️ Riprendi Auto';
-            }
-        }
-
-        // Gestione errori
-        function showError(message) {
-            const msg = message || 'Errore Connessione';
-            document.getElementById('statusText').textContent = '❌ ' + msg;
-            document.getElementById('statusDot').className = 'status-dot off-air';
-        }
-
-        // Apri player
-        function openPlayer() {
-            window.open('/', '_blank');
-        }
-
-        // Pulizia prima di uscire
-        window.addEventListener('beforeunload', () => {
-            stopAutoRefresh();
         });
-    </script>
+    }
+
+    // Aggiorna le statistiche
+    async function refreshStats() {
+        const indicator = document.getElementById('refreshIndicator');
+        indicator.classList.add('active');
+
+        try {
+            const response = await fetch('/stats');
+            if (!response.ok) {
+                throw new Error('Errore nel recupero delle statistiche');
+            }
+
+            const stats = await response.json();
+            updateUI(stats);
+            updateChart(stats.listeners);
+            errorCount = 0; // Reset on success
+
+        } catch (error) {
+            console.error('Errore stats:', error);
+            errorCount++;
+            if (errorCount >= MAX_ERRORS) {
+                stopAutoRefresh();
+                showError('Troppe connessioni fallite. Auto-refresh disabilitato.');
+            } else {
+                showError('Errore di connessione (tentativo ' + errorCount + '/' + MAX_ERRORS + ')');
+            }
+        } finally {
+            indicator.classList.remove('active');
+        }
+    }
+
+    // Aggiorna l'interfaccia
+    function updateUI(stats) {
+        // Stato
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        if (stats.on_air) {
+            statusDot.className = 'status-dot on-air';
+            statusText.textContent = '🔴 ON AIR';
+        } else {
+            statusDot.className = 'status-dot off-air';
+            statusText.textContent = '⚫ OFF AIR';
+        }
+
+        // Metriche principali
+        document.getElementById('listenersCount').textContent = stats.listeners;
+        document.getElementById('peakListeners').textContent = stats.peak_listeners || 0;
+        document.getElementById('sampleRate').textContent = (stats.sample_rate / 1000).toFixed(1) + 'k';
+        document.getElementById('channels').textContent = stats.channels + (stats.channels === 2 ? ' (Stereo)' : ' (Mono)');
+
+        // Nuove metriche
+        document.getElementById('uptime').textContent = stats.uptime_formatted || '00:00';
+        document.getElementById('dataTransferred').textContent = (stats.total_data_mb || 0).toFixed(1);
+        document.getElementById('chunksProcessed').textContent = (stats.chunks_processed || 0).toLocaleString();
+
+        // Info audio
+        document.getElementById('streamStatus').textContent = stats.on_air ? '🟢 Attivo' : '🔴 Inattivo';
+        document.getElementById('bitrate').textContent = calculateBitrate(stats.sample_rate, stats.channels);
+
+        // Timestamp
+        const now = new Date();
+        document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('it-IT');
+    }
+
+    // Calcola il bitrate
+    function calculateBitrate(sampleRate, channels) {
+        const bitrate = sampleRate * channels * 16; // 16-bit
+        return (bitrate / 1000).toFixed(0) + ' kbps';
+    }
+
+    // Aggiorna il grafico
+    function updateChart(listeners) {
+        const now = new Date();
+        const timeLabel = now.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+        // Mantieni solo gli ultimi 20 punti
+        if (timeLabels.length >= 20) {
+            timeLabels.shift();
+            listenersHistory.shift();
+        }
+
+        timeLabels.push(timeLabel);
+        listenersHistory.push(listeners);
+
+        chart.update();
+    }
+
+    // Auto refresh
+    function startAutoRefresh() {
+        if (autoRefresh) {
+            refreshInterval = setInterval(refreshStats, 5000); // Aggiorna ogni 5 secondi
+        }
+    }
+
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    }
+
+    function toggleAutoRefresh() {
+        autoRefresh = !autoRefresh;
+        const btn = event.target;
+
+        if (autoRefresh) {
+            startAutoRefresh();
+            btn.textContent = '⏸️ Pausa Auto';
+        } else {
+            stopAutoRefresh();
+            btn.textContent = '▶️ Riprendi Auto';
+        }
+    }
+
+    // Gestione errori
+    function showError(message) {
+        const msg = message || 'Errore Connessione';
+        document.getElementById('statusText').textContent = '❌ ' + msg;
+        document.getElementById('statusDot').className = 'status-dot off-air';
+    }
+
+    // Apri player
+    function openPlayer() {
+        window.open('/', '_blank');
+    }
+
+    // Pulizia prima di uscire
+    window.addEventListener('beforeunload', () => {
+        stopAutoRefresh();
+    });
+</script>
 </body>
 </html>

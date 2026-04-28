@@ -73,8 +73,18 @@ Choose between microphone or audio interface for optimal compatibility
 6 professional themes (Jazz, Classical, Rock, Pop, Electronic, New Age)
 </td>
 <td bgcolor="#E8F5E9">
+<strong>🌍 Multilingual Support</strong><br/>
+Interface available in Italian, English, and German
+</td>
+</tr>
+<tr>
+<td bgcolor="#E1F5FE">
 <strong>🌐 Share with Listeners</strong><br/>
 Anyone with a web browser can tune in to your broadcast
+</td>
+<td bgcolor="#FFF3E0">
+<strong>📱 Responsive Design</strong><br/>
+Clean, modern interface that works on all devices
 </td>
 </tr>
 <tr>

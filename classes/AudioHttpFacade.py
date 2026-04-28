@@ -1,8 +1,9 @@
 import logging
 import os
 import queue
+import yaml
 
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, jsonify, send_from_directory
 
 from utilities.Constants import CLIENT_QUEUE_SIZE
 
@@ -21,9 +22,15 @@ class AudioHttpFacade:
             audioStreamer: Instance of AudioStreamer for audio capture
         """
         # Get the project root directory (parent of classes folder)
-        template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
-        self.app = Flask(__name__, template_folder=template_dir)
+        root_dir = os.path.dirname(os.path.dirname(__file__))
+        template_dir = os.path.join(root_dir, 'templates')
+        static_dir = os.path.join(root_dir, 'static')
+        
+        self.app = Flask(__name__, 
+                        template_folder=template_dir,
+                        static_folder=static_dir)
         self.audioStreamer = audioStreamer
+        self.locales_dir = os.path.join(root_dir, 'locales')
         self._add_routes()
 
     def run(self, host: str, port: int, debug: bool):
@@ -45,6 +52,7 @@ class AudioHttpFacade:
         self.app.add_url_rule('/stream', 'stream', self._stream)
         self.app.add_url_rule('/stats', 'stats', self._stats)
         self.app.add_url_rule('/dashboard', 'dashboard', self._dashboard)
+        self.app.add_url_rule('/locales/<lang>', 'locales', self._get_locale)
 
     def _generateAudioStream(self):
         """Generate audio stream data for HTTP response.
@@ -151,3 +159,25 @@ class AudioHttpFacade:
             str: Rendered HTML template for the dashboard
         """
         return render_template('dashboard.html')
+
+    def _get_locale(self, lang):
+        """Serve translation files as JSON.
+        
+        Args:
+            lang: Language code (it, en, de)
+            
+        Returns:
+            dict: Translation data as JSON
+        """
+        try:
+            locale_file = os.path.join(self.locales_dir, f'{lang}.yaml')
+            if not os.path.exists(locale_file):
+                return jsonify({'error': 'Language not found'}), 404
+            
+            with open(locale_file, 'r', encoding='utf-8') as f:
+                translations = yaml.safe_load(f)
+            
+            return jsonify(translations)
+        except Exception as e:
+            logging.error(f"Error loading locale {lang}: {e}")
+            return jsonify({'error': 'Failed to load translations'}), 500
