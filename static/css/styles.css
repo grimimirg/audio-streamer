@@ -1,5 +1,5 @@
 :root {
-    --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --bg-gradient: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
     --glass-bg: rgba(0, 0, 0, 0.6);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
@@ -11,15 +11,15 @@
 }
 
 body.light {
-    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    --glass-bg: rgba(255, 255, 255, 0.6);
-    --glass-border: rgba(0, 0, 0, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-    --text-color: #2d3748;
-    --accent-color: rgba(0, 0, 0, 0.05);
-    --accent-hover: rgba(0, 0, 0, 0.1);
+    --bg-gradient: linear-gradient(135deg, #a8a8a8 0%, #888888 100%);
+    --glass-bg: rgba(255, 255, 255, 0.5);
+    --glass-border: rgba(0, 0, 0, 0.2);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    --text-color: #1a1a1a;
+    --accent-color: rgba(0, 0, 0, 0.1);
+    --accent-hover: rgba(0, 0, 0, 0.2);
     --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --visualizer-color: rgba(45, 55, 72, 0.8);
+    --visualizer-color: rgba(0, 0, 0, 0.8);
 }
 
 * {

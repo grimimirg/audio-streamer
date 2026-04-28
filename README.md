@@ -20,6 +20,17 @@
 <table>
 <tr>
 <td width="50%">
+<img src="black.jpg" alt="Dark Theme"/>
+</td>
+<td width="50%">
+<img src="white.jpg" alt="Light Theme"/>
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="50%">
 
 **Getting Started**
 - [What You Can Do](#features---what-you-can-do)
