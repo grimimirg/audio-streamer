@@ -1,39 +1,38 @@
-# Deutsche Übersetzungen
 app:
   title: "Audio Streamer"
-  subtitle: "Live-Streaming von meinen analogen Geräten"
+  subtitle: "Mein Radiosender"
 
 themes:
   label: "Thema"
   modern: "Modern (Standard)"
-  jazz: "Jazz"
-  classical: "Klassisch"
-  rock: "Rock"
-  pop: "Pop"
-  electronic: "Elektronisch"
-  newage: "New Age"
+  jazz: "🎷 Jazz"
+  classical: "🎼 Klassisch"
+  rock: "🎸 Rock"
+  pop: "🎤 Pop"
+  electronic: "🎹 Elektronisch"
+  newage: "🌊 New Age"
 
 language:
   label: "Sprache"
-  it: "Italiano"
-  en: "English"
-  de: "Deutsch"
+  it: "🇮🇹 Italiano"
+  en: "🇬🇧 English"
+  de: "🇩🇪 Deutsch"
 
 controls:
-  play: "Abspielen"
-  pause: "Pause"
-  connecting: "Verbinden..."
-  volume: "Lautstärke"
+  play: "▶️ Abspielen"
+  pause: "⏸️ Pause"
+  connecting: "⏳ Verbinden..."
+  volume: "🔊 Lautstärke"
 
 status:
-  ready: "Bereit zum Verbinden"
-  connecting: "Verbindung zum Stream..."
-  buffering: "Puffern..."
-  streaming: "Streaming"
-  connection_failed: "Verbindung fehlgeschlagen, erneuter Versuch..."
-  error: "Verbindung fehlgeschlagen. Überprüfen Sie, ob der Server läuft."
-  server_stopped: "Server hat Streaming gestoppt"
-  connection_lost: "Verbindung zum Server verloren"
+  ready: "🔄 Bereit zum Verbinden"
+  connecting: "🔄 Verbindung zum Stream..."
+  buffering: "🔄 Puffern..."
+  streaming: "🎵 Streaming"
+  connection_failed: "🔄 Verbindung fehlgeschlagen, erneuter Versuch..."
+  error: "❌ Verbindung fehlgeschlagen. Überprüfen Sie, ob der Server läuft."
+  server_stopped: "⚠️ Server hat Streaming gestoppt"
+  connection_lost: "⚠️ Verbindung zum Server verloren"
 
 listeners:
   online: "Online-Zuhörer"

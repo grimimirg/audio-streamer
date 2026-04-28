@@ -42,49 +42,26 @@ class I18n {
 // Istanza globale
 const i18n = new I18n();
 
-// Funzione per aggiornare tutti i testi tradotti
-function updateTranslations() {
-    // Titolo e sottotitolo
-    document.querySelector('h1').textContent = `📻 ${i18n.t('app.title')}`;
-    document.querySelector('.subtitle').textContent = i18n.t('app.subtitle');
-    
-    // Controlli
-    const playBtn = document.getElementById('playBtn');
-    if (playBtn.textContent.includes('▶') || playBtn.textContent.includes('Play') || playBtn.textContent.includes('Riproduci') || playBtn.textContent.includes('Abspielen')) {
-        playBtn.textContent = `▶️ ${i18n.t('controls.play')}`;
-    } else if (playBtn.textContent.includes('⏸') || playBtn.textContent.includes('Pause')) {
-        playBtn.textContent = `⏸️ ${i18n.t('controls.pause')}`;
-    }
-    
-    // Volume
-    document.querySelector('.volume-control').childNodes[0].textContent = `🔊 ${i18n.t('controls.volume')}: `;
-    
-    // Listeners
-    const statusDiv = document.querySelector('.status');
-    const listenersText = statusDiv.childNodes[0];
-    listenersText.textContent = `🎧 ${i18n.t('listeners.online')}: `;
-    
-    // Aggiorna dropdown lingua
-    const langSelect = document.getElementById('languageDropdown');
-    if (langSelect) {
-        langSelect.value = i18n.getCurrentLang();
-    }
-}
-
 // Cambia lingua
 async function changeLanguage(lang) {
     const success = await i18n.loadTranslations(lang);
     if (success) {
-        updateTranslations();
+        // Aggiorna tutti gli elementi con data-i18n
+        const elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            element.textContent = i18n.t(key);
+        });
+        
+        // Aggiorna dropdown lingua
+        const langSelect = document.getElementById('languageDropdown');
+        if (langSelect) {
+            langSelect.value = i18n.getCurrentLang();
+        }
+        
         // Aggiorna anche lo stato corrente se presente
         if (window.updateCurrentStatus) {
             window.updateCurrentStatus();
         }
     }
 }
-
-// Inizializzazione
-document.addEventListener('DOMContentLoaded', async () => {
-    await i18n.loadTranslations(i18n.getCurrentLang());
-    updateTranslations();
-});

@@ -1,39 +1,38 @@
-# Traduzioni Italiano
 app:
   title: "Audio Streamer"
-  subtitle: "Streaming live dai miei dispositivi analogici"
+  subtitle: "La mia stazione radio"
 
 themes:
   label: "Tema"
   modern: "Moderno (Default)"
-  jazz: "Jazz"
-  classical: "Classico"
-  rock: "Rock"
-  pop: "Pop"
-  electronic: "Elettronico"
-  newage: "New Age"
+  jazz: "🎷 Jazz"
+  classical: "🎼 Classica"
+  rock: "🎸 Rock"
+  pop: "🎤 Pop"
+  electronic: "🎹 Elettronico"
+  newage: "🌊 New Age"
 
 language:
   label: "Lingua"
-  it: "Italiano"
-  en: "English"
-  de: "Deutsch"
+  it: "🇮🇹 Italiano"
+  en: "🇬🇧 English"
+  de: "🇩🇪 Deutsch"
 
 controls:
-  play: "Riproduci"
-  pause: "Pausa"
-  connecting: "Connessione..."
-  volume: "Volume"
+  play: "▶️ Riproduci"
+  pause: "⏸️ Pausa"
+  connecting: "⏳ Connessione..."
+  volume: "🔊 Volume"
 
 status:
-  ready: "Pronto per connettersi"
-  connecting: "Connessione allo stream..."
-  buffering: "Buffering..."
-  streaming: "In riproduzione"
-  connection_failed: "Connessione fallita, riprovo..."
-  error: "Connessione fallita. Verifica che il server sia attivo."
-  server_stopped: "Il server ha interrotto lo streaming"
-  connection_lost: "Connessione al server persa"
+  ready: "🔄 Pronto per connettersi"
+  connecting: "🔄 Connessione allo stream..."
+  buffering: "🔄 Buffering..."
+  streaming: "🎵 In riproduzione"
+  connection_failed: "🔄 Connessione fallita, riprovo..."
+  error: "❌ Connessione fallita. Verifica che il server sia attivo."
+  server_stopped: "⚠️ Il server ha interrotto lo streaming"
+  connection_lost: "⚠️ Connessione al server persa"
 
 listeners:
   online: "Ascoltatori online"

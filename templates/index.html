@@ -11,28 +11,28 @@
 <div class="top-selectors">
     <div class="selector-box">
         <select id="themeDropdown" onchange="changeTheme(this.value)">
-            <option value="">Modern (Default)</option>
-            <option value="jazz">🎷 Jazz</option>
-            <option value="classical">🎼 Classical</option>
-            <option value="rock">🎸 Rock</option>
-            <option value="pop">🎤 Pop</option>
-            <option value="electronic">🎹 Electronic</option>
-            <option value="newage">🌊 New Age</option>
+            <option value="" data-i18n="themes.modern"></option>
+            <option value="jazz" data-i18n="themes.jazz"></option>
+            <option value="classical" data-i18n="themes.classical"></option>
+            <option value="rock" data-i18n="themes.rock"></option>
+            <option value="pop" data-i18n="themes.pop"></option>
+            <option value="electronic" data-i18n="themes.electronic"></option>
+            <option value="newage" data-i18n="themes.newage"></option>
         </select>
     </div>
 
     <div class="selector-box">
         <select id="languageDropdown" onchange="changeLanguage(this.value)">
-            <option value="it">🇮🇹 Italiano</option>
-            <option value="en">🇬🇧 English</option>
-            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it" data-i18n="language.it"></option>
+            <option value="en" data-i18n="language.en"></option>
+            <option value="de" data-i18n="language.de"></option>
         </select>
     </div>
 </div>
 
 <div class="radio-container">
-    <h1>📻 Audio Streamer</h1>
-    <p class="subtitle">Live streaming from my analog devices</p>
+    <h1 data-i18n="app.title"></h1>
+    <p class="subtitle" data-i18n="app.subtitle"></p>
 
     <div class="vinyl" id="vinyl">💿</div>
 
@@ -48,20 +48,20 @@
     </div>
 
     <div class="controls">
-        <button id="playBtn" onclick="togglePlay()">▶️ Play</button>
+        <button id="playBtn" onclick="togglePlay()" data-i18n="controls.play">▶️ Play</button>
     </div>
 
     <div class="volume-control">
-        🔊 Volume: <span id="volumeValue">70</span>%
+        <span data-i18n="controls.volume"></span> <span id="volumeValue">70</span>%
         <br>
         <input type="range" id="volume" min="0" max="100" value="70"
                oninput="changeVolume(this.value)">
     </div>
 
     <div class="status">
-        🎧 Online listeners: <span class="listeners" id="listeners">0</span>
+        <span data-i18n="listeners.online"></span> <span class="listeners" id="listeners">0</span>
         <br>
-        <span id="connectionStatus" class="loading">🔄 Ready to connect</span>
+        <span id="connectionStatus" class="loading" data-i18n="status.ready"></span>
     </div>
 
     <audio id="audioPlayer" preload="none"></audio>
