@@ -1,5 +1,7 @@
 import logging
 import sys
+import os
+from pathlib import Path
 from classes.ApplicationController import ApplicationController
 from utilities.Constants import HOST_ADDR, PORT, DEBUG
 
@@ -11,6 +13,19 @@ if __name__ == '__main__':
     Handles setup failures gracefully with appropriate error codes.
     """
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    # Check if .env file exists
+    env_file = Path('.env')
+    if not env_file.exists():
+        print("\n" + "="*70)
+        print("ERROR: Configuration file '.env' not found!")
+        print("="*70)
+        print("\nThe .env file is required to run this application.")
+        print("\nTo create it, run:")
+        print("  cp .env.example .env")
+        print("\nThen edit .env with your configuration settings.")
+        print("="*70 + "\n")
+        sys.exit(1)
     
     try:
         # Initialize application

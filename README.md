@@ -1,17 +1,104 @@
-# 📻 Audio Streamer - Your Personal Radio Station
+<div align="center">
+  <img src="audio-streamer-logo.jpeg" alt="Audio Streamer Logo" width="400"/>
+  
+  # Audio Streamer - Your Personal Radio Station
+  
+  <p align="center">
+    <strong>Transform your computer into a professional radio station and broadcast your analog audio sources to the world.</strong>
+  </p>
+  
+  <p align="center">
+    <img src="https://img.shields.io/badge/Python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+    <img src="https://img.shields.io/badge/Audio-Streaming-orange.svg?style=for-the-badge&logo=soundcloud&logoColor=white" alt="Audio Streaming"/>
+    <img src="https://img.shields.io/badge/Quality-CD--Quality-green.svg?style=for-the-badge&logo=music&logoColor=white" alt="CD Quality"/>
+    <img src="https://img.shields.io/badge/License-Open--Source-purple.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="License"/>
+  </p>
+</div>
 
-Transform your computer into a professional radio station and broadcast your analog audio sources to the world.
+---
 
-## 🎯 What You Can Do
+<table>
+<tr>
+<td width="50%">
 
-- **Create Your Radio Station**: Stream from turntables, cassette decks, mixers, or any audio source
-- **Smart Audio Selection**: Choose between microphone or audio interface for optimal compatibility
-- **Beautiful Themed Interface**: 6 professional themes (Jazz, Classical, Rock, Pop, Electronic, New Age)
-- **Share with Listeners**: Anyone with a web browser can tune in to your broadcast
-- **Professional Features**: Auto-reconnect, error recovery, and real-time listener stats
-- **Zero Configuration**: Works out of the box with any audio device
+**Getting Started**
+- [What You Can Do](#features---what-you-can-do)
+- [Quick Start - 5 Minutes to Live](#quick-start---5-minutes-to-live)
+- [Building Your Radio Station](#building-your-radio-station)
+- [Going Global - Share Your Station](#going-global---share-your-station)
 
-## 🚀 Quick Start - 5 Minutes to Live
+**Features & Configuration**
+- [Professional Features](#professional-features)
+- [Use Cases & Inspiration](#use-cases--inspiration)
+- [Studio Configuration Guide](#studio-configuration-guide)
+- [Listener Experience](#listener-experience)
+
+</td>
+<td width="50%">
+
+**Operations & Support**
+- [Troubleshooting](#troubleshooting---keep-your-station-running)
+- [Broadcasting Statistics](#broadcasting-statistics)
+- [Production Deployment](#production-deployment)
+- [Security Best Practices](#security-best-practices)
+
+**Advanced & Community**
+- [Advanced Configuration](#advanced-configuration)
+- [Success Stories](#success-stories--testimonials)
+- [Contributing & Support](#contributing--support)
+- [Quick Reference](#quick-reference)
+
+</td>
+</tr>
+</table>
+
+---
+
+## Features - What You Can Do
+
+<table>
+<tr>
+<td width="50%" bgcolor="#FFF3E0">
+<strong>📡 Create Your Radio Station</strong><br/>
+Stream from turntables, cassette decks, mixers, or any audio source
+</td>
+<td width="50%" bgcolor="#E3F2FD">
+<strong>🎯 Smart Audio Selection</strong><br/>
+Choose between microphone or audio interface for optimal compatibility
+</td>
+</tr>
+<tr>
+<td bgcolor="#F3E5F5">
+<strong>🎨 Themed Interface</strong><br/>
+6 professional themes (Jazz, Classical, Rock, Pop, Electronic, New Age)
+</td>
+<td bgcolor="#E8F5E9">
+<strong>🌐 Share with Listeners</strong><br/>
+Anyone with a web browser can tune in to your broadcast
+</td>
+</tr>
+<tr>
+<td bgcolor="#FCE4EC">
+<strong>⚡ Professional Features</strong><br/>
+Auto-reconnect, error recovery, and real-time listener stats
+</td>
+<td bgcolor="#FFF9C4">
+<strong>🔌 Zero Configuration</strong><br/>
+Works out of the box with any audio device
+</td>
+</tr>
+</table>
+
+## Quick Start - 5 Minutes to Live
+
+<table>
+<tr>
+<td>
+<strong>⚡ Fast Setup</strong><br/>
+Get your radio station live in just 5 minutes! Install dependencies, create your <code>.env</code> configuration file, and start broadcasting.
+</td>
+</tr>
+</table>
 
 ### Step 1: Connect Your Audio Source
 ```
@@ -20,7 +107,7 @@ OR
 Turntable/Mixer → Audio Interface → Computer
 ```
 
-### Step 2: Install & Run
+### Step 2: Install & Configure
 ```bash
 # Clone and install
 git clone <this-repository>
@@ -35,9 +122,15 @@ sudo apt update && sudo apt install -y python3-dev portaudio19-dev
 # Then install Python requirements:
 pip install -r requirements.txt
 
+# REQUIRED: Create configuration file
+cp .env.example .env
+nano .env  # Edit your settings
+
 # Start your radio station
 python app.py
 ```
+
+**Note:** The `.env` file is **required**. The application will not start without it.
 
 ### Step 3: Choose Your Input Method
 When you run the app, you'll see:
@@ -77,27 +170,38 @@ Choose device index(es) to stream from (or ENTER for default):
 1. Select your audio device from the list
 2. Open `http://localhost:4986` in your browser
 3. Click **Play** to start broadcasting
-4. Choose your favorite theme from the dropdown! 🎨
+4. Choose your favorite theme from the dropdown
 
-## 🎛️ Professional Features
+---
 
-### 🎨 Multi-Theme Web Interface
-- **🎷 Jazz Night**: Warm colors, vintage feel with sepia filter
-- **🎼 Classical**: Elegant brown/beige, Times New Roman font
-- **🎸 Rock**: Dark theme with red accents, bold borders
-- **🎤 Pop**: Bright pastel colors, modern clean interface
-- **🎹 Electronic**: Cyberpunk style with green text on black
-- **🌊 New Age**: Ethereal blue gradients, minimal design
+## Professional Features
+
+<table>
+<tr>
+<td bgcolor="#E8F5E9">
+<strong>🎨 Professional Broadcasting</strong><br/>
+Enjoy enterprise-grade features including 6 stunning themes, auto-reconnect technology, and real-time analytics. Perfect for both hobbyists and professional broadcasters.
+</td>
+</tr>
+</table>
+
+### Multi-Theme Web Interface
+- **Jazz Night**: Warm colors, vintage feel with sepia filter
+- **Classical**: Elegant brown/beige, Times New Roman font
+- **Rock**: Dark theme with red accents, bold borders
+- **Pop**: Bright pastel colors, modern clean interface
+- **Electronic**: Cyberpunk style with green text on black
+- **New Age**: Ethereal blue gradients, minimal design
 - **Modern**: Default purple/blue gradient theme
 
-### 🌐 Smart Web Player
+### Smart Web Player
 - **Auto-Reconnect**: Never lose a listener - automatic retry on connection issues
 - **Live Status**: Real-time connection indicators and listener count
 - **Buffering Display**: Visual feedback during connection setup
 - **Mobile Ready**: Works on phones, tablets, and desktops
 - **Theme Switcher**: Instant theme changes without page reload
 
-### 🔧 Intelligent Audio Engine
+### Intelligent Audio Engine
 - **Dual Engine Support**: 
   - **Microphone Mode**: Uses `arecord` for stable system audio capture with device selection
   - **Interface Mode**: Uses `PyAudio` for professional audio interfaces
@@ -109,12 +213,14 @@ Choose device index(es) to stream from (or ENTER for default):
 - **Error Recovery**: Automatic recovery from audio device issues
 - **Professional Audio**: 44.1kHz CD-quality stereo streaming
 
-### 📊 Real-Time Analytics
+### Real-Time Analytics
 - **Listener Count**: See how many people are tuned in
 - **Connection Status**: Monitor streaming health
 - **Error Tracking**: Automatic logging of issues for troubleshooting
 
-## 🏗️ Building Your Radio Station
+---
+
+## Building Your Radio Station
 
 ### Microphone Broadcasting (Perfect for Podcasts/Voice)
 ```bash
@@ -170,7 +276,9 @@ Device 2: Mixer Backup
 ```
 Enter: `0 1 2` when prompted to mix all sources
 
-## 🌍 Going Global - Share Your Station
+---
+
+## Going Global - Share Your Station
 
 ### Local Network
 ```
@@ -197,34 +305,38 @@ server {
 }
 ```
 
-## 🎵 Use Cases & Inspiration
+---
 
-### 🎙️ Podcasting & Voice Broadcasting
+## Use Cases & Inspiration
+
+### Podcasting & Voice Broadcasting
 - **Podcast Recording**: Stream your voice directly to listeners
 - **Live Commentary**: Real-time commentary for events or gaming
 - **Voice Radio**: Personal radio station with microphone input
 
-### 🎧 Music & DJ Broadcasting
+### Music & DJ Broadcasting
 - **Vinyl Streaming**: Broadcast your record collection
 - **DJ Sets**: Live DJ performances to global audience
 - **Music Production**: Share your creations instantly
 
-### 🎪 Live Events
+### Live Events
 - Stream parties and gatherings
 - Broadcast DJ sets live
 - Share conference audio with remote attendees
 
-### 🏢 Professional Use
+### Professional Use
 - In-store radio for businesses
 - Background music for venues
 - Audio distribution for large spaces
 
-### 🎓 Educational
+### Educational
 - Language learning broadcasts
 - School radio stations
 - Educational podcast streaming
 
-## 🔧 Studio Configuration Guide
+---
+
+## Studio Configuration Guide
 
 ### Audio Sources That Work
 - **Turntables**: Vinyl records (need preamp for most computers)
@@ -251,7 +363,9 @@ Available devices:
 Your choice: 1 2  # Mix USB interface + line-in
 ```
 
-## 📱 Listener Experience
+---
+
+## Listener Experience
 
 ### What Your Listeners See
 - **Modern Radio Interface**: Clean, professional web player
@@ -266,7 +380,18 @@ Stream Only: http://your-station:4986/stream
 Statistics: http://your-station:4986/stats
 ```
 
-## 🛠️ Troubleshooting - Keep Your Station Running
+---
+
+## Troubleshooting - Keep Your Station Running
+
+<table>
+<tr>
+<td bgcolor="#FFEBEE">
+<strong>🔧 Quick Solutions</strong><br/>
+Most issues can be resolved in minutes. Check device connections, test audio sources, and verify permissions. Our comprehensive troubleshooting guide has you covered.
+</td>
+</tr>
+</table>
 
 ### Common Issues & Quick Fixes
 
@@ -344,7 +469,9 @@ tail -f /var/log/audio-streamer.log
 htop  # Monitor CPU/memory usage
 ```
 
-## 📊 Broadcasting Statistics
+---
+
+## Broadcasting Statistics
 
 ### Real-Time Monitoring
 Visit `http://your-station:4986/stats` to see:
@@ -363,40 +490,100 @@ Visit `http://your-station:4986/stats` to see:
 - **Latency**: ~2 seconds (optimal for streaming)
 - **Bandwidth**: ~176 KB/s per listener
 
-## 🚀 Production Deployment
+---
 
-### 24/7 Radio Station
+## Production Deployment
+
+<table>
+<tr>
+<td bgcolor="#F3E5F5">
+<strong>🚀 Enterprise Ready</strong><br/>
+Deploy your station for 24/7 operation with native deployment. Direct hardware access ensures optimal audio quality and compatibility with professional audio interfaces.
+</td>
+</tr>
+</table>
+
+### Why Native Deployment?
+
+**Audio hardware requires direct system access:**
+- Professional audio interfaces need kernel-level drivers
+- Docker containers add latency and compatibility issues
+- USB audio devices may not work properly in containers
+- Native deployment = zero latency, full hardware support
+
+### 24/7 Radio Station with PM2
+
 ```bash
-# Install process manager
+# Install PM2 process manager
 npm install -g pm2
 
 # Start your station
-pm2 start app.py --name "radio-station"
+pm2 start app.py --name "radio-station" --interpreter python3
 
-# Monitor uptime
+# Monitor in real-time
 pm2 monit
 
-# Auto-restart on crashes
+# View logs
+pm2 logs radio-station
+
+# Auto-restart on system reboot
 pm2 startup
 pm2 save
+
+# Restart after code changes
+pm2 restart radio-station
 ```
 
-### Docker Deployment
-```dockerfile
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "app.py"]
+### Systemd Service (Linux)
+
+For production servers, use systemd for automatic startup.
+
+A ready-to-use service file is included: `audio-streamer.service`
+
+```bash
+# Edit the service file with your paths
+nano audio-streamer.service
+
+# Copy to systemd directory
+sudo cp audio-streamer.service /etc/systemd/system/
+
+# Reload systemd
+sudo systemctl daemon-reload
+```
+
+```ini
+[Unit]
+Description=Audio Streamer Radio Station
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/path/to/audio-streamer
+Environment="AUDIO_STREAMER_DEBUG=false"
+ExecStart=/usr/bin/python3 /path/to/audio-streamer/app.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
 ```
 
 ```bash
-docker build -t audio-streamer .
-docker run -p 4986:4986 --device /dev/snd audio-streamer
+# Enable and start service
+sudo systemctl enable audio-streamer
+sudo systemctl start audio-streamer
+
+# Check status
+sudo systemctl status audio-streamer
+
+# View logs
+sudo journalctl -u audio-streamer -f
 ```
 
-## 🔒 Security Best Practices
+---
+
+## Security Best Practices
 
 ### Basic Security
 ```bash
@@ -413,31 +600,66 @@ sudo ufw allow from 192.168.1.0/24 to any port 4986
 - Monitor for unusual connection patterns
 - Regular security updates
 
-## 🎛️ Advanced Configuration
+---
 
-### Environment Variables
+## Advanced Configuration
+
+### Configuration File (.env)
+
+**The `.env` file is mandatory.** The application will not start without it.
+
+All settings must be configured via the `.env` file:
+
 ```bash
-# Complete configuration
-export AUDIO_STREAMER_HOST=0.0.0.0
-export AUDIO_STREAMER_PORT=4986
-export AUDIO_STREAMER_DEBUG=false
+# Copy the example file (REQUIRED)
+cp .env.example .env
 
-# Custom audio settings (edit Constants.py)
-CHUNK = 2048        # Buffer size
-RATE = 48000        # Sample rate
-CHANNELS = 2        # Stereo
+# Edit your configuration
+nano .env
 ```
 
-### Audio Quality Settings
-```python
-# In utilities/Constants.py
-CHUNK = 512         # Lower latency (more CPU)
-CHUNK = 2048        # Higher latency (less CPU)
-RATE = 48000        # Higher quality
-RATE = 22050        # Lower bandwidth
+**Available settings:**
+
+```bash
+# Audio Configuration
+AUDIO_CHUNK=1024              # Buffer size (512-4096)
+AUDIO_CHANNELS=2              # 1=mono, 2=stereo
+AUDIO_RATE=44100              # Sample rate (22050, 44100, 48000)
+
+# Network Configuration
+AUDIO_STREAMER_HOST=0.0.0.0   # Bind address
+AUDIO_STREAMER_PORT=4986      # Server port
+AUDIO_STREAMER_DEBUG=False    # Debug mode
+
+# Streaming Configuration
+AUDIO_STREAMER_MAX_CLIENTS=10      # Max concurrent listeners
+AUDIO_STREAMER_QUEUE_SIZE=100      # Buffer queue size
 ```
 
-## 🌟 Success Stories
+### Audio Quality Tuning
+
+**Lower Latency (for live performances):**
+```bash
+AUDIO_CHUNK=512
+AUDIO_RATE=44100
+```
+
+**Higher Quality (for music streaming):**
+```bash
+AUDIO_CHUNK=2048
+AUDIO_RATE=48000
+```
+
+**Lower Bandwidth (for limited connections):**
+```bash
+AUDIO_CHUNK=1024
+AUDIO_RATE=22050
+AUDIO_CHANNELS=1
+```
+
+---
+
+## Success Stories & Testimonials
 
 ### Bedroom DJ to Global Station
 > "I started with just my turntable and now have listeners in 15 countries. The auto-reconnect feature means my station never goes down!" - DJ Mike
@@ -448,7 +670,9 @@ RATE = 22050        # Lower bandwidth
 ### Live Event Streaming
 > "We use it to broadcast our music festivals. People who can't attend can still enjoy the show live!" - Festival Organizer
 
-## 🤝 Contributing & Support
+---
+
+## Contributing & Support
 
 ### Help Improve Your Radio Station
 - Report bugs and request features
@@ -461,7 +685,9 @@ RATE = 22050        # Lower bandwidth
 - **Troubleshooting**: Check the common issues section
 - **Community**: Share experiences and get help from other broadcasters
 
-## 📋 Quick Reference
+---
+
+## Quick Reference
 
 ### Essential Commands
 ```bash
@@ -491,23 +717,3 @@ curl http://localhost:4986/stats
 - **Quality**: Use line-in or audio interfaces for best sound quality with external sources
 
 ---
-
-## 🎙️ You're Ready to Broadcast!
-
-Your personal radio station is just 5 minutes away. Choose your input method, select your device, pick your favorite theme, and start sharing your sound with the world.
-
-**Remember**: Great radio is about great content. Focus on what you want to share, and let Audio Streamer handle the technical details.
-
-Happy broadcasting! 📻🎵
-
----
-
-## 🆕 What's New in This Version
-
-- ✨ **Enhanced Device Selection**: Choose between built-in microphone and line-in jack (3.5mm)
-- 🎯 **Smart Device Detection**: Clear device labeling for easy selection
-- 🔧 **Improved Microphone Mode**: Better support for both voice and external audio sources
-- 🎨 **6 Beautiful Themes**: Jazz, Classical, Rock, Pop, Electronic, New Age
-- 📱 **Enhanced Mobile Experience**: Better responsive design and theme switching
-- 🛠️ **Improved Reliability**: Better error handling and auto-reconnection
-- 🎵 **Flexible Audio Sources**: Support for turntables, mixers, instruments via line-in

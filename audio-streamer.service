@@ -1,0 +1,19 @@
+[Unit]
+Description=Audio Streamer Radio Station
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/path/to/audio-streamer
+Environment="AUDIO_STREAMER_HOST=0.0.0.0"
+Environment="AUDIO_STREAMER_PORT=4986"
+Environment="AUDIO_STREAMER_DEBUG=false"
+ExecStart=/usr/bin/python3 /path/to/audio-streamer/app.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
