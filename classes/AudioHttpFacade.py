@@ -2,7 +2,6 @@ import logging
 import os
 import queue
 import yaml
-
 from flask import Flask, render_template, Response, jsonify, send_from_directory
 
 from utilities.Constants import CLIENT_QUEUE_SIZE
@@ -25,10 +24,10 @@ class AudioHttpFacade:
         root_dir = os.path.dirname(os.path.dirname(__file__))
         template_dir = os.path.join(root_dir, 'templates')
         static_dir = os.path.join(root_dir, 'static')
-        
-        self.app = Flask(__name__, 
-                        template_folder=template_dir,
-                        static_folder=static_dir)
+
+        self.app = Flask(__name__,
+                         template_folder=template_dir,
+                         static_folder=static_dir)
         self.audioStreamer = audioStreamer
         self.locales_dir = os.path.join(root_dir, 'locales')
         self._add_routes()
@@ -74,7 +73,8 @@ class AudioHttpFacade:
                     # Use timeout to prevent indefinite blocking
                     data = clientQueue.get(timeout=1.0)
                     chunkCount += 1
-                    logging.info(f"Yielding chunk {chunkCount}: {len(data)} bytes")
+                    # For debug purposes
+                    # logging.info(f"Yielding chunk {chunkCount}: {len(data)} bytes")
                     yield data
                 except queue.Empty:
                     # Check if streaming is still active
@@ -113,7 +113,7 @@ class AudioHttpFacade:
         """
         # Generate WAV header for streaming
         import struct
-        
+
         def generate_wav_stream():
             # WAV header for 44100 Hz, 16-bit, stereo
             sample_rate = 44100
@@ -121,19 +121,19 @@ class AudioHttpFacade:
             bits_per_sample = 16
             byte_rate = sample_rate * channels * bits_per_sample // 8
             block_align = channels * bits_per_sample // 8
-            
+
             # Simple WAV header
             header = struct.pack('<4sL4s', b'RIFF', 0, b'WAVE')
-            header += struct.pack('<4sLHHLLHH4sL', 
-                                b'fmt ', 16, 1, channels, sample_rate, 
-                                byte_rate, block_align, bits_per_sample, b'data', 0)
-            
+            header += struct.pack('<4sLHHLLHH4sL',
+                                  b'fmt ', 16, 1, channels, sample_rate,
+                                  byte_rate, block_align, bits_per_sample, b'data', 0)
+
             yield header
-            
+
             # Stream audio data
             for chunk in self._generateAudioStream():
                 yield chunk
-        
+
         return Response(
             generate_wav_stream(),
             mimetype='audio/wav',
@@ -173,10 +173,10 @@ class AudioHttpFacade:
             locale_file = os.path.join(self.locales_dir, f'{lang}.yaml')
             if not os.path.exists(locale_file):
                 return jsonify({'error': 'Language not found'}), 404
-            
+
             with open(locale_file, 'r', encoding='utf-8') as f:
                 translations = yaml.safe_load(f)
-            
+
             return jsonify(translations)
         except Exception as e:
             logging.error(f"Error loading locale {lang}: {e}")

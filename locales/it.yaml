@@ -4,13 +4,8 @@ app:
 
 themes:
   label: "Tema"
-  modern: "Moderno (Default)"
-  jazz: "🎷 Jazz"
-  classical: "🎼 Classica"
-  rock: "🎸 Rock"
-  pop: "🎤 Pop"
-  electronic: "🎹 Elettronico"
-  newage: "🌊 New Age"
+  dark: "🌙 Scuro"
+  light: "☀️ Chiaro"
 
 language:
   label: "Lingua"
@@ -19,10 +14,10 @@ language:
   de: "🇩🇪 Deutsch"
 
 controls:
-  play: "▶️ Riproduci"
-  pause: "⏸️ Pausa"
-  connecting: "⏳ Connessione..."
-  volume: "🔊 Volume"
+  play: "▶️"
+  pause: "⏸️"
+  connecting: "⏳"
+  volume: "🔊"
 
 status:
   ready: "🔄 Pronto per connettersi"

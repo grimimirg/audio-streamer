@@ -8,66 +8,62 @@
 </head>
 <body id="mainBody">
 
-<div class="top-selectors">
-    <div class="selector-box">
-        <select id="themeDropdown" onchange="changeTheme(this.value)">
-            <option value="" data-i18n="themes.modern"></option>
-            <option value="jazz" data-i18n="themes.jazz"></option>
-            <option value="classical" data-i18n="themes.classical"></option>
-            <option value="rock" data-i18n="themes.rock"></option>
-            <option value="pop" data-i18n="themes.pop"></option>
-            <option value="electronic" data-i18n="themes.electronic"></option>
-            <option value="newage" data-i18n="themes.newage"></option>
-        </select>
+<div class="glass-container">
+    <div class="glass-header">
+        <div class="header-left">
+            <span class="logo-icon">📻</span>
+            <span class="header-title" data-i18n="app.title"></span>
+        </div>
+        <div class="header-controls">
+            <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
+                <span id="themeIcon">☀️</span>
+            </button>
+            <div class="selector-box">
+                <select id="languageDropdown" onchange="changeLanguage(this.value)">
+                    <option value="it" data-i18n="language.it"></option>
+                    <option value="en" data-i18n="language.en"></option>
+                    <option value="de" data-i18n="language.de"></option>
+                </select>
+            </div>
+        </div>
     </div>
 
-    <div class="selector-box">
-        <select id="languageDropdown" onchange="changeLanguage(this.value)">
-            <option value="it" data-i18n="language.it"></option>
-            <option value="en" data-i18n="language.en"></option>
-            <option value="de" data-i18n="language.de"></option>
-        </select>
+    <div class="glass-content">
+        <div class="subtitle-container">
+            <p class="subtitle" data-i18n="app.subtitle"></p>
+        </div>
+
+        <div class="visualizer-container">
+            <canvas id="spectrumCanvas" class="spectrum-canvas"></canvas>
+        </div>
+
+        <div class="controls-container">
+            <button id="playBtn" onclick="togglePlay()" class="play-btn"></button>
+            <div class="volume-control">
+                <span class="volume-icon">🔊</span>
+                <input type="range" id="volume" min="0" max="100" value="70"
+                       oninput="changeVolume(this.value)" class="volume-slider">
+                <span id="volumeValue" class="volume-value">70%</span>
+            </div>
+        </div>
+
+        <div class="status-container">
+            <div class="status-item">
+                <span class="status-icon">🎧</span>
+                <span class="listeners" id="listeners">0</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <span id="connectionStatus" class="loading" data-i18n="status.ready"></span>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="radio-container">
-    <h1 data-i18n="app.title"></h1>
-    <p class="subtitle" data-i18n="app.subtitle"></p>
-
-    <div class="vinyl" id="vinyl">💿</div>
-
-    <div class="visualizer" id="visualizer">
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-    </div>
-
-    <div class="controls">
-        <button id="playBtn" onclick="togglePlay()" data-i18n="controls.play">▶️ Play</button>
-    </div>
-
-    <div class="volume-control">
-        <span data-i18n="controls.volume"></span> <span id="volumeValue">70</span>%
-        <br>
-        <input type="range" id="volume" min="0" max="100" value="70"
-               oninput="changeVolume(this.value)">
-    </div>
-
-    <div class="status">
-        <span data-i18n="listeners.online"></span> <span class="listeners" id="listeners">0</span>
-        <br>
-        <span id="connectionStatus" class="loading" data-i18n="status.ready"></span>
-    </div>
-
-    <audio id="audioPlayer" preload="none"></audio>
-</div>
+<audio id="audioPlayer" preload="none"></audio>
 
 <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+<script src="{{ url_for('static', filename='js/spectrum.js') }}"></script>
 <script src="{{ url_for('static', filename='js/player.js') }}"></script>
 </body>
 </html>

@@ -1,4 +1,3 @@
-// Sistema di localizzazione
 class I18n {
     constructor() {
         this.currentLang = localStorage.getItem('language') || 'it';
@@ -39,27 +38,22 @@ class I18n {
     }
 }
 
-// Istanza globale
 const i18n = new I18n();
 
-// Cambia lingua
 async function changeLanguage(lang) {
     const success = await i18n.loadTranslations(lang);
     if (success) {
-        // Aggiorna tutti gli elementi con data-i18n
         const elements = document.querySelectorAll('[data-i18n]');
         elements.forEach(element => {
             const key = element.getAttribute('data-i18n');
             element.textContent = i18n.t(key);
         });
         
-        // Aggiorna dropdown lingua
         const langSelect = document.getElementById('languageDropdown');
         if (langSelect) {
             langSelect.value = i18n.getCurrentLang();
         }
         
-        // Aggiorna anche lo stato corrente se presente
         if (window.updateCurrentStatus) {
             window.updateCurrentStatus();
         }

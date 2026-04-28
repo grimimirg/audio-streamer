@@ -1,16 +1,25 @@
 const audio = document.getElementById('audioPlayer');
 const playBtn = document.getElementById('playBtn');
-const vinyl = document.getElementById('vinyl');
-const visualizer = document.getElementById('visualizer');
 const connectionStatus = document.getElementById('connectionStatus');
 let isPlaying = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 3;
-let currentStatusKey = 'status.ready'; // Track current status for translation
+let currentStatusKey = 'status.ready';
 
-function changeTheme(themeName) {
-    document.getElementById('mainBody').className = themeName;
-    localStorage.setItem('theme', themeName);
+function toggleTheme() {
+    const body = document.getElementById('mainBody');
+    const themeIcon = document.getElementById('themeIcon');
+    const isLight = body.classList.contains('light');
+    
+    if (isLight) {
+        body.classList.remove('light');
+        themeIcon.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        body.classList.add('light');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    }
 }
 
 function updateStatus(messageKey, type = 'loading') {
@@ -18,13 +27,14 @@ function updateStatus(messageKey, type = 'loading') {
     connectionStatus.textContent = i18n.t(messageKey);
     connectionStatus.className = type;
     
-    // Store current status key for re-translation on language change
     window.updateCurrentStatus = () => {
         connectionStatus.textContent = i18n.t(messageKey);
     };
 }
 
 function togglePlay() {
+    if (playBtn.disabled) return;
+    
     if (!isPlaying) {
         startStreaming();
     } else {
@@ -35,7 +45,7 @@ function togglePlay() {
 function startStreaming() {
     updateStatus('status.connecting', 'loading');
     playBtn.disabled = true;
-    playBtn.textContent = `⏳ ${i18n.t('controls.connecting')}`;
+    playBtn.textContent = i18n.t('controls.connecting');
 
     audio.src = '/stream';
 
@@ -45,9 +55,13 @@ function startStreaming() {
     audio.addEventListener('stalled', onStalled);
 
     audio.play().catch(onPlayError);
+    
+    audioSpectrum.start();
 }
 
 function stopStreaming() {
+    playBtn.disabled = true;
+    
     audio.pause();
     audio.src = '';
 
@@ -56,13 +70,14 @@ function stopStreaming() {
     audio.removeEventListener('error', onError);
     audio.removeEventListener('stalled', onStalled);
 
-    playBtn.textContent = `▶️ ${i18n.t('controls.play')}`;
+    playBtn.textContent = i18n.t('controls.play');
     playBtn.style.background = '#667eea';
     playBtn.disabled = false;
-    vinyl.style.animationPlayState = 'paused';
     isPlaying = false;
     reconnectAttempts = 0;
     updateStatus('status.ready', 'loading');
+    
+    audioSpectrum.stop();
 }
 
 function onLoadStart() {
@@ -70,10 +85,9 @@ function onLoadStart() {
 }
 
 function onCanPlay() {
-    playBtn.textContent = `⏸️ ${i18n.t('controls.pause')}`;
+    playBtn.textContent = i18n.t('controls.pause');
     playBtn.style.background = '#f43f5e';
     playBtn.disabled = false;
-    vinyl.style.animationPlayState = 'running';
     isPlaying = true;
     reconnectAttempts = 0;
     updateStatus('status.streaming', 'listeners');
@@ -141,9 +155,7 @@ setInterval(() => {
 
 audio.volume = 0.7;
 
-// Funzione per aggiornare i testi statici dell'interfaccia
 function updateStaticTexts() {
-    // Aggiorna tutti gli elementi con attributo data-i18n
     const elements = document.querySelectorAll('[data-i18n]');
     elements.forEach(element => {
         const key = element.getAttribute('data-i18n');
@@ -152,38 +164,36 @@ function updateStaticTexts() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Carica le traduzioni iniziali
     await i18n.loadTranslations(i18n.getCurrentLang());
-    
-    // Aggiorna i testi statici
     updateStaticTexts();
     
-    // Ripristina tema salvato
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        document.getElementById('mainBody').className = savedTheme;
-        document.getElementById('themeDropdown').value = savedTheme;
+    const body = document.getElementById('mainBody');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    if (savedTheme === 'light') {
+        body.classList.add('light');
+        themeIcon.textContent = '🌙';
+    } else {
+        themeIcon.textContent = '☀️';
     }
     
-    // Ripristina lingua salvata
     const savedLang = localStorage.getItem('language');
     if (savedLang) {
         document.getElementById('languageDropdown').value = savedLang;
     }
     
-    // Aggiorna lo stato iniziale
+    playBtn.textContent = i18n.t('controls.play');
     updateStatus('status.ready', 'loading');
 });
 
-// Aggiorna funzione changeLanguage per aggiornare anche i testi statici
 const originalChangeLanguage = changeLanguage;
 changeLanguage = async function(lang) {
     const success = await originalChangeLanguage(lang);
     if (success) {
         updateStaticTexts();
-        // Aggiorna anche il testo del bottone play se non sta suonando
         if (!isPlaying) {
-            playBtn.textContent = `▶️ ${i18n.t('controls.play')}`;
+            playBtn.textContent = i18n.t('controls.play');
         }
     }
 };
