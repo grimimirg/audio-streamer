@@ -67,6 +67,8 @@
 
 ## Features - What You Can Do
 
+> ⚠️ **Development Warning**: This project is still under active development. You may encounter bugs or malfunctions. Please report any issues you find to help improve the project.
+
 <table>
 <tr>
 <td width="50%" bgcolor="#FFF3E0">
