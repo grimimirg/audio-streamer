@@ -80,7 +80,7 @@ class ApplicationController:
                 logging.warning("No device selected, using default")
 
             # Start audio streaming
-            self.audioStreamer.startAudioStream([deviceIndex] if deviceIndex is not None else None)
+            self.audioStreamer.startAudioStream(deviceIndex)
 
             # Verify streaming started successfully
             if not self.audioStreamer.onAir:
