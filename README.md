@@ -4,7 +4,7 @@
   # Audio Streamer - Your Personal Radio Station
   
   <p align="center">
-    <strong>Transform your computer into a professional radio station and broadcast your analog audio sources to the world.</strong>
+    <strong>Transform your computer into a professional radio station and broadcast your sound to the world.</strong>
   </p>
   
   <p align="center">
@@ -55,7 +55,6 @@
 
 **Advanced & Community**
 - [Advanced Configuration](#advanced-configuration)
-- [Success Stories](#success-stories--testimonials)
 - [Contributing & Support](#contributing--support)
 - [Quick Reference](#quick-reference)
 
@@ -204,7 +203,7 @@ Choose device index(es) to stream from (or ENTER for default):
 <tr>
 <td bgcolor="#E8F5E9">
 <strong>🎨 Professional Broadcasting</strong><br/>
-Enjoy enterprise-grade features including 6 stunning themes, auto-reconnect technology, and real-time analytics. Perfect for both hobbyists and professional broadcasters.
+Enjoy enterprise-grade features including light/dark themes, auto-reconnect technology, and real-time analytics. Perfect for both hobbyists and professional broadcasters.
 </td>
 </tr>
 </table>
@@ -487,10 +486,25 @@ netstat -tlnp | grep 4986
 - Verify audio device isn't being used by other apps
 - Monitor system resources
 
+#### Audio Streaming Issues
+**"Audio stream has interruptions or glitches"**
+- **Decrease AUDIO_CHUNK**: Lower the buffer size in your `.env` file for better continuity
+  ```bash
+  # Try these values (default is 1024):
+  AUDIO_CHUNK=512   # Lower latency, better for real-time
+  AUDIO_CHUNK=256   # Even lower latency, may help with interruptions
+  ```
+- Ensure your system has sufficient CPU resources
+- Close other applications that might be using audio devices
+- Check if your audio device supports the configured sample rate
+
 ### Professional Monitoring
 ```bash
-# Monitor logs for issues
-tail -f /var/log/audio-streamer.log
+# Monitor logs for issues (systemd service)
+sudo journalctl -u audio-streamer -f
+
+# Monitor logs for issues (PM2)
+pm2 logs radio-station
 
 # Check system resources
 htop  # Monitor CPU/memory usage
@@ -502,7 +516,7 @@ htop  # Monitor CPU/memory usage
 
 ### Real-Time Dashboard
 Visit `http://your-station:4986/dashboard` to view live statistics:
-- **Listener Count**: Current and peak listeners
+- **Listener Count**: Current listeners (peak listeners available in Audio Interface mode)
 - **Audio Quality**: Sample rate, channels, bitrate
 - **Application Uptime**: Time since application started
 - **Stream Status**: On-air/off-air indicator
@@ -519,9 +533,16 @@ For programmatic access, visit `http://your-station:4986/stats`:
   "sample_rate": 44100,
   "channels": 2,
   "uptime_seconds": 3600,
-  "uptime_formatted": "1h 0m 0s"
+  "uptime_formatted": "1h 0m 0s",
+  "start_time": 1234567890
 }
 ```
+
+**Note**: When using Audio Interface mode (CardAudioStreamer), additional fields are available:
+- `peak_listeners`: Maximum concurrent listeners
+- `total_data_mb`: Total data transferred in MB
+- `chunks_processed`: Number of audio chunks processed
+- `avg_chunk_size`: Average chunk size in bytes
 
 ### Performance Metrics
 - **Concurrent Listeners**: Unlimited (limited by your bandwidth)
@@ -698,19 +719,6 @@ AUDIO_CHUNK=1024
 AUDIO_RATE=22050
 AUDIO_CHANNELS=1
 ```
-
----
-
-## Success Stories & Testimonials
-
-### Bedroom DJ to Global Station
-> "I started with just my turntable and now have listeners in 15 countries. The auto-reconnect feature means my station never goes down!" - DJ Mike
-
-### Community Radio Station
-> "We replaced our $10,000 broadcasting equipment with this simple setup. It's more reliable and easier to use!" - Community Radio FM
-
-### Live Event Streaming
-> "We use it to broadcast our music festivals. People who can't attend can still enjoy the show live!" - Festival Organizer
 
 ---
 
