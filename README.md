@@ -20,10 +20,10 @@
 <table>
 <tr>
 <td width="50%">
-<img src="black.jpg" alt="Dark Theme"/>
+<img src="screenshots/player.png" alt="Player Interface"/>
 </td>
 <td width="50%">
-<img src="white.jpg" alt="Light Theme"/>
+<img src="screenshots/dashboard.png" alt="Dashboard Interface"/>
 </td>
 </tr>
 </table>
@@ -726,6 +726,26 @@ AUDIO_CHANNELS=1
 - **Documentation**: This README covers everything you need
 - **Troubleshooting**: Check the common issues section
 - **Community**: Share experiences and get help from other broadcasters
+
+---
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 (GPLv3).
+
+### What this means
+
+- ✅ You can use, modify, and distribute this software freely
+- ✅ You can use it for commercial purposes
+- ✅ You can distribute modified versions of the software
+- ⚠️ You must disclose the source code of any modified versions
+- ⚠️ You must include the original license and copyright notice
+- ⚠️ You must provide the same license to anyone who receives the software
+
+### Full License Text
+
+For the complete license text, see [LICENSE](LICENSE) or visit:
+https://www.gnu.org/licenses/gpl-3.0.html
 
 ---
 

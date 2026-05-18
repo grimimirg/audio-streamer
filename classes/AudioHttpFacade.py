@@ -91,6 +91,8 @@ class AudioHttpFacade:
         clientQueue = queue.Queue(maxsize=CLIENT_QUEUE_SIZE)
         self.audioStreamer.addClient(clientQueue)
         Logger.info("New audio stream client connected")
+        # Broadcast updated stats to all WebSocket clients
+        self.socketio.emit('stats', self.audioStreamer.getStats())
 
         try:
             chunkCount = 0
@@ -122,6 +124,8 @@ class AudioHttpFacade:
             # Ensure client is removed even on errors
             self.audioStreamer.removeClient(clientQueue)
             Logger.debug("Client queue removed from audio streamer")
+            # Broadcast updated stats to all WebSocket clients
+            self.socketio.emit('stats', self.audioStreamer.getStats())
 
     def _player(self):
         """Serve the main web player interface.
