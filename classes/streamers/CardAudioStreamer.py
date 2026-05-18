@@ -1,4 +1,3 @@
-import logging
 import queue
 import threading
 import time
@@ -7,6 +6,7 @@ from typing import List, Optional
 import pyaudio
 
 from utilities.Constants import FORMAT, CHANNELS, RATE, CHUNK
+from utilities.Logger import Logger
 
 
 def getSupportedSampleRate(deviceIndex, defaultRate=44100):
@@ -43,7 +43,7 @@ def getSupportedSampleRate(deviceIndex, defaultRate=44100):
 
             stream.close()
             audio.terminate()
-            logging.info(f"Device {deviceIndex} supports sample rate: {rate}")
+            Logger.info(f"Device {deviceIndex} supports sample rate: {rate}")
 
             return rate
         except Exception:
@@ -69,7 +69,7 @@ class CardAudioStreamer:
         self._lock = threading.RLock()  # Thread-safe lock for client management
         
         # Additional metrics
-        self.startTime = None  # When streaming started
+        self.startTime = None  # Set by ApplicationController
         self.totalDataTransferred = 0  # Total bytes sent
         self.peakListeners = 0  # Maximum concurrent listeners
         self.chunkCount = 0  # Total audio chunks processed
@@ -80,12 +80,12 @@ class CardAudioStreamer:
         Iterates through system audio devices and displays only those
         with input channels (microphones, line-in, etc.).
         """
-        logging.info("=== Available audio devices ===")
+        Logger.info("=== Available audio devices ===")
         for i in range(self.audioInterface.get_device_count()):
             info = self.audioInterface.get_device_info_by_index(i)
             if info['maxInputChannels'] > 0:
-                logging.info(f"{i}: {info['name']} - Input channels: {info['maxInputChannels']}")
-        logging.info("=" * 10)
+                Logger.info(f"{i}: {info['name']} - Input channels: {info['maxInputChannels']}")
+        Logger.info("=" * 10)
 
     def startAudioStream(self, listeningDeviceIndexes: Optional[List[int]]):
         """Start capturing audio from specified input devices.
@@ -98,14 +98,14 @@ class CardAudioStreamer:
               the first device from the list if multiple are provided.
         """
         if self.onAir:
-            logging.info(f"Stream on {listeningDeviceIndexes} already OnAir")
+            Logger.info(f"Stream on {listeningDeviceIndexes} already OnAir")
             return
 
         # Validate device indexes to prevent crashes
         if listeningDeviceIndexes is not None:
             for deviceIdx in listeningDeviceIndexes:
                 if deviceIdx >= self.audioInterface.get_device_count() or deviceIdx < 0:
-                    logging.error(f"Invalid device index: {deviceIdx}")
+                    Logger.error(f"Invalid device index: {deviceIdx}")
                     return
 
         # Open audio stream with error handling
@@ -114,7 +114,7 @@ class CardAudioStreamer:
             deviceIdx = listeningDeviceIndexes[0] if listeningDeviceIndexes else None
             if deviceIdx is not None:
                 supportedRate = getSupportedSampleRate(deviceIdx, RATE)
-                logging.info(f"Using sample rate: {supportedRate} Hz for device {deviceIdx}")
+                Logger.info(f"Using sample rate: {supportedRate} Hz for device {deviceIdx}")
             else:
                 supportedRate = RATE
 
@@ -127,20 +127,20 @@ class CardAudioStreamer:
                 frames_per_buffer=CHUNK
             )
         except Exception as e:
-            logging.error(f"Failed to open audio stream: {e}")
+            Logger.error(f"Failed to open audio stream: {e}")
             return
 
         # Start the audio capture thread
-        logging.info("Starting audio capture thread...")
+        Logger.info("Starting audio capture thread...")
         self.onAir = True
-        self.startTime = time.time()  # Record start time
+        # Note: startTime is set by ApplicationController
         self.totalDataTransferred = 0  # Reset data counter
         self.chunkCount = 0  # Reset chunk counter
         capture_thread = threading.Thread(target=self._captureAudioFromStream, daemon=True)
         capture_thread.start()
-        logging.info("Audio capture thread started successfully")
+        Logger.info("Audio capture thread started successfully")
 
-        logging.info(f"Audio streaming on {listeningDeviceIndexes} started")
+        Logger.info(f"Audio streaming on {listeningDeviceIndexes} started")
 
     def stopAudioStream(self):
         """Stop audio streaming and clean up resources safely.
@@ -156,12 +156,12 @@ class CardAudioStreamer:
                 self.currentStream.stop_stream()
                 self.currentStream.close()
             except Exception as e:
-                logging.error(f"Error closing stream: {e}")
+                Logger.error(f"Error closing stream: {e}")
             finally:
                 self.currentStream = None  # Prevent dangling references
 
         # Note: PyAudio interface is kept alive for potential restart
-        logging.info("Audio streaming stopped")
+        Logger.info("Audio streaming stopped")
 
     def addClient(self, clientQueue: queue.Queue):
         """Add a new client queue to receive audio data.
@@ -169,14 +169,14 @@ class CardAudioStreamer:
         Args:
             clientQueue: Thread-safe queue for sending audio chunks to this client
         """
-        logging.info(f"Client connected")
+        Logger.info(f"Client connected")
         with self._lock:  # Thread-safe client list modification
             self.listeningClients.append(clientQueue)
             # Update peak listeners
             currentListeners = len(self.listeningClients)
             if currentListeners > self.peakListeners:
                 self.peakListeners = currentListeners
-            logging.info(f"New connected client. Number of connected clients: {currentListeners}")
+            Logger.info(f"New connected client. Number of connected clients: {currentListeners}")
 
     def removeClient(self, clientQueue: queue.Queue):
         """Remove a client queue from the distribution list.
@@ -187,7 +187,7 @@ class CardAudioStreamer:
         with self._lock:  # Thread-safe client list modification
             if clientQueue in self.listeningClients:
                 self.listeningClients.remove(clientQueue)
-                logging.info("Client disconnected")
+                Logger.info("Client disconnected")
 
     def getStats(self):
         """Get current streaming statistics.
@@ -196,9 +196,9 @@ class CardAudioStreamer:
             dict: Contains streaming status, listener count, audio parameters, and additional metrics
         """
         with self._lock:  # Thread-safe access to all metrics
-            # Calculate uptime if streaming is active
+            # Calculate uptime
             uptime_seconds = 0
-            if self.startTime and self.onAir:
+            if self.startTime:
                 uptime_seconds = int(time.time() - self.startTime)
             
             # Format data transferred in human-readable format
@@ -211,13 +211,14 @@ class CardAudioStreamer:
                 'channels': CHANNELS,
                 'uptime_seconds': uptime_seconds,
                 'uptime_formatted': self._formatUptime(uptime_seconds),
+                'start_time': self.startTime,
                 'total_data_mb': round(data_mb, 2),
                 'peak_listeners': self.peakListeners,
                 'chunks_processed': self.chunkCount,
                 'avg_chunk_size': round(self.totalDataTransferred / max(1, self.chunkCount), 0) if self.chunkCount > 0 else 0
             }
             
-        logging.info(f"Current stats: {stats}")
+        Logger.info(f"Current stats: {stats}")
         return stats
     
     def _formatUptime(self, seconds):
@@ -252,7 +253,7 @@ class CardAudioStreamer:
         3. Distributes audio data to each client queue
         4. Handles queue overflow and stream errors gracefully
         """
-        logging.info("Audio capture thread started - beginning capture loop")
+        Logger.info("Audio capture thread started - beginning capture loop")
 
         while self.onAir:
             try:
@@ -278,18 +279,18 @@ class CardAudioStreamer:
                         client.put_nowait(data)  # Non-blocking put
                     except queue.Full:
                         # Client queue is full, drop this chunk to prevent blocking
-                        logging.warning("Client queue full, dropping audio chunk")
+                        Logger.warning("Client queue full, dropping audio chunk")
 
             except OSError as e:
                 # Handle stream errors (device disconnect, etc.)
                 if self.onAir:  # Only log if we're supposed to be streaming
-                    logging.error(f"Audio device error: {e}")
-                    logging.error(f"Device info: {self.currentStream}")
+                    Logger.error(f"Audio device error: {e}")
+                    Logger.error(f"Device info: {self.currentStream}")
                 break  # Exit the loop on device error
             except Exception as e:
                 # Handle other unexpected errors
                 if self.onAir:  # Only log if we're supposed to be streaming
-                    logging.error(f"Unexpected error in audio capture: {type(e).__name__}: {e}")
+                    Logger.error(f"Unexpected error in audio capture: {type(e).__name__}: {e}")
                     import traceback
-                    logging.error(f"Full traceback: {traceback.format_exc()}")
+                    Logger.error(f"Full traceback: {traceback.format_exc()}")
                 break  # Exit the loop on error

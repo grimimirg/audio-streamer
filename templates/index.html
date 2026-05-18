@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📻 Audio Streamer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body id="mainBody">
@@ -12,16 +13,19 @@
     <div class="glass-header">
         <div class="header-left">
             <span class="logo-icon">📻</span>
-            <span class="header-title" data-i18n="app.title"></span>
+            <span class="header-title">{{ radio_station_name }}</span>
         </div>
         <div class="header-controls">
             <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
                 <span id="themeIcon">☀️</span>
             </button>
+            <button onclick="window.open('/dashboard', '_blank')" class="theme-toggle-btn" title="Dashboard">
+                <span>📊</span>
+            </button>
             <div class="selector-box">
                 <select id="languageDropdown" onchange="changeLanguage(this.value)">
                     <option value="it" data-i18n="language.it"></option>
-                    <option value="en" data-i18n="language.en"></option>
+                    <option value="en" data-i18n="language.en" selected></option>
                     <option value="de" data-i18n="language.de"></option>
                 </select>
             </div>
@@ -29,10 +33,6 @@
     </div>
 
     <div class="glass-content">
-        <div class="subtitle-container">
-            <p class="subtitle" data-i18n="app.subtitle"></p>
-        </div>
-
         <div class="visualizer-container">
             <canvas id="spectrumCanvas" class="spectrum-canvas"></canvas>
         </div>
@@ -62,6 +62,7 @@
 
 <audio id="audioPlayer" preload="none"></audio>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
 <script src="{{ url_for('static', filename='js/spectrum.js') }}"></script>
 <script src="{{ url_for('static', filename='js/player.js') }}"></script>

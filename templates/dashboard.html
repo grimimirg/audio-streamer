@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📻 Dashboard Streamer - Statistiche in Tempo Reale</title>
+    <title>📻 Dashboard Streamer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --container-bg: rgba(0, 0, 0, 0.8);
+            --bg-gradient: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            --container-bg: rgba(0, 0, 0, 0.6);
             --text-color: #ffffff;
             --accent-color: #667eea;
             --accent-hover: #764ba2;
@@ -50,54 +51,6 @@
             font-size: 2.5rem;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .status-bar {
-            background: var(--container-bg);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
-            animation: fadeIn 1s ease-out 0.2s both;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .status-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.on-air {
-            background: var(--success-color);
-            box-shadow: 0 0 10px var(--success-color);
-        }
-
-        .status-dot.off-air {
-            background: var(--error-color);
-            animation: none;
-        }
-
-        .last-update {
-            font-size: 0.9rem;
-            opacity: 0.8;
         }
 
         .dashboard-grid {
@@ -193,7 +146,7 @@
         }
 
         .btn {
-            background: var(--accent-color);
+            background: #667eea;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -204,21 +157,18 @@
             margin: 0 10px;
         }
 
+        body.light .btn {
+            background: rgba(0, 0, 0, 0.3);
+            color: #1a1a1a;
+        }
+
         .btn:hover {
-            background: var(--accent-hover);
+            background: #764ba2;
             transform: translateY(-2px);
         }
 
-        .refresh-indicator {
-            display: inline-block;
-            margin-left: 10px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .refresh-indicator.active {
-            opacity: 1;
-            animation: spin 1s linear infinite;
+        body.light .btn:hover {
+            background: rgba(0, 0, 0, 0.4);
         }
 
         @keyframes fadeInDown {
@@ -252,24 +202,6 @@
             }
         }
 
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.6;
-            }
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
@@ -279,252 +211,335 @@
                 grid-template-columns: 1fr;
             }
 
-            .status-bar {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
             .metric-value {
                 font-size: 2rem;
             }
+        }
+
+        .selector-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 8px 12px;
+        }
+
+        .selector-box select {
+            background: transparent;
+            color: #ffffff;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9em;
+            outline: none;
+            min-width: 50px;
+        }
+
+        .selector-box select:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .selector-box select option {
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+        }
+
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        body.light {
+            --bg-gradient: linear-gradient(135deg, #a8a8a8 0%, #888888 100%);
+            --container-bg: rgba(255, 255, 255, 0.5);
+            --text-color: #1a1a1a;
+            --accent-color: rgba(0, 0, 0, 0.1);
+            --accent-hover: rgba(0, 0, 0, 0.2);
+            --success-color: #4CAF50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+        }
+
+        body.light .selector-box {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light .selector-box select {
+            color: #1a1a1a;
+        }
+
+        body.light .selector-box select option {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1a1a1a;
+        }
+
+        body.light .theme-toggle-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light .theme-toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light .card,
+        body.light .status-bar,
+        body.light .chart-container,
+        body.light .controls {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        body.light .card-title,
+        body.light .chart-title {
+            color: #667eea;
+        }
+
+        body.light .info-item {
+            background: rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <header>
-        <h1>📻 Dashboard Streamer</h1>
-        <p class="subtitle">Statistiche in Tempo Reale della Tua Radio</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>📻 {{ radio_station_name }}</h1>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
+                    <span id="themeIcon">☀️</span>
+                </button>
+                <div class="selector-box">
+                    <select id="languageDropdown" onchange="changeLanguage(this.value)">
+                        <option value="it" data-i18n="language.it"></option>
+                        <option value="en" data-i18n="language.en"></option>
+                        <option value="de" data-i18n="language.de"></option>
+                    </select>
+                </div>
+            </div>
+        </div>
     </header>
-
-    <div class="status-bar">
-        <div class="status-indicator">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">Caricamento...</span>
-        </div>
-        <div class="last-update">
-            Ultimo aggiornamento: <span id="lastUpdate">--:--:--</span>
-            <span class="refresh-indicator" id="refreshIndicator">🔄</span>
-        </div>
-    </div>
 
     <div class="dashboard-grid">
         <div class="card">
             <div class="card-title">
-                <span>👥</span> Ascoltatori
+                <span>👥</span> <span data-i18n="dashboard.listeners">Ascoltatori</span>
             </div>
             <div class="metric-value" id="listenersCount">0</div>
-            <div class="metric-label">Connessi ora (Picco: <span id="peakListeners">0</span>)</div>
+            <div class="metric-label"><span data-i18n="dashboard.connected_now">Connessi ora</span> (<span data-i18n="dashboard.peak">Picco</span>: <span id="peakListeners">0</span>)</div>
         </div>
 
         <div class="card">
             <div class="card-title">
-                <span>🎵</span> Qualità Audio
+                <span>🎵</span> <span data-i18n="dashboard.audio_quality">Qualità Audio</span>
             </div>
             <div class="metric-value" id="sampleRate">44.1k</div>
-            <div class="metric-label">Sample Rate Hz</div>
+            <div class="metric-label"><span data-i18n="dashboard.sample_rate">Sample Rate Hz</span></div>
         </div>
 
         <div class="card">
             <div class="card-title">
-                <span>🔊</span> Canali
+                <span>🔊</span> <span data-i18n="dashboard.channels">Canali</span>
             </div>
             <div class="metric-value" id="channels">2</div>
-            <div class="metric-label">Stereo/Mono</div>
+            <div class="metric-label"><span data-i18n="dashboard.stereo_mono">Stereo/Mono</span></div>
         </div>
 
         <div class="card">
             <div class="card-title">
-                <span>⏱️</span> Tempo di Attività
+                <span>⏱️</span> <span data-i18n="dashboard.uptime">Tempo di Attività</span>
             </div>
             <div class="metric-value" id="uptime">00:00</div>
-            <div class="metric-label">On Air</div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                <span>📊</span> Dati Trasferiti
-            </div>
-            <div class="metric-value" id="dataTransferred">0</div>
-            <div class="metric-label">MB Totali</div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                <span>🎚️</span> Chunk Processati
-            </div>
-            <div class="metric-value" id="chunksProcessed">0</div>
-            <div class="metric-label">Blocchi audio</div>
+            <div class="metric-label"><span data-i18n="dashboard.on_air">On Air</span></div>
         </div>
     </div>
 
     <div class="chart-container">
-        <div class="chart-title">📊 Andamento Ascoltatori</div>
-        <canvas id="listenersChart" width="400" height="100"></canvas>
-    </div>
-
-    <div class="chart-container">
-        <div class="chart-title">🎛️ Informazioni Audio</div>
+        <div class="chart-title">🎛️ <span data-i18n="dashboard.audio_info">Informazioni Audio</span></div>
         <div class="audio-info">
             <div class="info-item">
-                <div class="info-label">Stato Stream</div>
+                <div class="info-label"><span data-i18n="dashboard.stream_status">Stato Stream</span></div>
                 <div class="info-value" id="streamStatus">---</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Bitrate Stimato</div>
+                <div class="info-label"><span data-i18n="dashboard.estimated_bitrate">Bitrate Stimato</span></div>
                 <div class="info-value" id="bitrate">---</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Formato Audio</div>
+                <div class="info-label"><span data-i18n="dashboard.audio_format">Formato Audio</span></div>
                 <div class="info-value" id="format">WAV 16-bit</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Latenza</div>
+                <div class="info-label"><span data-i18n="dashboard.latency">Latenza</span></div>
                 <div class="info-value" id="latency">~2s</div>
             </div>
         </div>
     </div>
 
     <div class="controls">
-        <button class="btn" onclick="refreshStats()">🔄 Aggiorna Ora</button>
-        <button class="btn" onclick="toggleAutoRefresh()">⏸️ Pausa Auto</button>
-        <button class="btn" onclick="openPlayer()">🎵 Apri Player</button>
+        <button class="btn" onclick="openPlayer()">🎵 <span data-i18n="dashboard.open_player">Apri Player</span></button>
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
 <script>
     // Variabili globali
-    let autoRefresh = true;
-    let refreshInterval;
-    let listenersHistory = [];
-    let timeLabels = [];
-    let chart;
+    let socket;
     let errorCount = 0;
+    let startTime = null;
+    let uptimeInterval = null;
     const MAX_ERRORS = 3;
 
     // Inizializzazione
-    document.addEventListener('DOMContentLoaded', function () {
-        initChart();
-        refreshStats();
-        startAutoRefresh();
+    document.addEventListener('DOMContentLoaded', async function () {
+        await i18n.loadTranslations(i18n.getCurrentLang());
+        updateStaticTexts();
+
+        // Set English as default language
+        const savedLang = localStorage.getItem('language') || 'en';
+        document.getElementById('languageDropdown').value = savedLang;
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        const body = document.body;
+        const themeIcon = document.getElementById('themeIcon');
+
+        if (savedTheme === 'light') {
+            body.classList.add('light');
+            themeIcon.textContent = '🌙';
+        } else {
+            themeIcon.textContent = '☀️';
+        }
+
+        // Connect to WebSocket
+        connectWebSocket();
     });
 
-    // Inizializza il grafico
-    function initChart() {
-        const ctx = document.getElementById('listenersChart').getContext('2d');
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: timeLabels,
-                datasets: [{
-                    label: 'Ascoltatori',
-                    data: listenersHistory,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#667eea',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#fff'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#fff',
-                            stepSize: 1
-                        }
-                    }
-                }
+    // Update static texts with i18n
+    function updateStaticTexts() {
+        const elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            element.textContent = i18n.t(key);
+        });
+    }
+
+    function connectWebSocket() {
+        socket = io();
+
+        socket.on('connect', () => {
+            console.log('WebSocket connected');
+        });
+
+        socket.on('stats', (data) => {
+            updateUI(data);
+            errorCount = 0;
+
+            // Store start_time and start uptime counter
+            if (data.start_time && !startTime) {
+                startTime = data.start_time * 1000; // Convert to milliseconds
+                startUptimeCounter();
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log('WebSocket disconnected');
+            if (uptimeInterval) {
+                clearInterval(uptimeInterval);
+            }
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('WebSocket connection error:', error);
+            errorCount++;
+            if (errorCount >= MAX_ERRORS) {
+                showError(i18n.t('dashboard.too_many_errors'));
+            } else {
+                showError(i18n.t('dashboard.connection_error') + ' (' + errorCount + '/' + MAX_ERRORS + ')');
             }
         });
     }
 
-    // Aggiorna le statistiche
-    async function refreshStats() {
-        const indicator = document.getElementById('refreshIndicator');
-        indicator.classList.add('active');
-
-        try {
-            const response = await fetch('/stats');
-            if (!response.ok) {
-                throw new Error('Errore nel recupero delle statistiche');
-            }
-
-            const stats = await response.json();
-            updateUI(stats);
-            updateChart(stats.listeners);
-            errorCount = 0; // Reset on success
-
-        } catch (error) {
-            console.error('Errore stats:', error);
-            errorCount++;
-            if (errorCount >= MAX_ERRORS) {
-                stopAutoRefresh();
-                showError('Troppe connessioni fallite. Auto-refresh disabilitato.');
-            } else {
-                showError('Errore di connessione (tentativo ' + errorCount + '/' + MAX_ERRORS + ')');
-            }
-        } finally {
-            indicator.classList.remove('active');
+    function startUptimeCounter() {
+        if (uptimeInterval) {
+            clearInterval(uptimeInterval);
         }
+
+        uptimeInterval = setInterval(() => {
+            if (startTime) {
+                const now = Date.now();
+                const uptimeSeconds = Math.floor((now - startTime) / 1000);
+                document.getElementById('uptime').textContent = formatUptime(uptimeSeconds);
+            }
+        }, 1000);
+    }
+
+    function formatUptime(seconds) {
+        if (seconds < 60) {
+            return `${seconds}s`;
+        } else if (seconds < 3600) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}m ${secs}s`;
+        } else {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours}h ${minutes}m ${secs}s`;
+        }
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const themeIcon = document.getElementById('themeIcon');
+
+        if (body.classList.contains('light')) {
+            body.classList.remove('light');
+            themeIcon.textContent = '☀️';
+            localStorage.setItem('theme', 'dark');
+        } else {
+            body.classList.add('light');
+            themeIcon.textContent = '🌙';
+            localStorage.setItem('theme', 'light');
+        }
+    }
+
+    // Change language function
+    async function changeLanguage(lang) {
+        await i18n.loadTranslations(lang);
+        localStorage.setItem('language', lang);
+        updateStaticTexts();
+    }
+
+    // Gestione errori
+    function showError(message) {
+        console.error(message);
     }
 
     // Aggiorna l'interfaccia
     function updateUI(stats) {
-        // Stato
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-
-        if (stats.on_air) {
-            statusDot.className = 'status-dot on-air';
-            statusText.textContent = '🔴 ON AIR';
-        } else {
-            statusDot.className = 'status-dot off-air';
-            statusText.textContent = '⚫ OFF AIR';
-        }
-
         // Metriche principali
         document.getElementById('listenersCount').textContent = stats.listeners;
         document.getElementById('peakListeners').textContent = stats.peak_listeners || 0;
         document.getElementById('sampleRate').textContent = (stats.sample_rate / 1000).toFixed(1) + 'k';
         document.getElementById('channels').textContent = stats.channels + (stats.channels === 2 ? ' (Stereo)' : ' (Mono)');
 
-        // Nuove metriche
-        document.getElementById('uptime').textContent = stats.uptime_formatted || '00:00';
-        document.getElementById('dataTransferred').textContent = (stats.total_data_mb || 0).toFixed(1);
-        document.getElementById('chunksProcessed').textContent = (stats.chunks_processed || 0).toLocaleString();
-
         // Info audio
-        document.getElementById('streamStatus').textContent = stats.on_air ? '🟢 Attivo' : '🔴 Inattivo';
+        document.getElementById('streamStatus').textContent = stats.on_air ? i18n.t('dashboard.active') : i18n.t('dashboard.inactive');
         document.getElementById('bitrate').textContent = calculateBitrate(stats.sample_rate, stats.channels);
-
-        // Timestamp
-        const now = new Date();
-        document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('it-IT');
     }
 
     // Calcola il bitrate
@@ -533,65 +548,10 @@
         return (bitrate / 1000).toFixed(0) + ' kbps';
     }
 
-    // Aggiorna il grafico
-    function updateChart(listeners) {
-        const now = new Date();
-        const timeLabel = now.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-
-        // Mantieni solo gli ultimi 20 punti
-        if (timeLabels.length >= 20) {
-            timeLabels.shift();
-            listenersHistory.shift();
-        }
-
-        timeLabels.push(timeLabel);
-        listenersHistory.push(listeners);
-
-        chart.update();
-    }
-
-    // Auto refresh
-    function startAutoRefresh() {
-        if (autoRefresh) {
-            refreshInterval = setInterval(refreshStats, 5000); // Aggiorna ogni 5 secondi
-        }
-    }
-
-    function stopAutoRefresh() {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-        }
-    }
-
-    function toggleAutoRefresh() {
-        autoRefresh = !autoRefresh;
-        const btn = event.target;
-
-        if (autoRefresh) {
-            startAutoRefresh();
-            btn.textContent = '⏸️ Pausa Auto';
-        } else {
-            stopAutoRefresh();
-            btn.textContent = '▶️ Riprendi Auto';
-        }
-    }
-
-    // Gestione errori
-    function showError(message) {
-        const msg = message || 'Errore Connessione';
-        document.getElementById('statusText').textContent = '❌ ' + msg;
-        document.getElementById('statusDot').className = 'status-dot off-air';
-    }
-
     // Apri player
     function openPlayer() {
         window.open('/', '_blank');
     }
-
-    // Pulizia prima di uscire
-    window.addEventListener('beforeunload', () => {
-        stopAutoRefresh();
-    });
 </script>
 </body>
 </html>

@@ -1,23 +1,12 @@
-app:
-  title: "Audio Streamer"
-  subtitle: "Mein Radiosender"
-
-themes:
-  label: "Thema"
-  dark: "🌙 Dunkel"
-  light: "☀️ Hell"
-
 language:
-  label: "Sprache"
-  it: "🇮🇹 Italiano"
-  en: "🇬🇧 English"
-  de: "🇩🇪 Deutsch"
+  it: "🇮🇹"
+  en: "🇬🇧"
+  de: "🇩🇪"
 
 controls:
   play: "▶️"
   pause: "⏸️"
   connecting: "Verbinden..."
-  volume: "Lautstärke"
 
 status:
   ready: "🔄 Bereit zum Verbinden"
@@ -29,5 +18,27 @@ status:
   server_stopped: "⚠️ Server hat Streaming gestoppt"
   connection_lost: "⚠️ Verbindung zum Server verloren"
 
-listeners:
-  online: "Online-Zuhörer"
+dashboard:
+  listeners: "Zuhörer"
+  connected_now: "Verbunden jetzt"
+  peak: "Spitze"
+  audio_quality: "Audioqualität"
+  sample_rate: "Sample-Rate Hz"
+  channels: "Kanäle"
+  stereo_mono: "Stereo/Mono"
+  uptime: "Betriebszeit"
+  on_air: "On Air"
+  audio_info: "Audio-Informationen"
+  stream_status: "Stream-Status"
+  estimated_bitrate: "Geschätzte Bitrate"
+  audio_format: "Audio-Format"
+  latency: "Latenz"
+  refresh_now: "Jetzt aktualisieren"
+  pause_auto: "Auto pausieren"
+  resume_auto: "Auto fortsetzen"
+  open_player: "Player öffnen"
+  active: "🟢 Aktiv"
+  inactive: "🔴 Inaktiv"
+  too_many_errors: "Zu viele fehlgeschlagene Verbindungen. Auto-Refresh deaktiviert."
+  connection_error: "Verbindungsfehler"
+  stats_error: "Fehler beim Abrufen der Statistiken"

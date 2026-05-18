@@ -1,10 +1,11 @@
-import logging
 import queue
 import subprocess
 import threading
+import time
 from typing import Optional, List
 
 from utilities.Constants import CHANNELS, RATE, CHUNK
+from utilities.Logger import Logger
 
 
 class MicrophoneAudioStreamer:
@@ -17,14 +18,15 @@ class MicrophoneAudioStreamer:
         self.onAir = False
         self.listeningClients = []
         self._lock = threading.RLock()
+        self.startTime = None  # Set by ApplicationController
 
     def listAvailableDevices(self):
         """List available audio devices using arecord."""
-        logging.info("=== Available audio devices (arecord) ===")
+        Logger.info("=== Available audio devices (arecord) ===")
         try:
             result = subprocess.run(['arecord', '-l'], capture_output=True, text=True)
             if result.returncode == 0:
-                logging.info(result.stdout)
+                Logger.info(result.stdout)
                 # Parse and show device options
                 lines = result.stdout.split('\n')
                 device_count = 0
@@ -32,19 +34,19 @@ class MicrophoneAudioStreamer:
                     if 'card 0:' in line and 'device' in line:
                         device_count += 1
                         if 'device 0:' in line:
-                            logging.info(f"Option {device_count}: Built-in Microphone (default)")
+                            Logger.info(f"Option {device_count}: Built-in Microphone (default)")
                         elif 'device 2:' in line:
-                            logging.info(f"Option {device_count}: Line-in Jack (3.5mm)")
+                            Logger.info(f"Option {device_count}: Line-in Jack (3.5mm)")
             else:
-                logging.error("Failed to list devices with arecord")
+                Logger.error("Failed to list devices with arecord")
         except Exception as e:
-            logging.error(f"Error listing devices: {e}")
-        logging.info("=" * 10)
+            Logger.error(f"Error listing devices: {e}")
+        Logger.info("=" * 10)
 
     def startAudioStream(self, listeningDeviceIndexes: Optional[List[int]] = None):
         """Start capturing audio using arecord."""
         if self.onAir:
-            logging.info("Stream already onAir")
+            Logger.info("Stream already onAir")
             return
 
         try:
@@ -55,12 +57,12 @@ class MicrophoneAudioStreamer:
                 device_choice = listeningDeviceIndexes[0]
                 if device_choice == 2:  # User chose line-in jack
                     device = 'hw:0,2'
-                    logging.info("Using Line-in Jack (3.5mm)")
+                    Logger.info("Using Line-in Jack (3.5mm)")
                 else:
                     device = 'default'
-                    logging.info("Using Built-in Microphone")
+                    Logger.info("Using Built-in Microphone")
             else:
-                logging.info("No device specified, using Built-in Microphone (default)")
+                Logger.info("No device specified, using Built-in Microphone (default)")
 
             # Build arecord command
             cmd = [
@@ -74,7 +76,7 @@ class MicrophoneAudioStreamer:
                 '-'  # Output to stdout
             ]
 
-            logging.info(f"Starting arecord with command: {' '.join(cmd)}")
+            Logger.info(f"Starting arecord with command: {' '.join(cmd)}")
 
             # Start arecord process
             self.recordingProcess = subprocess.Popen(
@@ -88,10 +90,10 @@ class MicrophoneAudioStreamer:
             self.onAir = True
             threading.Thread(target=self._captureAudioFromProcess, daemon=True).start()
 
-            logging.info("Audio streaming started with arecord")
+            Logger.info("Audio streaming started with arecord")
 
         except Exception as e:
-            logging.error(f"Failed to start arecord: {e}")
+            Logger.error(f"Failed to start arecord: {e}")
             return
 
     def stopAudioStream(self):
@@ -102,42 +104,71 @@ class MicrophoneAudioStreamer:
             try:
                 self.recordingProcess.terminate()
                 self.recordingProcess.wait(timeout=5)
-                logging.info("arecord process terminated")
+                Logger.info("arecord process terminated")
             except Exception as e:
-                logging.error(f"Error terminating arecord: {e}")
+                Logger.error(f"Error terminating arecord: {e}")
                 self.recordingProcess.kill()
 
             self.recordingProcess = None
 
     def addClient(self, clientQueue: queue.Queue):
         """Add a client queue for audio distribution."""
-        logging.info("Client connected")
+        Logger.info("Client connected")
         with self._lock:
             self.listeningClients.append(clientQueue)
-            logging.info(f"New connected client. Number of connected clients: {len(self.listeningClients)}")
+            Logger.info(f"New connected client. Number of connected clients: {len(self.listeningClients)}")
 
     def removeClient(self, clientQueue: queue.Queue):
         """Remove a client queue from distribution list."""
         with self._lock:
             if clientQueue in self.listeningClients:
                 self.listeningClients.remove(clientQueue)
-                logging.info(f"Client disconnected. Number of connected clients: {len(self.listeningClients)}")
+                Logger.info(f"Client disconnected. Number of connected clients: {len(self.listeningClients)}")
 
     def getStats(self):
         """Get current streaming statistics."""
         with self._lock:
+            # Calculate uptime
+            uptime_seconds = 0
+            if self.startTime:
+                uptime_seconds = int(time.time() - self.startTime)
+
             return {
                 'on_air': self.onAir,
                 'listeners': len(self.listeningClients),
                 'sample_rate': RATE,
-                'channels': CHANNELS
+                'channels': CHANNELS,
+                'uptime_seconds': uptime_seconds,
+                'uptime_formatted': self._formatUptime(uptime_seconds),
+                'start_time': self.startTime
             }
+
+    def _formatUptime(self, seconds):
+        """Format uptime seconds into human-readable string.
+        
+        Args:
+            seconds: Uptime in seconds
+            
+        Returns:
+            str: Formatted uptime string (e.g., "1h 23m 45s")
+        """
+        if seconds < 60:
+            return f"{seconds}s"
+        elif seconds < 3600:
+            minutes = seconds // 60
+            secs = seconds % 60
+            return f"{minutes}m {secs}s"
+        else:
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            secs = seconds % 60
+            return f"{hours}h {minutes}m {secs}s"
 
     # -- PRIVATES --
 
     def _captureAudioFromProcess(self):
         """Read audio data from arecord process and distribute to clients."""
-        logging.info("Audio capture thread started - reading from arecord")
+        Logger.info("Audio capture thread started - reading from arecord")
 
         try:
             while self.onAir and self.recordingProcess:
@@ -149,9 +180,9 @@ class MicrophoneAudioStreamer:
                     if self.recordingProcess.poll() is not None:
                         stderr = self.recordingProcess.stderr.read().decode()
                         stdout = self.recordingProcess.stdout.read().decode()
-                        logging.error(f"arecord process ended with code {self.recordingProcess.returncode}")
-                        logging.error(f"arecord stderr: {stderr}")
-                        logging.error(f"arecord stdout: {stdout}")
+                        Logger.error(f"arecord process ended with code {self.recordingProcess.returncode}")
+                        Logger.error(f"arecord stderr: {stderr}")
+                        Logger.error(f"arecord stdout: {stdout}")
                         break
                     else:
                         # Process still running but no data, wait a bit
@@ -164,7 +195,7 @@ class MicrophoneAudioStreamer:
                     self._chunkCount = 0
                 self._chunkCount += 1
                 if self._chunkCount <= 5:
-                    logging.info(f"Read chunk {self._chunkCount}: {len(data)} bytes")
+                    Logger.info(f"Read chunk {self._chunkCount}: {len(data)} bytes")
 
                 # Distribute to clients
                 with self._lock:
@@ -174,12 +205,12 @@ class MicrophoneAudioStreamer:
                     try:
                         client.put_nowait(data)
                     except queue.Full:
-                        logging.warning("Client queue full, dropping audio chunk")
+                        Logger.warning("Client queue full, dropping audio chunk")
 
         except Exception as e:
-            logging.error(f"Error in audio capture thread: {e}")
+            Logger.error(f"Error in audio capture thread: {e}")
             import traceback
-            logging.error(f"Full traceback: {traceback.format_exc()}")
+            Logger.error(f"Full traceback: {traceback.format_exc()}")
         finally:
             self.onAir = False
-            logging.info("Audio capture thread ended")
+            Logger.info("Audio capture thread ended")

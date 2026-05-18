@@ -1,9 +1,9 @@
-import logging
 import sys
 import os
 from pathlib import Path
 from classes.ApplicationController import ApplicationController
 from utilities.Constants import HOST_ADDR, PORT, DEBUG
+from utilities.Logger import Logger
 
 
 if __name__ == '__main__':
@@ -12,7 +12,6 @@ if __name__ == '__main__':
     Initializes the application, performs setup, and starts the server.
     Handles setup failures gracefully with appropriate error codes.
     """
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
     # Check if .env file exists
     env_file = Path('.env')
@@ -33,16 +32,16 @@ if __name__ == '__main__':
         
         # Perform setup
         if app.setup() is None:
-            logging.error("Application setup failed. Exiting.")
+            Logger.error("Application setup failed. Exiting.")
             sys.exit(1)
         
         # Start the server
-        logging.info(f"Starting server on {HOST_ADDR}:{PORT} (debug={DEBUG})")
+        Logger.info(f"Starting server on {HOST_ADDR}:{PORT} (debug={DEBUG})")
         app.run(host=HOST_ADDR, port=PORT, debug=DEBUG)
         
     except KeyboardInterrupt:
-        logging.info("Application interrupted by user")
+        Logger.info("Application interrupted by user")
         sys.exit(0)
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        Logger.error(f"Unexpected error: {e}")
         sys.exit(1)

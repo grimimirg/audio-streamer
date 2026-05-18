@@ -83,7 +83,7 @@ Choose between microphone or audio interface for optimal compatibility
 <tr>
 <td bgcolor="#F3E5F5">
 <strong>🎨 Themed Interface</strong><br/>
-6 professional themes (Jazz, Classical, Rock, Pop, Electronic, New Age)
+Light/Dark themes with instant switching
 </td>
 <td bgcolor="#E8F5E9">
 <strong>🌍 Multilingual Support</strong><br/>
@@ -92,8 +92,8 @@ Interface available in Italian, English, and German
 </tr>
 <tr>
 <td bgcolor="#E1F5FE">
-<strong>🌐 Share with Listeners</strong><br/>
-Anyone with a web browser can tune in to your broadcast
+<strong>📊 Real-Time Dashboard</strong><br/>
+Live statistics with WebSocket-based updates
 </td>
 <td bgcolor="#FFF3E0">
 <strong>📱 Responsive Design</strong><br/>
@@ -193,7 +193,8 @@ Choose device index(es) to stream from (or ENTER for default):
 1. Select your audio device from the list
 2. Open `http://localhost:4986` in your browser
 3. Click **Play** to start broadcasting
-4. Choose your favorite theme from the dropdown
+4. Choose your theme (Light/Dark) and language from the dropdowns
+5. Click the 📊 button to view the real-time dashboard
 
 ---
 
@@ -209,20 +210,21 @@ Enjoy enterprise-grade features including 6 stunning themes, auto-reconnect tech
 </table>
 
 ### Multi-Theme Web Interface
-- **Jazz Night**: Warm colors, vintage feel with sepia filter
-- **Classical**: Elegant brown/beige, Times New Roman font
-- **Rock**: Dark theme with red accents, bold borders
-- **Pop**: Bright pastel colors, modern clean interface
-- **Electronic**: Cyberpunk style with green text on black
-- **New Age**: Ethereal blue gradients, minimal design
-- **Modern**: Default purple/blue gradient theme
+- **Light/Dark Themes**: Instant theme switching with persistent preference
+- **Professional Aesthetics**: Clean, modern design optimized for readability
+
+### Real-Time Dashboard
+- **Live Statistics**: View listener count, audio quality, and uptime in real-time
+- **WebSocket Updates**: No polling required - instant updates via WebSocket
+- **Application Uptime**: Track how long your station has been running
+- **Audio Information**: Stream status, bitrate, and format details
 
 ### Smart Web Player
 - **Auto-Reconnect**: Never lose a listener - automatic retry on connection issues
 - **Live Status**: Real-time connection indicators and listener count
 - **Buffering Display**: Visual feedback during connection setup
 - **Mobile Ready**: Works on phones, tablets, and desktops
-- **Theme Switcher**: Instant theme changes without page reload
+- **Language Switcher**: Instant language changes (Italian, English, German)
 
 ### Intelligent Audio Engine
 - **Dual Engine Support**: 
@@ -395,6 +397,8 @@ Your choice: 1 2  # Mix USB interface + line-in
 - **Instant Connection**: No software installation required
 - **Real-time Info**: Listener count and connection status
 - **Mobile Optimized**: Works perfectly on smartphones
+- **Language Support**: Interface in Italian, English, or German
+- **Theme Options**: Light and dark themes for comfort
 
 ### Sharing Your Station
 ```
@@ -496,14 +500,26 @@ htop  # Monitor CPU/memory usage
 
 ## Broadcasting Statistics
 
-### Real-Time Monitoring
-Visit `http://your-station:4986/stats` to see:
+### Real-Time Dashboard
+Visit `http://your-station:4986/dashboard` to view live statistics:
+- **Listener Count**: Current and peak listeners
+- **Audio Quality**: Sample rate, channels, bitrate
+- **Application Uptime**: Time since application started
+- **Stream Status**: On-air/off-air indicator
+- **Audio Information**: Format, latency details
+
+All statistics update in real-time via WebSocket - no polling required.
+
+### Statistics API
+For programmatic access, visit `http://your-station:4986/stats`:
 ```json
 {
   "on_air": true,
   "listeners": 42,
   "sample_rate": 44100,
-  "channels": 2
+  "channels": 2,
+  "uptime_seconds": 3600,
+  "uptime_formatted": "1h 0m 0s"
 }
 ```
 
@@ -654,6 +670,9 @@ AUDIO_STREAMER_HOST=0.0.0.0   # Bind address
 AUDIO_STREAMER_PORT=4986      # Server port
 AUDIO_STREAMER_DEBUG=False    # Debug mode
 
+# Station Configuration
+RADIO_STATION_NAME=My Radio Station  # Custom station name
+
 # Streaming Configuration
 AUDIO_STREAMER_MAX_CLIENTS=10      # Max concurrent listeners
 AUDIO_STREAMER_QUEUE_SIZE=100      # Buffer queue size
@@ -729,8 +748,9 @@ curl http://localhost:4986/stats
 
 ### Important URLs
 - **Radio Player**: `http://localhost:4986`
-- **Audio Stream**: `http://localhost:4986/stream`  
-- **Statistics**: `http://localhost:4986/stats`
+- **Audio Stream**: `http://localhost:4986/stream`
+- **Statistics Dashboard**: `http://localhost:4986/dashboard`
+- **Statistics API**: `http://localhost:4986/stats`
 
 ### Audio Device Tips
 - **Built-in Microphone**: Choose option 1, then device 1 for voice/podcasting

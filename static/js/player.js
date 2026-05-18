@@ -61,7 +61,7 @@ function startStreaming() {
 
 function stopStreaming() {
     playBtn.disabled = true;
-    
+
     audio.pause();
     audio.src = '';
 
@@ -71,12 +71,12 @@ function stopStreaming() {
     audio.removeEventListener('stalled', onStalled);
 
     playBtn.textContent = i18n.t('controls.play');
-    playBtn.style.background = '#667eea';
+    playBtn.style.background = '';
     playBtn.disabled = false;
     isPlaying = false;
     reconnectAttempts = 0;
     updateStatus('status.ready', 'loading');
-    
+
     audioSpectrum.stop();
 }
 
@@ -86,7 +86,7 @@ function onLoadStart() {
 
 function onCanPlay() {
     playBtn.textContent = i18n.t('controls.pause');
-    playBtn.style.background = '#f43f5e';
+    playBtn.style.background = '#90EE90';
     playBtn.disabled = false;
     isPlaying = true;
     reconnectAttempts = 0;
@@ -129,29 +129,39 @@ function changeVolume(value) {
     document.getElementById('volumeValue').textContent = value;
 }
 
-setInterval(() => {
-    fetch('/stats')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Stats request failed');
-            }
-            return response.json();
-        })
-        .then(data => {
-            document.getElementById('listeners').textContent = data.listeners;
+// WebSocket connection for real-time stats
+let socket;
 
-            if (isPlaying && !data.on_air) {
-                updateStatus('status.server_stopped', 'error');
-                stopStreaming();
-            }
-        })
-        .catch(error => {
-            console.error('Stats error:', error);
-            if (isPlaying) {
-                updateStatus('status.connection_lost', 'error');
-            }
-        });
-}, 5000);
+function connectWebSocket() {
+    socket = io();
+
+    socket.on('connect', () => {
+        console.log('WebSocket connected');
+    });
+
+    socket.on('stats', (data) => {
+        document.getElementById('listeners').textContent = data.listeners;
+
+        if (isPlaying && !data.on_air) {
+            updateStatus('status.server_stopped', 'error');
+            stopStreaming();
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('WebSocket disconnected');
+        if (isPlaying) {
+            updateStatus('status.connection_lost', 'error');
+        }
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('WebSocket connection error:', error);
+        if (isPlaying) {
+            updateStatus('status.connection_lost', 'error');
+        }
+    });
+}
 
 audio.volume = 0.7;
 
@@ -166,25 +176,28 @@ function updateStaticTexts() {
 document.addEventListener('DOMContentLoaded', async () => {
     await i18n.loadTranslations(i18n.getCurrentLang());
     updateStaticTexts();
-    
+
     const savedTheme = localStorage.getItem('theme');
     const body = document.getElementById('mainBody');
     const themeIcon = document.getElementById('themeIcon');
-    
+
     if (savedTheme === 'light') {
         body.classList.add('light');
         themeIcon.textContent = '🌙';
     } else {
         themeIcon.textContent = '☀️';
     }
-    
+
     const savedLang = localStorage.getItem('language');
     if (savedLang) {
         document.getElementById('languageDropdown').value = savedLang;
     }
-    
+
     playBtn.textContent = i18n.t('controls.play');
     updateStatus('status.ready', 'loading');
+
+    // Connect to WebSocket for real-time stats
+    connectWebSocket();
 });
 
 const originalChangeLanguage = changeLanguage;

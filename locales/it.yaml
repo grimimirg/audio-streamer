@@ -1,23 +1,12 @@
-app:
-  title: "Audio Streamer"
-  subtitle: "La mia stazione radio"
-
-themes:
-  label: "Tema"
-  dark: "🌙 Scuro"
-  light: "☀️ Chiaro"
-
 language:
-  label: "Lingua"
-  it: "🇮🇹 Italiano"
-  en: "🇬🇧 English"
-  de: "🇩🇪 Deutsch"
+  it: "🇮🇹"
+  en: "🇬🇧"
+  de: "🇩🇪"
 
 controls:
   play: "▶️"
   pause: "⏸️"
   connecting: "⏳"
-  volume: "🔊"
 
 status:
   ready: "🔄 Pronto per connettersi"
@@ -29,5 +18,27 @@ status:
   server_stopped: "⚠️ Il server ha interrotto lo streaming"
   connection_lost: "⚠️ Connessione al server persa"
 
-listeners:
-  online: "Ascoltatori online"
+dashboard:
+  listeners: "Ascoltatori"
+  connected_now: "Connessi ora"
+  peak: "Picco"
+  audio_quality: "Qualità Audio"
+  sample_rate: "Sample Rate Hz"
+  channels: "Canali"
+  stereo_mono: "Stereo/Mono"
+  uptime: "Tempo di Attività"
+  on_air: "On Air"
+  audio_info: "Informazioni Audio"
+  stream_status: "Stato Stream"
+  estimated_bitrate: "Bitrate Stimato"
+  audio_format: "Formato Audio"
+  latency: "Latenza"
+  refresh_now: "Aggiorna Ora"
+  pause_auto: "Pausa Auto"
+  resume_auto: "Riprendi Auto"
+  open_player: "Apri Player"
+  active: "🟢 Attivo"
+  inactive: "🔴 Inattivo"
+  too_many_errors: "Troppe connessioni fallite. Auto-refresh disabilitato."
+  connection_error: "Errore di connessione"
+  stats_error: "Errore nel recupero delle statistiche"
