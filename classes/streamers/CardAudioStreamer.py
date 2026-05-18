@@ -80,12 +80,12 @@ class CardAudioStreamer:
         Iterates through system audio devices and displays only those
         with input channels (microphones, line-in, etc.).
         """
-        Logger.info("=== Available audio devices ===")
+        print("=== Available audio devices ===")
         for i in range(self.audioInterface.get_device_count()):
             info = self.audioInterface.get_device_info_by_index(i)
             if info['maxInputChannels'] > 0:
-                Logger.info(f"{i}: {info['name']} - Input channels: {info['maxInputChannels']}")
-        Logger.info("=" * 10)
+                print(f"{i}: {info['name']} - Input channels: {info['maxInputChannels']}")
+        print("=" * 10)
 
     def startAudioStream(self, listeningDeviceIndexes: Optional[List[int]]):
         """Start capturing audio from specified input devices.
