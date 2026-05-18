@@ -142,6 +142,30 @@ function connectWebSocket() {
     socket.on('stats', (data) => {
         document.getElementById('listeners').textContent = data.listeners;
 
+        // Update track info
+        const trackInfoContainer = document.getElementById('trackInfoContainer');
+        const trackArtist = document.getElementById('trackArtist');
+        const trackTitle = document.getElementById('trackTitle');
+        const trackAlbum = document.getElementById('trackAlbum');
+        const trackCover = document.getElementById('trackCover');
+        const trackCoverImg = document.getElementById('trackCoverImg');
+
+        if (data.track_title || data.album_name || data.artist) {
+            trackInfoContainer.style.display = 'block';
+            trackArtist.textContent = data.artist || '';
+            trackTitle.textContent = data.track_title || '';
+            trackAlbum.textContent = data.album_name && data.track_year ? `${data.album_name} (${data.track_year})` : (data.album_name || '');
+
+            if (data.album_cover) {
+                trackCover.style.display = 'block';
+                trackCoverImg.src = data.album_cover;
+            } else {
+                trackCover.style.display = 'none';
+            }
+        } else {
+            trackInfoContainer.style.display = 'none';
+        }
+
         if (isPlaying && !data.on_air) {
             updateStatus('status.server_stopped', 'error');
             stopStreaming();

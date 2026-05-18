@@ -109,6 +109,16 @@ Auto-reconnect, error recovery, and real-time listener stats
 Works out of the box with any audio device
 </td>
 </tr>
+<tr>
+<td bgcolor="#C8E6C9">
+<strong>🎵 Track Information</strong><br/>
+Display artist, album, year, and album cover for your listeners
+</td>
+<td bgcolor="#BBDEFB">
+<strong>📤 Easy Track Management</strong><br/>
+Upload album covers via URL or file directly from the dashboard
+</td>
+</tr>
 </table>
 
 ## Quick Start - 5 Minutes to Live
@@ -217,6 +227,9 @@ Enjoy enterprise-grade features including light/dark themes, auto-reconnect tech
 - **WebSocket Updates**: No polling required - instant updates via WebSocket
 - **Application Uptime**: Track how long your station has been running
 - **Audio Information**: Stream status, bitrate, and format details
+- **Now Playing Section**: Manage track information (artist, title, album, year, cover)
+- **Album Cover Upload**: Upload cover images via URL or file upload with preview
+- **Track Info Broadcasting**: Send track information to all connected listeners instantly
 
 ### Smart Web Player
 - **Auto-Reconnect**: Never lose a listener - automatic retry on connection issues
@@ -224,6 +237,9 @@ Enjoy enterprise-grade features including light/dark themes, auto-reconnect tech
 - **Buffering Display**: Visual feedback during connection setup
 - **Mobile Ready**: Works on phones, tablets, and desktops
 - **Language Switcher**: Instant language changes (Italian, English, German)
+- **Track Information Display**: Shows artist, album (with year), and track title
+- **Album Cover Art**: Displays album cover image when available
+- **Real-Time Track Updates**: Track information updates automatically via WebSocket
 
 ### Intelligent Audio Engine
 - **Dual Engine Support**: 
@@ -398,6 +414,9 @@ Your choice: 1 2  # Mix USB interface + line-in
 - **Mobile Optimized**: Works perfectly on smartphones
 - **Language Support**: Interface in Italian, English, or German
 - **Theme Options**: Light and dark themes for comfort
+- **Track Information**: Artist name, album with year, and track title
+- **Album Cover**: Album artwork displayed when available
+- **Audio Visualizer**: Real-time spectrum analyzer for visual feedback
 
 ### Sharing Your Station
 ```
@@ -521,6 +540,10 @@ Visit `http://your-station:4986/dashboard` to view live statistics:
 - **Application Uptime**: Time since application started
 - **Stream Status**: On-air/off-air indicator
 - **Audio Information**: Format, latency details
+- **Now Playing**: Section to manage track information
+- **Track Info Fields**: Artist, track title, album, year, and album cover
+- **Cover Upload**: Upload album covers via URL or file with live preview
+- **Send to Player**: Broadcast track information to all listeners instantly
 
 All statistics update in real-time via WebSocket - no polling required.
 

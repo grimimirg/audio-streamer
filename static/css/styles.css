@@ -301,6 +301,14 @@ body {
     font-weight: 600;
 }
 
+.track-title {
+    color: #667eea;
+}
+
+body.light .track-title {
+    color: #5b21b6;
+}
+
 @media (max-width: 600px) {
     .glass-header {
         flex-direction: column;
