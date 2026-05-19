@@ -7,6 +7,7 @@ from flask import Flask, render_template, Response, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
+from functools import wraps
 
 from utilities.Constants import CLIENT_QUEUE_SIZE
 from utilities.Logger import Logger
@@ -48,6 +49,8 @@ class AudioHttpFacade:
         self.audioStreamer = audioStreamer
         self.locales_dir = os.path.join(root_dir, 'locales')
         self.radio_station_name = os.getenv('RADIO_STATION_NAME', 'My Radio Station')
+        self.dashboard_username = os.getenv('DASHBOARD_USERNAME', 'admin')
+        self.dashboard_password = os.getenv('DASHBOARD_PASSWORD', 'admin123')
         self.track_info = {'artist': '', 'track_title': '', 'album_name': '', 'track_year': '', 'album_cover': ''}
         self._clear_upload_folder()
         self._add_routes()
@@ -80,12 +83,53 @@ class AudioHttpFacade:
                     Logger.error(f"Error deleting file {file_path}: {e}")
             Logger.info("Upload folder cleared at application startup")
 
+    def _check_auth(self, username, password):
+        """Check if the provided credentials are valid.
+
+        Args:
+            username: Username from HTTP Basic Auth
+            password: Password from HTTP Basic Auth
+
+        Returns:
+            bool: True if credentials are valid, False otherwise
+        """
+        return username == self.dashboard_username and password == self.dashboard_password
+
+    def _authenticate(self):
+        """Send 401 response with WWW-Authenticate header.
+
+        Returns:
+            Response: Flask response with authentication challenge
+        """
+        return Response(
+            'Could not verify your access level for that URL.\n'
+            'You have to login with proper credentials', 401,
+            {'WWW-Authenticate': 'Basic realm="Login Required"'}
+        )
+
+    def _requires_auth(self, f):
+        """Decorator to require HTTP Basic Authentication for a route.
+
+        Args:
+            f: The function to decorate
+
+        Returns:
+            The decorated function
+        """
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            auth = request.authorization
+            if not auth or not self._check_auth(auth.username, auth.password):
+                return self._authenticate()
+            return f(*args, **kwargs)
+        return decorated
+
     def _add_routes(self):
         """Configure Flask URL routes for the application."""
         self.app.add_url_rule('/', 'player', self._player)
         self.app.add_url_rule('/stream', 'stream', self._stream)
         self.app.add_url_rule('/stats', 'stats', self._stats)
-        self.app.add_url_rule('/dashboard', 'dashboard', self._dashboard)
+        self.app.add_url_rule('/dashboard', 'dashboard', self._requires_auth(self._dashboard))
         self.app.add_url_rule('/locales/<lang>', 'locales', self._get_locale)
         self.app.add_url_rule('/upload_cover', 'upload_cover', self._upload_cover, methods=['POST'])
         self.app.add_url_rule('/uploads/covers/<filename>', 'uploaded_cover', self._uploaded_cover)
@@ -233,7 +277,7 @@ class AudioHttpFacade:
 
     def _dashboard(self):
         """Serve the dashboard interface.
-        
+
         Returns:
             str: Rendered HTML template for the dashboard
         """
