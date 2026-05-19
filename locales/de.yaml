@@ -58,3 +58,9 @@ dashboard:
   album_cover_placeholder: "Cover-URL eingeben..."
   album_cover_upload: "Oder Cover-Bild hochladen"
   artist_placeholder: "Künstler eingeben..."
+  history: "Verlauf"
+  history_empty: "Keine Titel im Verlauf"
+
+player:
+  history: "Verlauf"
+  history_empty: "Keine Titel im Verlauf"

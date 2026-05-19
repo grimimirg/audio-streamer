@@ -49,6 +49,7 @@ class AudioHttpFacade:
         self.locales_dir = os.path.join(root_dir, 'locales')
         self.radio_station_name = os.getenv('RADIO_STATION_NAME', 'My Radio Station')
         self.track_info = {'artist': '', 'track_title': '', 'album_name': '', 'track_year': '', 'album_cover': ''}
+        self._clear_upload_folder()
         self._add_routes()
         self._add_socketio_events()
 
@@ -64,6 +65,20 @@ class AudioHttpFacade:
         self.socketio.run(self.app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
 
     # -- PRIVATES --
+
+    def _clear_upload_folder(self):
+        """Clear all files from the upload folder at application startup."""
+        upload_folder = self.app.config['UPLOAD_FOLDER']
+        if os.path.exists(upload_folder):
+            for filename in os.listdir(upload_folder):
+                file_path = os.path.join(upload_folder, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                        Logger.info(f"Deleted old upload: {file_path}")
+                except Exception as e:
+                    Logger.error(f"Error deleting file {file_path}: {e}")
+            Logger.info("Upload folder cleared at application startup")
 
     def _add_routes(self):
         """Configure Flask URL routes for the application."""
@@ -262,17 +277,6 @@ class AudioHttpFacade:
                 return jsonify({'error': 'No file selected'}), 400
 
             if file:
-                # Clear existing files in upload folder
-                upload_folder = self.app.config['UPLOAD_FOLDER']
-                if os.path.exists(upload_folder):
-                    for filename in os.listdir(upload_folder):
-                        file_path = os.path.join(upload_folder, filename)
-                        try:
-                            if os.path.isfile(file_path):
-                                os.unlink(file_path)
-                        except Exception as e:
-                            Logger.error(f"Error deleting file {file_path}: {e}")
-
                 # Generate unique filename
                 filename = secure_filename(file.filename)
                 unique_filename = f"{uuid.uuid4().hex}_{filename}"

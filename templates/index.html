@@ -9,26 +9,30 @@
 </head>
 <body id="mainBody">
 
+<div class="top-right-controls">
+    <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
+        <span id="themeIcon">☀️</span>
+    </button>
+    <button onclick="window.open('/dashboard', '_blank')" class="theme-toggle-btn" title="Dashboard">
+        <span>📊</span>
+    </button>
+    <button id="historyToggleBtn" onclick="toggleHistory()" class="theme-toggle-btn" title="History">
+        <span>📜</span>
+    </button>
+    <div class="selector-box">
+        <select id="languageDropdown" onchange="changeLanguage(this.value)">
+            <option value="it" data-i18n="language.it"></option>
+            <option value="en" data-i18n="language.en" selected></option>
+            <option value="de" data-i18n="language.de"></option>
+        </select>
+    </div>
+</div>
+
 <div class="glass-container">
     <div class="glass-header">
         <div class="header-left">
             <span class="logo-icon">📻</span>
             <span class="header-title">{{ radio_station_name }}</span>
-        </div>
-        <div class="header-controls">
-            <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
-                <span id="themeIcon">☀️</span>
-            </button>
-            <button onclick="window.open('/dashboard', '_blank')" class="theme-toggle-btn" title="Dashboard">
-                <span>📊</span>
-            </button>
-            <div class="selector-box">
-                <select id="languageDropdown" onchange="changeLanguage(this.value)">
-                    <option value="it" data-i18n="language.it"></option>
-                    <option value="en" data-i18n="language.en" selected></option>
-                    <option value="de" data-i18n="language.de"></option>
-                </select>
-            </div>
         </div>
     </div>
 
@@ -70,6 +74,16 @@
                 <span id="connectionStatus" class="loading" data-i18n="status.ready"></span>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="historyPanel" class="history-panel">
+    <div class="history-panel-header">
+        <span data-i18n="player.history">Cronologia</span>
+        <button onclick="toggleHistory()" class="history-close-btn">×</button>
+    </div>
+    <div id="historyStack" class="history-stack">
+        <div class="history-empty" data-i18n="player.history_empty">Nessun brano nella cronologia</div>
     </div>
 </div>
 

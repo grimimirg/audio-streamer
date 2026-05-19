@@ -5,6 +5,8 @@ let isPlaying = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 3;
 let currentStatusKey = 'status.ready';
+let trackHistory = [];
+let historyVisible = false;
 
 function toggleTheme() {
     const body = document.getElementById('mainBody');
@@ -129,6 +131,64 @@ function changeVolume(value) {
     document.getElementById('volumeValue').textContent = value;
 }
 
+// History management functions
+function toggleHistory() {
+    const historyPanel = document.getElementById('historyPanel');
+    historyVisible = !historyVisible;
+    
+    if (historyVisible) {
+        historyPanel.classList.add('open');
+    } else {
+        historyPanel.classList.remove('open');
+    }
+}
+
+function isDuplicate(track) {
+    return trackHistory.some(existing =>
+        existing.artist === track.artist &&
+        existing.album_name === track.album_name &&
+        existing.track_title === track.track_title
+    );
+}
+
+function addToHistory(track) {
+    if (track.artist && track.track_title && !isDuplicate(track)) {
+        trackHistory.unshift(track);
+        renderHistory();
+    }
+}
+
+function renderHistory() {
+    const historyStack = document.getElementById('historyStack');
+    
+    if (trackHistory.length === 0) {
+        historyStack.innerHTML = '<div class="history-empty" data-i18n="player.history_empty">Nessun brano nella cronologia</div>';
+        return;
+    }
+
+    historyStack.innerHTML = trackHistory.map(track => {
+        const coverHtml = track.album_cover
+            ? `<img src="${track.album_cover}" class="history-card-cover" alt="Cover">`
+            : `<div class="history-card-cover-placeholder">🎵</div>`;
+        
+        const albumYear = track.album_name && track.track_year
+            ? `${track.album_name} (${track.track_year})`
+            : (track.album_name || track.track_year || '');
+
+        return `
+            <div class="history-card">
+                ${coverHtml}
+                <div class="history-card-info">
+                    <div class="history-card-title">${track.track_title}</div>
+                    <div class="history-card-artist">${track.artist}</div>
+                    <div class="history-card-album">${albumYear}</div>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+        `;
+    }).join('');
+}
+
 // WebSocket connection for real-time stats
 let socket;
 
@@ -162,6 +222,15 @@ function connectWebSocket() {
             } else {
                 trackCover.style.display = 'none';
             }
+
+            // Add to history when track info is received
+            addToHistory({
+                artist: data.artist || '',
+                track_title: data.track_title || '',
+                album_name: data.album_name || '',
+                track_year: data.track_year || '',
+                album_cover: data.album_cover || ''
+            });
         } else {
             trackInfoContainer.style.display = 'none';
         }

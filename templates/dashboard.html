@@ -5,334 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📻 Dashboard Streamer</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-            --container-bg: rgba(0, 0, 0, 0.6);
-            --text-color: #ffffff;
-            --accent-color: #667eea;
-            --accent-hover: #764ba2;
-            --success-color: #4CAF50;
-            --warning-color: #ff9800;
-            --error-color: #f44336;
-            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --border-radius: 12px;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-main);
-            background: var(--bg-gradient);
-            color: var(--text-color);
-            min-height: 100vh;
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: var(--container-bg);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .card-title {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: var(--accent-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .metric-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .chart-container {
-            background: var(--container-bg);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            box-shadow: var(--shadow);
-            margin-bottom: 30px;
-            animation: fadeIn 1s ease-out 0.6s both;
-        }
-
-        .chart-title {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            color: var(--accent-color);
-        }
-
-        .audio-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .info-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--accent-color);
-        }
-
-        .info-label {
-            font-size: 0.85rem;
-            opacity: 0.7;
-            margin-bottom: 5px;
-        }
-
-        .info-value {
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-
-        .controls {
-            background: var(--container-bg);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            text-align: center;
-            animation: fadeIn 1s ease-out 0.8s both;
-        }
-
-        .btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 0 10px;
-        }
-
-        body.light .btn {
-            background: rgba(0, 0, 0, 0.3);
-            color: #1a1a1a;
-        }
-
-        .btn:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-
-        body.light .btn:hover {
-            background: rgba(0, 0, 0, 0.4);
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .metric-value {
-                font-size: 2rem;
-            }
-        }
-
-        .selector-box {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 8px 12px;
-        }
-
-        .selector-box select {
-            background: transparent;
-            color: #ffffff;
-            border: none;
-            padding: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.9em;
-            outline: none;
-            min-width: 50px;
-        }
-
-        .selector-box select:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .selector-box select option {
-            background: rgba(0, 0, 0, 0.8);
-            color: #ffffff;
-        }
-
-        .theme-toggle-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        body.light {
-            --bg-gradient: linear-gradient(135deg, #a8a8a8 0%, #888888 100%);
-            --container-bg: rgba(255, 255, 255, 0.5);
-            --text-color: #1a1a1a;
-            --accent-color: rgba(0, 0, 0, 0.1);
-            --accent-hover: rgba(0, 0, 0, 0.2);
-            --success-color: #4CAF50;
-            --warning-color: #ff9800;
-            --error-color: #f44336;
-        }
-
-        body.light .selector-box {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        body.light .selector-box select {
-            color: #1a1a1a;
-        }
-
-        body.light .selector-box select option {
-            background: rgba(255, 255, 255, 0.95);
-            color: #1a1a1a;
-        }
-
-        body.light .theme-toggle-btn {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        body.light .theme-toggle-btn:hover {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        body.light .card,
-        body.light .status-bar,
-        body.light .chart-container,
-        body.light .controls {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        body.light .card-title,
-        body.light .chart-title {
-            color: #667eea;
-        }
-
-        body.light .info-item {
-            background: rgba(0, 0, 0, 0.05);
-            border-left: 4px solid #667eea;
-        }
-    </style>
 </head>
-<body>
+<body class="dashboard-page">
+<div class="top-right-controls">
+    <button onclick="openPlayer()" class="theme-toggle-btn" title="Open Player">
+        <span>🎵</span>
+    </button>
+    <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
+        <span id="themeIcon">☀️</span>
+    </button>
+    <div class="selector-box">
+        <select id="languageDropdown" onchange="changeLanguage(this.value)">
+            <option value="it" data-i18n="language.it"></option>
+            <option value="en" data-i18n="language.en" selected></option>
+            <option value="de" data-i18n="language.de"></option>
+        </select>
+    </div>
+</div>
+
 <div class="container">
     <header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>📻 {{ radio_station_name }}</h1>
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <button onclick="openPlayer()" class="theme-toggle-btn" title="Open Player">
-                    <span>🎵</span>
-                </button>
-                <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
-                    <span id="themeIcon">☀️</span>
-                </button>
-                <div class="selector-box">
-                    <select id="languageDropdown" onchange="changeLanguage(this.value)">
-                        <option value="it" data-i18n="language.it"></option>
-                        <option value="en" data-i18n="language.en" selected></option>
-                        <option value="de" data-i18n="language.de"></option>
-                    </select>
-                </div>
-            </div>
-        </div>
+        <h1>📻 {{ radio_station_name }}</h1>
     </header>
 
     <div class="chart-container">
@@ -376,6 +71,12 @@
                     <div class="info-label"><span data-i18n="dashboard.track_year">Anno</span></div>
                     <input type="number" id="trackYear" placeholder=""
                            style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 1rem;">
+                </div>
+            </div>
+            <div style="width: 300px; flex-shrink: 0;">
+                <div class="info-label" style="margin-bottom: 10px;"><span data-i18n="dashboard.history">Cronologia</span></div>
+                <div id="historyStack" class="history-stack">
+                    <div class="history-empty" data-i18n="dashboard.history_empty">Nessun brano nella cronologia</div>
                 </div>
             </div>
         </div>
@@ -453,6 +154,7 @@
     let startTime = null;
     let uptimeInterval = null;
     const MAX_ERRORS = 3;
+    let trackHistory = [];
 
     // Inizializzazione
     document.addEventListener('DOMContentLoaded', async function () {
@@ -682,12 +384,71 @@
             album_cover: coverUrl
         });
 
+        // Add to history
+        addToHistory({
+            artist: artistName,
+            track_title: trackTitle,
+            album_name: albumName,
+            track_year: trackYear,
+            album_cover: coverUrl
+        });
+
         // Mostra messaggio di conferma
         const confirmationMessage = document.getElementById('confirmationMessage');
         confirmationMessage.style.display = 'block';
         setTimeout(() => {
             confirmationMessage.style.display = 'none';
         }, 3000);
+    }
+
+    // Check if track already exists in history (by artist, album, and title)
+    function isDuplicate(track) {
+        return trackHistory.some(existing =>
+            existing.artist === track.artist &&
+            existing.album_name === track.album_name &&
+            existing.track_title === track.track_title
+        );
+    }
+
+    // Add track to history
+    function addToHistory(track) {
+        // Only add if all required fields are present and not a duplicate
+        if (track.artist && track.track_title && !isDuplicate(track)) {
+            trackHistory.unshift(track);
+            renderHistory();
+        }
+    }
+
+    // Render history stack
+    function renderHistory() {
+        const historyStack = document.getElementById('historyStack');
+        
+        if (trackHistory.length === 0) {
+            historyStack.innerHTML = '<div class="history-empty" data-i18n="dashboard.history_empty">Nessun brano nella cronologia</div>';
+            return;
+        }
+
+        historyStack.innerHTML = trackHistory.map(track => {
+            const coverHtml = track.album_cover 
+                ? `<img src="${track.album_cover}" class="history-card-cover" alt="Cover">`
+                : `<div class="history-card-cover-placeholder">🎵</div>`;
+            
+            const albumYear = track.album_name && track.track_year 
+                ? `${track.album_name} (${track.track_year})` 
+                : (track.album_name || track.track_year || '');
+
+            return `
+                <div class="history-card">
+                    ${coverHtml}
+                    <div class="history-card-info">
+                        <div class="history-card-title">${track.track_title}</div>
+                        <div class="history-card-artist">${track.artist}</div>
+                        <div class="history-card-album">${albumYear}</div>
+                    </div>
+                    <div style="clear: both;"></div>
+                </div>
+            `;
+        }).join('');
     }
 </script>
 </body>

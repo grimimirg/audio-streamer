@@ -58,3 +58,9 @@ dashboard:
   album_cover_placeholder: "Enter cover URL..."
   album_cover_upload: "Or upload cover image"
   artist_placeholder: "Enter artist..."
+  history: "History"
+  history_empty: "No tracks in history"
+
+player:
+  history: "History"
+  history_empty: "No tracks in history"

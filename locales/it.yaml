@@ -58,3 +58,9 @@ dashboard:
   album_cover_placeholder: "Inserisci l'URL della copertina..."
   album_cover_upload: "Oppure carica immagine copertina"
   artist_placeholder: "Inserisci l'artista..."
+  history: "Cronologia"
+  history_empty: "Nessun brano nella cronologia"
+
+player:
+  history: "Cronologia"
+  history_empty: "Nessun brano nella cronologia"
