@@ -49,15 +49,23 @@ function startStreaming() {
     playBtn.disabled = true;
     playBtn.textContent = i18n.t('controls.connecting');
 
-    audio.src = '/stream';
-
+    // Set up event listeners before assigning src (important for Firefox)
     audio.addEventListener('loadstart', onLoadStart);
     audio.addEventListener('canplay', onCanPlay);
     audio.addEventListener('error', onError);
     audio.addEventListener('stalled', onStalled);
 
-    audio.play().catch(onPlayError);
-    
+    audio.src = '/stream';
+
+    // Load the audio before playing (Firefox compatibility)
+    audio.load();
+
+    // Wait for canplay event before attempting to play
+    audio.addEventListener('canplay', function onCanPlayOnce() {
+        audio.removeEventListener('canplay', onCanPlayOnce);
+        audio.play().catch(onPlayError);
+    }, { once: true });
+
     audioSpectrum.start();
 }
 

@@ -245,11 +245,13 @@ class AudioHttpFacade:
             byte_rate = sample_rate * channels * bits_per_sample // 8
             block_align = channels * bits_per_sample // 8
 
-            # Simple WAV header
-            header = struct.pack('<4sL4s', b'RIFF', 0, b'WAVE')
+            # WAV header with proper sizes for Firefox compatibility
+            # Use a large dummy size (2GB) to indicate streaming
+            dummy_size = 0xFFFFFFFF
+            header = struct.pack('<4sL4s', b'RIFF', dummy_size, b'WAVE')
             header += struct.pack('<4sLHHLLHH4sL',
                                   b'fmt ', 16, 1, channels, sample_rate,
-                                  byte_rate, block_align, bits_per_sample, b'data', 0)
+                                  byte_rate, block_align, bits_per_sample, b'data', dummy_size)
 
             yield header
 
@@ -261,9 +263,10 @@ class AudioHttpFacade:
             generate_wav_stream(),
             mimetype='audio/wav',
             headers={
-                'Cache-Control': 'no-cache',
+                'Cache-Control': 'no-cache, no-store',
                 'Connection': 'keep-alive',
-                'Access-Control-Allow-Origin': '*'
+                'Access-Control-Allow-Origin': '*',
+                'Accept-Ranges': 'none'
             }
         )
 
