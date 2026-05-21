@@ -1,6 +1,6 @@
 // Dashboard JavaScript for Liquid Music streaming mode
 
-// Variabili globali
+// Global variables
 let socket;
 let errorCount = 0;
 let startTime = null;
@@ -9,26 +9,10 @@ const MAX_ERRORS = 3;
 let playlist = [];
 let playbackStack = [];
 
-// Inizializzazione
+// Initialization
 document.addEventListener('DOMContentLoaded', async function () {
     await i18n.loadTranslations(i18n.getCurrentLang());
     updateStaticTexts();
-
-    // Set English as default language
-    const savedLang = localStorage.getItem('language') || 'en';
-    document.getElementById('languageDropdown').value = savedLang;
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme');
-    const body = document.body;
-    const themeIcon = document.getElementById('themeIcon');
-
-    if (savedTheme === 'light') {
-        body.classList.add('light');
-        themeIcon.textContent = '🌙';
-    } else {
-        themeIcon.textContent = '☀️';
-    }
 
     // Connect to WebSocket
     connectWebSocket();
@@ -157,12 +141,12 @@ function showError(message) {
 }
 
 function updateUI(stats) {
-    // Metriche principali
+    // Main metrics
     document.getElementById('listenersCount').textContent = stats.listeners;
     document.getElementById('sampleRate').textContent = (stats.sample_rate / 1000).toFixed(1) + 'k';
     document.getElementById('channels').textContent = stats.channels + (stats.channels === 2 ? ' (Stereo)' : ' (Mono)');
 
-    // Info audio
+    // Audio info
     document.getElementById('streamStatus').textContent = stats.on_air ? i18n.t('dashboard.active') : i18n.t('dashboard.inactive');
     document.getElementById('currentTrack').textContent = stats.current_track || '---';
 
@@ -190,7 +174,7 @@ function updateUI(stats) {
 }
 
 function openPlayer() {
-    window.open('/', '_blank');
+    window.location.href = '/';
 }
 
 // Upload tracks

@@ -19,6 +19,15 @@ class MicrophoneAudioStreamer:
         self.listeningClients = []
         self._lock = threading.RLock()
         self.startTime = None  # Set by ApplicationController
+        self._listener_callback = None  # Callback for listener count changes
+
+    def set_listener_callback(self, callback):
+        """Set a callback function to be called when listener count changes.
+
+        Args:
+            callback: Function to call when listeners connect/disconnect
+        """
+        self._listener_callback = callback
 
     def listAvailableDevices(self):
         """List available audio devices using arecord."""
@@ -118,12 +127,20 @@ class MicrophoneAudioStreamer:
             self.listeningClients.append(clientQueue)
             Logger.info(f"New connected client. Number of connected clients: {len(self.listeningClients)}")
 
+        # Notify callback if set
+        if self._listener_callback:
+            self._listener_callback()
+
     def removeClient(self, clientQueue: queue.Queue):
         """Remove a client queue from distribution list."""
         with self._lock:
             if clientQueue in self.listeningClients:
                 self.listeningClients.remove(clientQueue)
                 Logger.info(f"Client disconnected. Number of connected clients: {len(self.listeningClients)}")
+
+        # Notify callback if set
+        if self._listener_callback:
+            self._listener_callback()
 
     def getStats(self):
         """Get current streaming statistics."""

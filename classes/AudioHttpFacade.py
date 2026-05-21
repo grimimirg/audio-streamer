@@ -1,7 +1,7 @@
 import os
 from functools import wraps
 from dotenv import load_dotenv
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_socketio import SocketIO, emit
 
 from classes.handlers.AuthHandler import AuthHandler
@@ -32,8 +32,9 @@ class AudioHttpFacade:
         load_dotenv(env_file)
 
         # Get the project root directory (parent of classes folder)
-        template_dir = os.path.join(root_dir, 'templates')
-        static_dir = os.path.join(root_dir, 'static')
+        template_dir = os.path.join(root_dir, 'html-client', 'templates')
+        static_dir = os.path.join(root_dir, 'html-client', 'static')
+        self.js_dir = os.path.join(root_dir, 'html-client', 'src')
         upload_dir = os.path.join(root_dir, 'uploads', 'covers')
         locales_dir = os.path.join(root_dir, 'locales')
 
@@ -60,6 +61,10 @@ class AudioHttpFacade:
         self.localization_handler = LocalizationHandler(locales_dir)
         self.stream_handler = StreamHandler(audioStreamer, self.radio_station_name)
         self.liquid_music_handler = LiquidMusicHandler(audioStreamer, self.socketio)
+
+        # Register callback for listener count changes
+        if hasattr(audioStreamer, 'set_listener_callback'):
+            audioStreamer.set_listener_callback(self._notify_listener_change)
 
         # Clear upload folders and setup
         self.cover_handler.clear_upload_folder()
@@ -178,6 +183,9 @@ class AudioHttpFacade:
         self.app.add_url_rule('/liquid/remove_track', 'remove_track',
                               self._requires_auth(self.liquid_music_handler.remove_track), methods=['POST'])
 
+        # Serve JavaScript files from html-client/src
+        self.app.add_url_rule('/js/<path:filename>', 'serve_js', self._serve_js)
+
     def _add_socketio_events(self):
         """Configure SocketIO event handlers for real-time updates."""
 
@@ -230,3 +238,11 @@ class AudioHttpFacade:
     def _streamer_type(self):
         """Get the current streamer type."""
         return jsonify(self.stream_handler.streamer_type())
+
+    def _serve_js(self, filename):
+        """Serve JavaScript files from html-client/src directory."""
+        return send_from_directory(self.js_dir, filename)
+
+    def _notify_listener_change(self):
+        """Notify all WebSocket clients when listener count changes."""
+        self.socketio.emit('stats', self._get_stats_with_track_info())
