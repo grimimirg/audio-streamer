@@ -97,24 +97,6 @@
 <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
 <script src="{{ url_for('static', filename='js/spectrum.js') }}"></script>
 <script src="{{ url_for('static', filename='js/player.js') }}"></script>
-<script>
-    async function openDashboard() {
-        try {
-            const response = await fetch('/streamer_type');
-            if (response.ok) {
-                const data = await response.json();
-                const dashboardUrl = data.streamer_type === 'liquid' ? '/dashboard_liquid' : '/dashboard';
-                window.open(dashboardUrl, '_blank');
-            } else {
-                // Fallback to standard dashboard if request fails
-                window.open('/dashboard', '_blank');
-            }
-        } catch (error) {
-            console.error('Error getting streamer type:', error);
-            // Fallback to standard dashboard on error
-            window.open('/dashboard', '_blank');
-        }
-    }
-</script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 </html>
