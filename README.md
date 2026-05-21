@@ -565,4 +565,15 @@ AUDIO_STREAMER_DEBUG=false python app.py
 
 For detailed technical information, configuration, and troubleshooting, see the [User Manual](USER_MANUAL.md).
 
+### API Documentation
+
+| Endpoint | Method | Description | Auth Required |
+|----------|--------|-------------|---------------|
+| `/stream` | GET | Live audio stream (WAV format) | No |
+| `/dashboard` | GET | Dashboard UI with real-time stats | No |
+| `/api/status` | GET | Server status and current listeners | No |
+| `/api/config` | GET/POST | Audio configuration (device, quality) | No |
+
+API docs are auto-generated via Flask-RESTX at `/api/docs`. All endpoints return JSON unless otherwise noted. See [User Manual](USER_MANUAL.md) for authentication setup and detailed request/response examples.
+
 ---
