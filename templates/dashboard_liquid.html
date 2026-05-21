@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16.png') }}">
     <title>Dashboard - {{ radio_station_name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -10,10 +12,10 @@
 <body class="dashboard-page">
 <div class="top-right-controls">
     <button onclick="openPlayer()" class="theme-toggle-btn" title="Open Player">
-        <span>🎵</span>
+        <span>🎧</span>
     </button>
     <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
-        <span id="themeIcon">☀️</span>
+        <span id="themeIcon">🌓</span>
     </button>
     <div class="selector-box">
         <select id="languageDropdown" onchange="changeLanguage(this.value)">
@@ -26,7 +28,7 @@
 
 <div class="container">
     <header>
-        <h1>🎵 {{ radio_station_name }}</h1>
+        <h1>Dashboard - {{ radio_station_name }}</h1>
     </header>
 
     <!-- Scheduler and Local Music Sections Side by Side -->
@@ -153,7 +155,7 @@
 
         <div class="card">
             <div class="card-title">
-                <span>🎵</span> <span data-i18n="dashboard.audio_quality"></span>
+                <span>🎧</span> <span data-i18n="dashboard.audio_quality"></span>
             </div>
             <div class="metric-value" id="sampleRate">44.1k</div>
             <div class="metric-label"><span data-i18n="dashboard.sample_rate"></span></div>

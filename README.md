@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="audio-streamer-logo.jpeg" alt="Audio Streamer Logo" width="400"/>
+  <img src="audio-streamer-logo.png" alt="Audio Streamer Logo" width="400"/>
   
   # Audio Streamer - Your Personal Radio Station
   
