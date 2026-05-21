@@ -51,9 +51,24 @@ class AudioSpectrum {
             
             for (let i = 0; i < barCount; i++) {
                 const barHeight = (this.dataArray[i] / 255) * height;
-                const hue = (i / barCount) * 360;
+                const isLightTheme = document.body.classList.contains('light') || document.body.classList.contains('dashboard-page') && document.body.classList.contains('light');
+                
+                // Cyan/teal color range (180-200 hue)
+                const baseHue = 185;
+                const hueVariation = (i / barCount) * 20; // Small variation in cyan range
+                const hue = baseHue + hueVariation;
+                
                 const saturation = 70;
-                const lightness = 50 + (this.dataArray[i] / 255) * 20;
+                let lightness;
+                
+                if (isLightTheme) {
+                    // Darker cyan for light theme
+                    lightness = 30 + (this.dataArray[i] / 255) * 25;
+                } else {
+                    // Lighter cyan for dark theme
+                    lightness = 50 + (this.dataArray[i] / 255) * 25;
+                }
+                
                 ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
                 const radius = barWidth / 2;
                 const y = height - barHeight;
