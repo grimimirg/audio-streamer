@@ -1,0 +1,40 @@
+{% macro dashboard_cards(show_peak=false, show_audio_format=true) %}
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-title">
+            <span>👥</span> <span data-i18n="dashboard.listeners"></span>
+        </div>
+        <div class="metric-value" id="listenersCount">0</div>
+        <div class="metric-label">
+            <span data-i18n="dashboard.connected_now"></span>
+            {% if show_peak %}
+            (<span data-i18n="dashboard.peak"></span>: <span id="peakListeners">0</span>)
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <span>🎧</span> <span data-i18n="dashboard.audio_quality"></span>
+        </div>
+        <div class="metric-value" id="sampleRate">44.1k</div>
+        <div class="metric-label"><span data-i18n="dashboard.sample_rate"></span></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <span>🔊</span> <span data-i18n="dashboard.channels"></span>
+        </div>
+        <div class="metric-value" id="channels">2</div>
+        <div class="metric-label"><span data-i18n="dashboard.stereo_mono"></span></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <span>⏱️</span> <span data-i18n="dashboard.uptime"></span>
+        </div>
+        <div class="metric-value" id="uptime">00:00</div>
+        <div class="metric-label"><span data-i18n="dashboard.on_air"></span></div>
+    </div>
+</div>
+{% endmacro %}

@@ -9,10 +9,10 @@ let trackHistory = [];
 let historyVisible = false;
 
 function toggleTheme() {
-    const body = document.getElementById('mainBody');
+    const body = document.body;
     const themeIcon = document.getElementById('themeIcon');
     const isLight = body.classList.contains('light');
-    
+
     if (isLight) {
         body.classList.remove('light');
         themeIcon.textContent = '☀️';
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateStaticTexts();
 
     const savedTheme = localStorage.getItem('theme');
-    const body = document.getElementById('mainBody');
+    const body = document.body;
     const themeIcon = document.getElementById('themeIcon');
 
     if (savedTheme === 'light') {
