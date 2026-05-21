@@ -1,8 +1,7 @@
 from typing import Optional, List
 import time
 
-from classes.streamers.CardAudioStreamer import CardAudioStreamer
-from classes.streamers.MicrophoneAudioStreamer import MicrophoneAudioStreamer
+from classes.streamer.AudioStreamerFactory import AudioStreamerFactory
 from .AudioHttpFacade import AudioHttpFacade
 from utilities.Logger import Logger
 
@@ -22,16 +21,17 @@ class ApplicationController:
         self.startTime = time.time()  # Application start time
 
     def _askForInputMethod(self):
-        """Ask user to choose between microphone and audio interface."""
+        """Ask user to choose between microphone, audio interface, or liquid music."""
         while True:
             try:
                 print("\n" + "=" * 50)
                 print("Choose your audio input method:")
                 print("1. Microphone (built-in or USB mic)")
                 print("2. Audio Interface (external sound card, line-in)")
+                print("3. Liquid Music (file-based music playback)")
                 print("=" * 50)
 
-                choice = input("Enter your choice (1 or 2): ").strip()
+                choice = input("Enter your choice (1, 2, or 3): ").strip()
 
                 if choice == "1":
                     Logger.info("User selected: Microphone input")
@@ -39,8 +39,11 @@ class ApplicationController:
                 elif choice == "2":
                     Logger.info("User selected: Audio interface input")
                     return "interface"
+                elif choice == "3":
+                    Logger.info("User selected: Liquid Music")
+                    return "liquid_music"
                 else:
-                    print("Invalid choice. Please enter 1 or 2.")
+                    print("Invalid choice. Please enter 1, 2, or 3.")
                     continue
 
             except (EOFError, KeyboardInterrupt):
@@ -48,17 +51,15 @@ class ApplicationController:
                 return "microphone"
 
     def _createStreamer(self, input_method):
-        """Create the appropriate audio streamer based on user choice."""
-        if input_method == "microphone":
-            Logger.info("Creating AudioStreamerAlternative for microphone input")
-            return MicrophoneAudioStreamer()
-        elif input_method == "interface":
-            Logger.info("Creating AudioStreamer for audio interface input")
-            return CardAudioStreamer()
-        else:
-            # Fallback
-            Logger.warning("Unknown input method, defaulting to microphone")
-            return MicrophoneAudioStreamer()
+        """Create the appropriate audio streamer based on user choice using the factory.
+        
+        Args:
+            input_method: The selected input method (microphone, interface, or liquid_music)
+            
+        Returns:
+            An instance of the appropriate audio streamer class
+        """
+        return AudioStreamerFactory.create(input_method)
 
     def setup(self):
         """Setup audio streaming by selecting devices and starting capture.
@@ -75,20 +76,25 @@ class ApplicationController:
             self.audioStreamer.startTime = self.startTime  # Set application start time
             self.audioHttpFacade = AudioHttpFacade(self.audioStreamer)
 
-            # List available devices and ask for selection
-            self.audioStreamer.listAvailableDevices()
-            deviceIndex = self._askForDeviceIndex()
+            # For liquid music, skip device selection and don't auto-start streaming
+            if input_method == "liquid_music":
+                Logger.info("Liquid Music mode: streaming will start when play is pressed")
+                self.audioStreamer.listAvailableDevices()
+            else:
+                # List available devices and ask for selection
+                self.audioStreamer.listAvailableDevices()
+                deviceIndex = self._askForDeviceIndex()
 
-            if deviceIndex is None:
-                Logger.warning("No device selected, using default")
+                if deviceIndex is None:
+                    Logger.warning("No device selected, using default")
 
-            # Start audio streaming
-            self.audioStreamer.startAudioStream(deviceIndex)
+                # Start audio streaming
+                self.audioStreamer.startAudioStream(deviceIndex)
 
-            # Verify streaming started successfully
-            if not self.audioStreamer.onAir:
-                Logger.error("Failed to start audio streaming")
-                return None
+                # Verify streaming started successfully
+                if not self.audioStreamer.onAir:
+                    Logger.error("Failed to start audio streaming")
+                    return None
 
             self._setupSuccessful = True
             Logger.info("Application setup completed successfully")

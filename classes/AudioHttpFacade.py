@@ -1,16 +1,14 @@
 import os
-import queue
-import yaml
-import uuid
-import shutil
-from flask import Flask, render_template, Response, jsonify, send_from_directory, request
+from flask import Flask, Response
 from flask_socketio import SocketIO, emit
 from dotenv import load_dotenv
-from werkzeug.utils import secure_filename
-from functools import wraps
 
-from utilities.Constants import CLIENT_QUEUE_SIZE
 from utilities.Logger import Logger
+from classes.handlers.AuthHandler import AuthHandler
+from classes.handlers.CoverUploadHandler import CoverUploadHandler
+from classes.handlers.LocalizationHandler import LocalizationHandler
+from classes.handlers.LiquidMusicHandler import LiquidMusicHandler
+from classes.handlers.StreamHandler import StreamHandler
 
 
 class AudioHttpFacade:
@@ -35,6 +33,7 @@ class AudioHttpFacade:
         template_dir = os.path.join(root_dir, 'templates')
         static_dir = os.path.join(root_dir, 'static')
         upload_dir = os.path.join(root_dir, 'uploads', 'covers')
+        locales_dir = os.path.join(root_dir, 'locales')
 
         # Create upload directory if it doesn't exist
         os.makedirs(upload_dir, exist_ok=True)
@@ -47,12 +46,21 @@ class AudioHttpFacade:
         self.app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
         self.audioStreamer = audioStreamer
-        self.locales_dir = os.path.join(root_dir, 'locales')
         self.radio_station_name = os.getenv('RADIO_STATION_NAME', 'My Radio Station')
         self.dashboard_username = os.getenv('DASHBOARD_USERNAME', 'admin')
         self.dashboard_password = os.getenv('DASHBOARD_PASSWORD', 'admin123')
         self.track_info = {'artist': '', 'track_title': '', 'album_name': '', 'track_year': '', 'album_cover': ''}
-        self._clear_upload_folder()
+
+        # Initialize handlers
+        self.auth_handler = AuthHandler(self.dashboard_username, self.dashboard_password)
+        self.cover_handler = CoverUploadHandler(upload_dir)
+        self.localization_handler = LocalizationHandler(locales_dir)
+        self.stream_handler = StreamHandler(audioStreamer, self.radio_station_name)
+        self.liquid_music_handler = LiquidMusicHandler(audioStreamer, self.socketio)
+
+        # Clear upload folders and setup
+        self.cover_handler.clear_upload_folder()
+        self.liquid_music_handler.clear_upload_folder()
         self._add_routes()
         self._add_socketio_events()
 
@@ -69,44 +77,6 @@ class AudioHttpFacade:
 
     # -- PRIVATES --
 
-    def _clear_upload_folder(self):
-        """Clear all files from the upload folder at application startup."""
-        upload_folder = self.app.config['UPLOAD_FOLDER']
-        if os.path.exists(upload_folder):
-            for filename in os.listdir(upload_folder):
-                file_path = os.path.join(upload_folder, filename)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                        Logger.info(f"Deleted old upload: {file_path}")
-                except Exception as e:
-                    Logger.error(f"Error deleting file {file_path}: {e}")
-            Logger.info("Upload folder cleared at application startup")
-
-    def _check_auth(self, username, password):
-        """Check if the provided credentials are valid.
-
-        Args:
-            username: Username from HTTP Basic Auth
-            password: Password from HTTP Basic Auth
-
-        Returns:
-            bool: True if credentials are valid, False otherwise
-        """
-        return username == self.dashboard_username and password == self.dashboard_password
-
-    def _authenticate(self):
-        """Send 401 response with WWW-Authenticate header.
-
-        Returns:
-            Response: Flask response with authentication challenge
-        """
-        return Response(
-            'Could not verify your access level for that URL.\n'
-            'You have to login with proper credentials', 401,
-            {'WWW-Authenticate': 'Basic realm="Login Required"'}
-        )
-
     def _requires_auth(self, f):
         """Decorator to require HTTP Basic Authentication for a route.
 
@@ -116,28 +86,38 @@ class AudioHttpFacade:
         Returns:
             The decorated function
         """
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            auth = request.authorization
-            if not auth or not self._check_auth(auth.username, auth.password):
-                return self._authenticate()
-            return f(*args, **kwargs)
-        return decorated
+        return self.auth_handler.requires_auth(f)
 
     def _add_routes(self):
         """Configure Flask URL routes for the application."""
-        self.app.add_url_rule('/', 'player', self._player)
-        self.app.add_url_rule('/stream', 'stream', self._stream)
+        # Standard routes
+        self.app.add_url_rule('/', 'player', self.stream_handler.player)
+        self.app.add_url_rule('/stream', 'stream', self.stream_handler.stream)
         self.app.add_url_rule('/stats', 'stats', self._stats)
-        self.app.add_url_rule('/dashboard', 'dashboard', self._requires_auth(self._dashboard))
-        self.app.add_url_rule('/locales/<lang>', 'locales', self._get_locale)
-        self.app.add_url_rule('/upload_cover', 'upload_cover', self._upload_cover, methods=['POST'])
-        self.app.add_url_rule('/uploads/covers/<filename>', 'uploaded_cover', self._uploaded_cover)
+        self.app.add_url_rule('/dashboard', 'dashboard', self._requires_auth(self.stream_handler.dashboard))
+        self.app.add_url_rule('/dashboard_liquid', 'dashboard_liquid', self._requires_auth(self.stream_handler.dashboard_liquid))
+        self.app.add_url_rule('/locales/<lang>', 'locales', self.localization_handler.get_locale)
+        self.app.add_url_rule('/upload_cover', 'upload_cover', self._requires_auth(self._upload_cover), methods=['POST'])
+        self.app.add_url_rule('/uploads/covers/<filename>', 'uploaded_cover', self.cover_handler.serve_cover)
+        self.app.add_url_rule('/streamer_type', 'streamer_type', self._streamer_type)
+        
+        # Liquid Music routes
+        self.app.add_url_rule('/liquid/upload_track', 'upload_track', self._requires_auth(self.liquid_music_handler.upload_track), methods=['POST'])
+        self.app.add_url_rule('/liquid/play', 'play', self._requires_auth(self.liquid_music_handler.play), methods=['POST'])
+        self.app.add_url_rule('/liquid/stop', 'stop', self._requires_auth(self.liquid_music_handler.stop), methods=['POST'])
+        self.app.add_url_rule('/liquid/pause', 'pause', self._requires_auth(self.liquid_music_handler.pause), methods=['POST'])
+        self.app.add_url_rule('/liquid/resume', 'resume', self._requires_auth(self.liquid_music_handler.resume), methods=['POST'])
+        self.app.add_url_rule('/liquid/skip_forward', 'skip_forward', self._requires_auth(self.liquid_music_handler.skip_forward), methods=['POST'])
+        self.app.add_url_rule('/liquid/skip_backward', 'skip_backward', self._requires_auth(self.liquid_music_handler.skip_backward), methods=['POST'])
+        self.app.add_url_rule('/liquid/set_local_path', 'set_local_path', self._requires_auth(self.liquid_music_handler.set_local_path), methods=['POST'])
+        self.app.add_url_rule('/liquid/playlist', 'playlist', self._requires_auth(self.liquid_music_handler.get_playlist))
+        self.app.add_url_rule('/liquid/stack', 'stack', self._requires_auth(self.liquid_music_handler.get_stack))
+        self.app.add_url_rule('/liquid/remove_track', 'remove_track', self._requires_auth(self.liquid_music_handler.remove_track), methods=['POST'])
 
     def _add_socketio_events(self):
         """Configure SocketIO event handlers for real-time updates."""
         @self.socketio.on('connect')
-        def handle_connect():
+        def handle_connect(data=None):
             Logger.info('WebSocket client connected')
             # Send initial stats on connection
             emit('stats', self._get_stats_with_track_info())
@@ -164,7 +144,7 @@ class AudioHttpFacade:
 
     def _get_stats_with_track_info(self):
         """Get audio stats combined with track info."""
-        stats = self.audioStreamer.getStats()
+        stats = self.stream_handler.stats()
         stats['artist'] = self.track_info['artist']
         stats['track_title'] = self.track_info['track_title']
         stats['album_name'] = self.track_info['album_name']
@@ -172,186 +152,18 @@ class AudioHttpFacade:
         stats['album_cover'] = self.track_info['album_cover']
         return stats
 
-    def _generateAudioStream(self):
-        """Generate audio stream data for HTTP response.
-
-        Creates a client queue, registers it with the audio streamer,
-        and yields audio chunks as they become available.
-
-        Yields:
-            bytes: Raw audio data chunks
-        """
-        clientQueue = queue.Queue(maxsize=CLIENT_QUEUE_SIZE)
-        self.audioStreamer.addClient(clientQueue)
-        Logger.info("New audio stream client connected")
-        # Broadcast updated stats to all WebSocket clients
-        self.socketio.emit('stats', self._get_stats_with_track_info())
-
-        try:
-            chunkCount = 0
-            while True:
-                try:
-                    # Use timeout to prevent indefinite blocking
-                    data = clientQueue.get(timeout=1.0)
-                    chunkCount += 1
-                    # For debug purposes
-                    # Logger.info(f"Yielding chunk {chunkCount}: {len(data)} bytes")
-                    yield data
-                except queue.Empty:
-                    # Check if streaming is still active
-                    if not self.audioStreamer.onAir:
-                        Logger.info("Audio streaming stopped, closing client connection")
-                        break
-                    # Continue waiting for data
-                    Logger.warning(f"Queue empty, waiting... (stream active: {self.audioStreamer.onAir})")
-                    continue
-                except Exception as e:
-                    Logger.error(f"Error while getting data from queue: {type(e).__name__}: {str(e)}")
-                    break
-
-        except GeneratorExit:
-            Logger.info("Client disconnected from audio stream")
-        except Exception as e:
-            Logger.error(f"Unexpected error in audio stream generator: {type(e).__name__}: {str(e)}")
-        finally:
-            # Ensure client is removed even on errors
-            self.audioStreamer.removeClient(clientQueue)
-            Logger.debug("Client queue removed from audio streamer")
-            # Broadcast updated stats to all WebSocket clients
-            self.socketio.emit('stats', self._get_stats_with_track_info())
-
-    def _player(self):
-        """Serve the main web player interface.
-        
-        Returns:
-            str: Rendered HTML template for the audio player
-        """
-        return render_template('index.html', radio_station_name=self.radio_station_name)
-
-    def _stream(self):
-        """Serve the audio streaming endpoint.
-        
-        Returns:
-            Response: Flask response with audio stream data
-        """
-        # Generate WAV header for streaming
-        import struct
-
-        def generate_wav_stream():
-            # WAV header for 44100 Hz, 16-bit, stereo
-            sample_rate = 44100
-            channels = 2
-            bits_per_sample = 16
-            byte_rate = sample_rate * channels * bits_per_sample // 8
-            block_align = channels * bits_per_sample // 8
-
-            # WAV header with proper sizes for Firefox compatibility
-            # Use a large dummy size (2GB) to indicate streaming
-            dummy_size = 0xFFFFFFFF
-            header = struct.pack('<4sL4s', b'RIFF', dummy_size, b'WAVE')
-            header += struct.pack('<4sLHHLLHH4sL',
-                                  b'fmt ', 16, 1, channels, sample_rate,
-                                  byte_rate, block_align, bits_per_sample, b'data', dummy_size)
-
-            yield header
-
-            # Stream audio data
-            for chunk in self._generateAudioStream():
-                yield chunk
-
-        return Response(
-            generate_wav_stream(),
-            mimetype='audio/wav',
-            headers={
-                'Cache-Control': 'no-cache, no-store',
-                'Connection': 'keep-alive',
-                'Access-Control-Allow-Origin': '*',
-                'Accept-Ranges': 'none'
-            }
-        )
+    def _upload_cover(self):
+        """Handle album cover image upload."""
+        from flask import request
+        if 'cover' not in request.files:
+            return {'error': 'No file provided'}, 400
+        return self.cover_handler.upload_cover(request.files['cover'])
 
     def _stats(self):
-        """Serve streaming statistics endpoint.
-        
-        Returns:
-            dict: Current streaming statistics as JSON
-        """
+        """Serve streaming statistics endpoint."""
         return self._get_stats_with_track_info()
 
-    def _dashboard(self):
-        """Serve the dashboard interface.
-
-        Returns:
-            str: Rendered HTML template for the dashboard
-        """
-        return render_template('dashboard.html', radio_station_name=self.radio_station_name)
-
-    def _get_locale(self, lang):
-        """Serve translation files as JSON.
-        
-        Args:
-            lang: Language code (it, en, de)
-            
-        Returns:
-            dict: Translation data as JSON
-        """
-        try:
-            locale_file = os.path.join(self.locales_dir, f'{lang}.yaml')
-            if not os.path.exists(locale_file):
-                return jsonify({'error': 'Language not found'}), 404
-
-            with open(locale_file, 'r', encoding='utf-8') as f:
-                translations = yaml.safe_load(f)
-
-            return jsonify(translations)
-        except Exception as e:
-            Logger.error(f"Error loading locale {lang}: {e}")
-            return jsonify({'error': 'Failed to load translations'}), 500
-
-    def _upload_cover(self):
-        """Handle album cover image upload.
-        
-        Returns:
-            dict: JSON response with the URL of the uploaded image
-        """
-        try:
-            if 'cover' not in request.files:
-                return jsonify({'error': 'No file provided'}), 400
-
-            file = request.files['cover']
-
-            if file.filename == '':
-                return jsonify({'error': 'No file selected'}), 400
-
-            if file:
-                # Generate unique filename
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4().hex}_{filename}"
-                filepath = os.path.join(self.app.config['UPLOAD_FOLDER'], unique_filename)
-
-                # Save file
-                file.save(filepath)
-
-                # Return URL
-                url = f"/uploads/covers/{unique_filename}"
-                Logger.info(f"Cover image uploaded: {url}")
-                return jsonify({'url': url})
-
-        except Exception as e:
-            Logger.error(f"Error uploading cover: {e}")
-            return jsonify({'error': 'Failed to upload file'}), 500
-
-    def _uploaded_cover(self, filename):
-        """Serve uploaded cover images.
-        
-        Args:
-            filename: Name of the file to serve
-            
-        Returns:
-            File: The requested image file
-        """
-        try:
-            return send_from_directory(self.app.config['UPLOAD_FOLDER'], filename)
-        except Exception as e:
-            Logger.error(f"Error serving cover {filename}: {e}")
-            return jsonify({'error': 'File not found'}), 404
+    def _streamer_type(self):
+        """Get the current streamer type."""
+        from flask import jsonify
+        return jsonify(self.stream_handler.streamer_type())

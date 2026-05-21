@@ -41,22 +41,18 @@
 **Features & Configuration**
 - [Professional Features](#professional-features)
 - [Use Cases & Inspiration](#use-cases--inspiration)
-- [Studio Configuration Guide](#studio-configuration-guide)
 - [Listener Experience](#listener-experience)
 
 </td>
 <td width="50%">
 
 **Operations & Support**
-- [Troubleshooting](#troubleshooting---keep-your-station-running)
-- [Broadcasting Statistics](#broadcasting-statistics)
-- [Production Deployment](#production-deployment)
-- [Security Best Practices](#security-best-practices)
+- [User Manual - Technical Details](USER_MANUAL.md) ⭐
+- [Quick Reference](#quick-reference)
 
 **Advanced & Community**
-- [Advanced Configuration](#advanced-configuration)
 - [Contributing & Support](#contributing--support)
-- [Quick Reference](#quick-reference)
+- [License](#license)
 
 </td>
 </tr>
@@ -119,6 +115,16 @@ Display artist, album, year, and album cover for your listeners
 Upload album covers via URL or file directly from the dashboard
 </td>
 </tr>
+<tr>
+<td bgcolor="#FFF9C4">
+<strong>🎧 Liquid Music Mode</strong><br/>
+Upload and play music files from your computer with automatic metadata extraction
+</td>
+<td bgcolor="#E1F5FE">
+<strong>📁 Local Music Library</strong><br/>
+Load your entire music collection from any folder on your computer
+</td>
+</tr>
 </table>
 
 ## Quick Start - 5 Minutes to Live
@@ -170,9 +176,10 @@ When you run the app, you'll see:
 🎤 Choose your audio input method:
 1. Microphone (built-in or USB mic)
 2. Audio Interface (external sound card, line-in)
+3. Liquid Music (file-based music playback)
 ==================================================
 
-Enter your choice (1 or 2):
+Enter your choice (1, 2, or 3):
 ```
 
 ### Step 4: Select Your Audio Device
@@ -198,12 +205,69 @@ Choose a device index (1 for built-in mic, 2 for line-in, or ENTER for default):
 Choose device index(es) to stream from (or ENTER for default):
 ```
 
+**For Liquid Music Mode:**
+```
+=== Available music sources ===
+1. Upload songs manually via dashboard
+2. Specify local directory path
+==================================================
+
+Streaming will start when you press play in the dashboard
+```
+
 ### Step 5: Go Live
 1. Select your audio device from the list
 2. Open `http://localhost:4986` in your browser
 3. Click **Play** to start broadcasting
 4. Choose your theme (Light/Dark) and language from the dropdowns
 5. Click the 📊 button to view the real-time dashboard
+
+**For Liquid Music Mode:**
+1. Open the dashboard by clicking the 📊 button
+2. Upload your music files or load them from a local folder
+3. Click **Play** to start broadcasting your music
+
+---
+
+## Liquid Music Mode - Play Your Music Files
+
+Liquid Music mode lets you broadcast music files stored on your computer. Perfect for playing your music collection without needing turntables or audio interfaces.
+
+### How It Works
+
+**Upload Your Music**
+- Open the dashboard when using Liquid Music mode
+- Click "Upload" to select music files from your computer
+- Supported formats: MP3, WAV, FLAC, OGG, M4A
+- The app automatically extracts song information (title, artist, album, year)
+
+**Load From Local Folder**
+- Enter the path to your music folder (e.g., `/home/yourname/Music`)
+- The app loads all music files from that folder
+- Perfect for your entire music library
+
+**Control Your Playlist**
+- See all your uploaded songs in the playlist
+- Remove songs you don't want
+- Skip forward or backward in your playlist
+- Pause, resume, or stop playback at any time
+
+**Automatic Features**
+- Song information is automatically extracted from your music files
+- No need to manually enter artist, album, or song titles
+- Uploaded files are automatically cleaned up when you restart the app
+- Security checks ensure only valid music files are uploaded
+
+### When to Use Liquid Music
+
+- **Personal Radio Station**: Broadcast your music collection
+- **Background Music**: Perfect for businesses, cafes, or venues
+- **Music Sharing**: Share your playlists with friends
+- **Automated Broadcasting**: Set up a playlist and let it run
+
+### Security
+
+The app automatically checks every uploaded file to ensure it's a valid music file. This protects your computer from potentially harmful files while keeping your station secure.
 
 ---
 
@@ -230,6 +294,9 @@ Enjoy enterprise-grade features including light/dark themes, auto-reconnect tech
 - **Now Playing Section**: Manage track information (artist, title, album, year, cover)
 - **Album Cover Upload**: Upload cover images via URL or file upload with preview
 - **Track Info Broadcasting**: Send track information to all connected listeners instantly
+- **Liquid Music Dashboard**: Special dashboard for file-based music playback with playlist management
+- **Automatic Metadata Extraction**: Song information automatically extracted from uploaded music files
+- **Secure File Upload**: Built-in security checks to ensure only valid music files are uploaded
 
 ### Smart Web Player
 - **Auto-Reconnect**: Never lose a listener - automatic retry on connection issues
@@ -331,19 +398,7 @@ Example: http://192.168.1.100:4986
 2. **Get Public IP**: Visit `whatismyip.com`
 3. **Share Link**: `http://YOUR-PUBLIC-IP:4986`
 
-### Professional Setup (Recommended)
-```nginx
-# Nginx reverse proxy with SSL
-server {
-    listen 443 ssl;
-    server_name radio.yourdomain.com;
-    
-    location / {
-        proxy_pass http://localhost:4986;
-        proxy_set_header Host $host;
-    }
-}
-```
+For professional setup with SSL and reverse proxy, see the [User Manual](USER_MANUAL.md).
 
 ---
 
@@ -376,35 +431,6 @@ server {
 
 ---
 
-## Studio Configuration Guide
-
-### Audio Sources That Work
-- **Turntables**: Vinyl records (need preamp for most computers)
-- **Cassette Decks**: Analog tapes and mixtapes
-- **Mixers**: DJ controllers, audio mixers
-- **Instruments**: Electric guitars, keyboards, synthesizers
-- **Microphones**: Voice, instruments, ambient sound
-
-### Professional Setup Tips
-```
-Volume Settings: 70-80% to avoid distortion
-Audio Quality: Use 44.1kHz, 16-bit for best compatibility
-Monitoring: Keep headphones connected to check audio quality
-```
-
-### Multiple Device Setup
-```bash
-# When prompted, enter multiple device numbers:
-Available devices:
-  0: Built-in Microphone
-  1: USB Audio Interface
-  2: Line-in
-
-Your choice: 1 2  # Mix USB interface + line-in
-```
-
----
-
 ## Listener Experience
 
 ### What Your Listeners See
@@ -416,331 +442,11 @@ Your choice: 1 2  # Mix USB interface + line-in
 - **Theme Options**: Light and dark themes for comfort
 - **Track Information**: Artist name, album with year, and track title
 - **Album Cover**: Album artwork displayed when available
-- **Audio Visualizer**: Real-time spectrum analyzer for visual feedback
 
 ### Sharing Your Station
 ```
 Direct Link: http://your-station:4986
 Stream Only: http://your-station:4986/stream
-Statistics: http://your-station:4986/stats
-```
-
----
-
-## Troubleshooting - Keep Your Station Running
-
-<table>
-<tr>
-<td bgcolor="#FFEBEE">
-<strong>🔧 Quick Solutions</strong><br/>
-Most issues can be resolved in minutes. Check device connections, test audio sources, and verify permissions. Our comprehensive troubleshooting guide has you covered.
-</td>
-</tr>
-</table>
-
-### Common Issues & Quick Fixes
-
-#### Microphone Issues
-**"No sound from microphone"**
-```bash
-# Test built-in microphone directly
-arecord -D default -d 3 test.wav && aplay test.wav
-
-# Test line-in jack directly
-arecord -D hw:0,2 -d 3 test.wav && aplay test.wav
-
-# Check microphone permissions
-pactl list sources | grep -i microphone
-
-# Restart with correct device
-python app.py  # Choose microphone option, then device 1 or 2
-```
-
-**"Choosing between built-in mic and line-in"**
-- **Device 1**: Built-in microphone - perfect for voice, podcasts, commentary
-- **Device 2**: Line-in jack (3.5mm) - for turntables, mixers, instruments
-- **Default**: Press ENTER to use built-in microphone
-
-**"Microphone quality is poor"**
-- Check microphone distance (6-12 inches optimal for built-in mic)
-- Reduce background noise
-- Use line-in for better audio quality with external sources
-- Adjust system input levels
-
-#### Audio Interface Issues
-**"Interface not detected"**
-```bash
-# Check if device is connected
-arecord -l
-
-# Test with PyAudio
-python -c "import pyaudio; print('Devices:', pyaudio.PyAudio().get_device_count())"
-
-# Restart with interface option
-python app.py  # Choose audio interface option
-```
-
-**"Audio sounds distorted"**
-- Lower input gain on interface
-- Check for clipping indicators
-- Use proper cable connections
-- Ensure sample rate compatibility
-
-#### Connection Issues
-**"Listeners can't connect"**
-```bash
-# Check firewall settings
-sudo ufw allow 4986  # Linux
-
-# Test local connection
-curl http://localhost:4986/stats
-
-# Check network accessibility
-netstat -tlnp | grep 4986
-```
-
-**"Connection keeps dropping"**
-- The auto-reconnect will handle temporary issues
-- Check your internet connection stability
-- Verify audio device isn't being used by other apps
-- Monitor system resources
-
-#### Audio Streaming Issues
-**"Audio stream has interruptions or glitches"**
-- **Decrease AUDIO_CHUNK**: Lower the buffer size in your `.env` file for better continuity
-  ```bash
-  # Try these values (default is 1024):
-  AUDIO_CHUNK=512   # Lower latency, better for real-time
-  AUDIO_CHUNK=256   # Even lower latency, may help with interruptions
-  ```
-- Ensure your system has sufficient CPU resources
-- Close other applications that might be using audio devices
-- Check if your audio device supports the configured sample rate
-
-### Professional Monitoring
-```bash
-# Monitor logs for issues (systemd service)
-sudo journalctl -u audio-streamer -f
-
-# Monitor logs for issues (PM2)
-pm2 logs radio-station
-
-# Check system resources
-htop  # Monitor CPU/memory usage
-```
-
----
-
-## Broadcasting Statistics
-
-### Real-Time Dashboard
-Visit `http://your-station:4986/dashboard` to view live statistics:
-- **Listener Count**: Current listeners (peak listeners available in Audio Interface mode)
-- **Audio Quality**: Sample rate, channels, bitrate
-- **Application Uptime**: Time since application started
-- **Stream Status**: On-air/off-air indicator
-- **Audio Information**: Format, latency details
-- **Now Playing**: Section to manage track information
-- **Track Info Fields**: Artist, track title, album, year, and album cover
-- **Cover Upload**: Upload album covers via URL or file with live preview
-- **Send to Player**: Broadcast track information to all listeners instantly
-
-All statistics update in real-time via WebSocket - no polling required.
-
-### Statistics API
-For programmatic access, visit `http://your-station:4986/stats`:
-```json
-{
-  "on_air": true,
-  "listeners": 42,
-  "sample_rate": 44100,
-  "channels": 2,
-  "uptime_seconds": 3600,
-  "uptime_formatted": "1h 0m 0s",
-  "start_time": 1234567890
-}
-```
-
-**Note**: When using Audio Interface mode (CardAudioStreamer), additional fields are available:
-- `peak_listeners`: Maximum concurrent listeners
-- `total_data_mb`: Total data transferred in MB
-- `chunks_processed`: Number of audio chunks processed
-- `avg_chunk_size`: Average chunk size in bytes
-
-### Performance Metrics
-- **Concurrent Listeners**: Unlimited (limited by your bandwidth)
-- **Audio Quality**: CD-quality 44.1kHz stereo
-- **Latency**: ~2 seconds (optimal for streaming)
-- **Bandwidth**: ~176 KB/s per listener
-
----
-
-## Production Deployment
-
-<table>
-<tr>
-<td bgcolor="#F3E5F5">
-<strong>🚀 Enterprise Ready</strong><br/>
-Deploy your station for 24/7 operation with native deployment. Direct hardware access ensures optimal audio quality and compatibility with professional audio interfaces.
-</td>
-</tr>
-</table>
-
-### Why Native Deployment?
-
-**Audio hardware requires direct system access:**
-- Professional audio interfaces need kernel-level drivers
-- Docker containers add latency and compatibility issues
-- USB audio devices may not work properly in containers
-- Native deployment = zero latency, full hardware support
-
-### 24/7 Radio Station with PM2
-
-```bash
-# Install PM2 process manager
-npm install -g pm2
-
-# Start your station
-pm2 start app.py --name "radio-station" --interpreter python3
-
-# Monitor in real-time
-pm2 monit
-
-# View logs
-pm2 logs radio-station
-
-# Auto-restart on system reboot
-pm2 startup
-pm2 save
-
-# Restart after code changes
-pm2 restart radio-station
-```
-
-### Systemd Service (Linux)
-
-For production servers, use systemd for automatic startup.
-
-A ready-to-use service file is included: `audio-streamer.service`
-
-```bash
-# Edit the service file with your paths
-nano audio-streamer.service
-
-# Copy to systemd directory
-sudo cp audio-streamer.service /etc/systemd/system/
-
-# Reload systemd
-sudo systemctl daemon-reload
-```
-
-```ini
-[Unit]
-Description=Audio Streamer Radio Station
-After=network.target sound.target
-
-[Service]
-Type=simple
-User=your-username
-WorkingDirectory=/path/to/audio-streamer
-Environment="AUDIO_STREAMER_DEBUG=false"
-ExecStart=/usr/bin/python3 /path/to/audio-streamer/app.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# Enable and start service
-sudo systemctl enable audio-streamer
-sudo systemctl start audio-streamer
-
-# Check status
-sudo systemctl status audio-streamer
-
-# View logs
-sudo journalctl -u audio-streamer -f
-```
-
----
-
-## Security Best Practices
-
-### Basic Security
-```bash
-# Disable debug mode in production
-export AUDIO_STREAMER_DEBUG=false
-
-# Use firewall to restrict access
-sudo ufw allow from 192.168.1.0/24 to any port 4986
-```
-
-### Professional Security
-- Use reverse proxy with SSL termination
-- Implement rate limiting for connections
-- Monitor for unusual connection patterns
-- Regular security updates
-
----
-
-## Advanced Configuration
-
-### Configuration File (.env)
-
-**The `.env` file is mandatory.** The application will not start without it.
-
-All settings must be configured via the `.env` file:
-
-```bash
-# Copy the example file (REQUIRED)
-cp .env.example .env
-
-# Edit your configuration
-nano .env
-```
-
-**Available settings:**
-
-```bash
-# Audio Configuration
-AUDIO_CHUNK=1024              # Buffer size (512-4096)
-AUDIO_CHANNELS=2              # 1=mono, 2=stereo
-AUDIO_RATE=44100              # Sample rate (22050, 44100, 48000)
-
-# Network Configuration
-AUDIO_STREAMER_HOST=0.0.0.0   # Bind address
-AUDIO_STREAMER_PORT=4986      # Server port
-AUDIO_STREAMER_DEBUG=False    # Debug mode
-
-# Station Configuration
-RADIO_STATION_NAME=My Radio Station  # Custom station name
-
-# Streaming Configuration
-AUDIO_STREAMER_MAX_CLIENTS=10      # Max concurrent listeners
-AUDIO_STREAMER_QUEUE_SIZE=100      # Buffer queue size
-```
-
-### Audio Quality Tuning
-
-**Lower Latency (for live performances):**
-```bash
-AUDIO_CHUNK=512
-AUDIO_RATE=44100
-```
-
-**Higher Quality (for music streaming):**
-```bash
-AUDIO_CHUNK=2048
-AUDIO_RATE=48000
-```
-
-**Lower Bandwidth (for limited connections):**
-```bash
-AUDIO_CHUNK=1024
-AUDIO_RATE=22050
-AUDIO_CHANNELS=1
 ```
 
 ---
@@ -754,8 +460,8 @@ AUDIO_CHANNELS=1
 - Help others in the community
 
 ### Technical Support
-- **Documentation**: This README covers everything you need
-- **Troubleshooting**: Check the common issues section
+- **User Manual**: For detailed technical information, see [USER_MANUAL.md](USER_MANUAL.md)
+- **Quick Reference**: See the section below for essential commands
 - **Community**: Share experiences and get help from other broadcasters
 
 ---
@@ -792,22 +498,20 @@ AUDIO_STREAMER_PORT=8080 python app.py
 
 # Production mode
 AUDIO_STREAMER_DEBUG=false python app.py
-
-# Check stats
-curl http://localhost:4986/stats
 ```
 
 ### Important URLs
 - **Radio Player**: `http://localhost:4986`
 - **Audio Stream**: `http://localhost:4986/stream`
-- **Statistics Dashboard**: `http://localhost:4986/dashboard`
-- **Statistics API**: `http://localhost:4986/stats`
+- **Dashboard**: `http://localhost:4986/dashboard`
 
 ### Audio Device Tips
 - **Built-in Microphone**: Choose option 1, then device 1 for voice/podcasting
 - **Line-in Jack**: Choose option 1, then device 2 for external audio sources
 - **Audio Interface**: Choose option 2 for professional music production
+- **Liquid Music**: Choose option 3 for file-based music playback
 - **Test First**: Always test your device before going live
-- **Quality**: Use line-in or audio interfaces for best sound quality with external sources
+
+For detailed technical information, configuration, and troubleshooting, see the [User Manual](USER_MANUAL.md).
 
 ---
