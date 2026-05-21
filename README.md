@@ -33,6 +33,7 @@
 <td width="50%">
 
 **Getting Started**
+- [Legal Disclaimer](#legal-disclaimer)
 - [What You Can Do](#features---what-you-can-do)
 - [Quick Start - 5 Minutes to Live](#quick-start---5-minutes-to-live)
 - [Building Your Radio Station](#building-your-radio-station)
@@ -53,6 +54,50 @@
 **Advanced & Community**
 - [Contributing & Support](#contributing--support)
 - [License](#license)
+
+</td>
+</tr>
+</table>
+
+---
+
+<table border="3" bordercolor="#d32f2f" style="border-collapse: collapse;">
+<tr>
+<td bgcolor="#FFEBEE" style="padding: 20px;">
+
+## ⚠️ Legal Disclaimer
+
+**IMPORTANT NOTICE**: This software is a tool for audio streaming. Users are solely responsible for ensuring compliance with all applicable laws and regulations regarding music streaming and broadcasting.
+
+**Music Streaming Licenses**
+
+Streaming copyrighted music over the internet typically requires appropriate licenses from relevant copyright collection societies and performance rights organizations in your jurisdiction. Requirements vary significantly by country and region.
+
+**Users should be aware that:**
+
+- **Public streaming** of copyrighted music generally requires licenses for both composition rights (songwriters/publishers) and master recording rights (record labels/artists)
+- **License requirements** depend on your location, the location of your listeners, and whether streaming is for personal or commercial use
+- **Failure to obtain proper licenses** may result in legal consequences
+- **This application** provides the technical means to stream audio but does not provide any streaming licenses or legal protection
+
+**For Personal/Local Use**
+
+Streaming within a private network or for personal use may have different or no licensing requirements depending on local laws. Users should verify applicable regulations in their jurisdiction.
+
+**For Public/Commercial Use**
+
+If you plan to stream to the public or use this for commercial purposes, you should:
+
+- Consult with copyright collection societies in your country (e.g., SIAE in Italy, ASCAP/BMI in USA, GEMA in Germany, PRS in UK)
+- Obtain appropriate webcasting or streaming licenses
+- Ensure compliance with all relevant copyright and performance rights regulations
+- Seek professional legal advice if uncertain about requirements
+
+**This disclaimer is provided for informational purposes only and does not constitute legal advice.**
+
+**Author Liability Disclaimer**
+
+The author of this software assumes no responsibility or liability for any use of this application. Users are solely responsible for ensuring their use complies with all applicable laws and regulations. The author shall not be held liable for any legal consequences, damages, or issues arising from the use of this software for streaming or broadcasting purposes.
 
 </td>
 </tr>
