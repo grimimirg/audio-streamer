@@ -8,22 +8,6 @@ let currentStatusKey = 'status.ready';
 let trackHistory = [];
 let historyVisible = false;
 
-function toggleTheme() {
-    const body = document.body;
-    const themeIcon = document.getElementById('themeIcon');
-    const isLight = body.classList.contains('light');
-
-    if (isLight) {
-        body.classList.remove('light');
-        themeIcon.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-    } else {
-        body.classList.add('light');
-        themeIcon.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-    }
-}
-
 function updateStatus(messageKey, type = 'loading') {
     currentStatusKey = messageKey;
     connectionStatus.textContent = i18n.t(messageKey);
@@ -277,22 +261,6 @@ function updateStaticTexts() {
 document.addEventListener('DOMContentLoaded', async () => {
     await i18n.loadTranslations(i18n.getCurrentLang());
     updateStaticTexts();
-
-    const savedTheme = localStorage.getItem('theme');
-    const body = document.body;
-    const themeIcon = document.getElementById('themeIcon');
-
-    if (savedTheme === 'light') {
-        body.classList.add('light');
-        themeIcon.textContent = '🌙';
-    } else {
-        themeIcon.textContent = '☀️';
-    }
-
-    const savedLang = localStorage.getItem('language');
-    if (savedLang) {
-        document.getElementById('languageDropdown').value = savedLang;
-    }
 
     playBtn.textContent = i18n.t('controls.play');
     updateStatus('status.ready', 'loading');

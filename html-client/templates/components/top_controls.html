@@ -1,5 +1,24 @@
 {% macro top_controls(show_player_btn=false, show_dashboard_btn=false, show_history_btn=false) %}
-<div class="top-right-controls">
+<div class="top-right-controls" x-data="{
+    isLight: localStorage.getItem('theme') === 'light',
+    language: localStorage.getItem('language') || 'en',
+    toggleTheme() {
+        this.isLight = !this.isLight;
+        localStorage.setItem('theme', this.isLight ? 'light' : 'dark');
+        document.body.classList.toggle('light', this.isLight);
+    },
+    changeLanguage(lang) {
+        this.language = lang;
+        localStorage.setItem('language', lang);
+        if (typeof changeLanguage === 'function') {
+            changeLanguage(lang);
+        }
+    },
+    init() {
+        document.body.classList.toggle('light', this.isLight);
+        $el.querySelector('#languageDropdown').value = this.language;
+    }
+}">
     {% if show_player_btn %}
     <button onclick="openPlayer()" class="theme-toggle-btn" title="Open Player">
         <span>🎧</span>
@@ -15,13 +34,13 @@
         <span>🔄</span>
     </button>
     {% endif %}
-    <button id="themeToggleBtn" onclick="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
-        <span id="themeIcon">🌓</span>
+    <button @click="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
+        <span x-text="isLight ? '🌙' : '☀️'">🌓</span>
     </button>
     <div class="selector-box">
-        <select id="languageDropdown" onchange="changeLanguage(this.value)">
+        <select id="languageDropdown" x-model="language" @change="changeLanguage($el.value)">
             <option value="it" data-i18n="language.it"></option>
-            <option value="en" data-i18n="language.en" selected></option>
+            <option value="en" data-i18n="language.en"></option>
             <option value="de" data-i18n="language.de"></option>
         </select>
     </div>

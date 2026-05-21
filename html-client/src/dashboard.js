@@ -1,6 +1,6 @@
 // Dashboard JavaScript for standard streaming mode
 
-// Variabili globali
+// Global variables
 let socket;
 let errorCount = 0;
 let startTime = null;
@@ -8,26 +8,10 @@ let uptimeInterval = null;
 const MAX_ERRORS = 3;
 let trackHistory = [];
 
-// Inizializzazione
+// Initialization
 document.addEventListener('DOMContentLoaded', async function () {
     await i18n.loadTranslations(i18n.getCurrentLang());
     updateStaticTexts();
-
-    // Set English as default language
-    const savedLang = localStorage.getItem('language') || 'en';
-    document.getElementById('languageDropdown').value = savedLang;
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme');
-    const body = document.body;
-    const themeIcon = document.getElementById('themeIcon');
-
-    if (savedTheme === 'light') {
-        body.classList.add('light');
-        themeIcon.textContent = '🌙';
-    } else {
-        themeIcon.textContent = '☀️';
-    }
 
     // Connect to WebSocket
     connectWebSocket();
@@ -142,21 +126,6 @@ function formatUptime(seconds) {
     }
 }
 
-function toggleTheme() {
-    const body = document.body;
-    const themeIcon = document.getElementById('themeIcon');
-
-    if (body.classList.contains('light')) {
-        body.classList.remove('light');
-        themeIcon.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-    } else {
-        body.classList.add('light');
-        themeIcon.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-    }
-}
-
 // Change language function
 async function changeLanguage(lang) {
     await i18n.loadTranslations(lang);
@@ -164,36 +133,36 @@ async function changeLanguage(lang) {
     updateStaticTexts();
 }
 
-// Gestione errori
+// Error handling
 function showError(message) {
     console.error(message);
 }
 
-// Aggiorna l'interfaccia
+// Update the interface
 function updateUI(stats) {
-    // Metriche principali
+    // Main metrics
     document.getElementById('listenersCount').textContent = stats.listeners;
     document.getElementById('peakListeners').textContent = stats.peak_listeners || 0;
     document.getElementById('sampleRate').textContent = (stats.sample_rate / 1000).toFixed(1) + 'k';
     document.getElementById('channels').textContent = stats.channels + (stats.channels === 2 ? ' (Stereo)' : ' (Mono)');
 
-    // Info audio
+    // Audio info
     document.getElementById('streamStatus').textContent = stats.on_air ? i18n.t('dashboard.active') : i18n.t('dashboard.inactive');
     document.getElementById('bitrate').textContent = calculateBitrate(stats.sample_rate, stats.channels);
 }
 
-// Calcola il bitrate
+// Calculate bitrate
 function calculateBitrate(sampleRate, channels) {
     const bitrate = sampleRate * channels * 16; // 16-bit
     return (bitrate / 1000).toFixed(0) + ' kbps';
 }
 
-// Apri player
+// Open player
 function openPlayer() {
-    window.open('/', '_blank');
+    window.location.href = '/';
 }
 
-// Aggiorna informazioni sul brano
+// Update track information
 async function updateTrackInfo() {
     const artistName = document.getElementById('artistName').value;
     const trackTitle = document.getElementById('trackTitle').value;
@@ -204,7 +173,7 @@ async function updateTrackInfo() {
 
     let coverUrl = albumCover;
 
-    // Se è stato caricato un file, fai l'upload
+    // If a file was loaded, upload it
     if (albumCoverFile) {
         const formData = new FormData();
         formData.append('cover', albumCoverFile);
@@ -245,7 +214,7 @@ async function updateTrackInfo() {
         album_cover: coverUrl
     });
 
-    // Mostra messaggio di conferma
+    // Show confirmation message
     const confirmationMessage = document.getElementById('confirmationMessage');
     confirmationMessage.style.display = 'block';
     setTimeout(() => {

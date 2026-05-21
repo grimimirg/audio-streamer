@@ -19,7 +19,7 @@ class LiquidMusicStreamer:
     """
 
     def __init__(self):
-        """Initialize the musica liquida streaming system.
+        """Initialize the liquid music streaming system.
         
         Sets up playlist management, playback state, client management,
         and creates the upload directory for music files.
@@ -84,14 +84,14 @@ class LiquidMusicStreamer:
         os.makedirs(self.uploadDir, exist_ok=True)
 
     def listAvailableDevices(self):
-        """List available music sources for musica liquida.
-        
+        """List available music sources for liquid music.
+
         Displays the two available music sources:
         1. Manual upload via dashboard
         2. Local directory path specification
-        
+
         Note: This is a placeholder method for consistency with other streamers.
-              Musica liquida doesn't use audio devices but file-based playback.
+              Liquid music doesn't use audio devices but file-based playback.
         """
         print("=== Available music sources ===")
         print("1. Upload songs manually via dashboard")
