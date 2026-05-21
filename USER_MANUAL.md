@@ -899,5 +899,5 @@ To add new HTTP endpoints:
 
 This project is licensed under the GNU General Public License v3.0 (GPLv3).
 
-For the complete license text, see [LICENSE](LICENSE) or visit:
+For the complete license text, see [LICENSE.md](LICENSE) or visit:
 https://www.gnu.org/licenses/gpl-3.0.html
