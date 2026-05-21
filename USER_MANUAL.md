@@ -1,6 +1,9 @@
 # Audio Streamer - User Manual
 
+Welcome to Audio Streamer! This manual will guide you through everything you need to know, whether you're just getting started or diving into advanced integration.
+
 ## Table of Contents
+- [Getting Started](#getting-started)
 - [Technical Overview](#technical-overview)
 - [Streaming Modes](#streaming-modes)
 - [Configuration](#configuration)
@@ -13,139 +16,183 @@
 
 ---
 
+## Getting Started
+
+### What is Audio Streamer?
+
+Audio Streamer is a flexible audio broadcasting system that lets you stream audio over your network. Think of it as your personal radio station - you can broadcast live audio from a microphone, play music files from your computer, or mix audio from professional equipment, and multiple listeners can tune in simultaneously.
+
+### What Can You Do With It?
+
+Whether you're a radio enthusiast, a podcaster, or just want to share music with friends across different devices, Audio Streamer has you covered:
+
+- **Stream live audio** from microphones or audio interfaces - perfect for live shows, podcasts, or DJ sets
+- **Play music files** from your computer with automatic playlist management - great for background music or automated radio
+- **Support multiple listeners** simultaneously over the network - share your stream with anyone on your network
+- **Work with various audio formats** (MP3, WAV, FLAC, OGG, M4A) - no need to convert your files
+- **Control everything from a web dashboard** - easy to use, no technical knowledge required
+
+### Quick Start Guide
+
+If you just want to get up and running quickly, here's what you need to do:
+
+1. **Install the application** - follow the installation instructions for your system
+2. **Configure basic settings** - edit the `.env` file to set your server port and station name
+3. **Choose how you want to stream**:
+   - **For music files**: Use the "Liquid Music" mode. You can either upload files directly or select a folder from your computer - the app will scan it asynchronously and you'll see files appear in your playlist in real-time
+   - **For live audio**: Connect a microphone or audio interface to your computer
+4. **Open the dashboard** - point your browser to `http://your-server:4986/dashboard` (or `http://your-server:4986/dashboard_liquid` for music mode)
+5. **Start streaming** - click the play button in the dashboard
+6. **Share the stream** - give your listeners the stream URL and they can tune in
+
+That's really all there is to it! The application handles all the technical details behind the scenes - audio encoding, network streaming, playlist management, metadata extraction - so you can focus on the content.
+
+### For Developers and Technical Users
+
+If you're interested in how things work under the hood, want to integrate Audio Streamer with other systems, or need to customize it for your needs, check out the [Technical Overview](#technical-overview) and [API Reference](#api-reference) sections below. We've documented the architecture, endpoints, and WebSocket events to help you integrate Audio Streamer into your projects.
+
+---
+
 ## Technical Overview
 
 ### Architecture
 
-Audio Streamer is built on a modular architecture with the following components:
+Audio Streamer is built with a modular, maintainable architecture that separates concerns and makes it easy to extend or modify functionality. Here's how the pieces fit together:
 
-- **ApplicationController**: Main controller managing the application lifecycle
-- **AudioStreamerFactory**: Factory pattern for creating appropriate streamer instances
-- **Audio Streamers**:
-  - `MicrophoneAudioStreamer`: Uses `arecord` for microphone/line-in capture
-  - `CardAudioStreamer`: Uses `PyAudio` for professional audio interfaces
-  - `LiquidMusicStreamer`: File-based music playback with playlist management
-- **AudioHttpFacade**: HTTP server and WebSocket communication handler
-- **Handler Classes**: Modular route handlers for different functionalities
-  - `AuthHandler`: HTTP Basic Authentication
-  - `CoverUploadHandler`: Album cover image management
-  - `LocalizationHandler`: Multi-language support
-  - `LiquidMusicHandler`: Liquid Music specific endpoints
-  - `StreamHandler**: Core streaming and dashboard routes
+**Core Components:**
+
+- **ApplicationController**: Think of this as the main conductor that orchestrates everything. It manages the application lifecycle, coordinates between different components, and ensures smooth startup and shutdown.
+
+- **AudioStreamerFactory**: This is like a factory that creates the right type of audio streamer based on your needs. Whether you're using a microphone, professional audio interface, or playing music files, this factory instantiates the appropriate streamer for you.
+
+- **Audio Streamers**: These are the engines that handle different audio sources:
+  - `MicrophoneAudioStreamer`: Captures audio from microphones or line-in using Linux's ALSA system via `arecord`. Great for simple setups - just plug in a microphone and go.
+  - `CardAudioStreamer`: Uses PyAudio for professional audio interfaces. Supports multiple devices simultaneously and provides detailed statistics. Ideal for broadcast studios or when you need professional-grade audio.
+  - `LiquidMusicStreamer`: Plays music files from your computer with automatic playlist management. Perfect for automated radio stations, background music systems, or when you just want to stream your music library.
+
+- **AudioHttpFacade**: This handles all web communication - both HTTP requests for the dashboard and API endpoints, and WebSocket connections for real-time updates. It's the bridge between your browser and the audio streaming engine.
+
+- **Handler Classes**: Modular components that handle specific functionalities:
+  - `AuthHandler`: Manages authentication to protect your dashboard
+  - `CoverUploadHandler`: Handles album cover image uploads
+  - `LocalizationHandler`: Provides multi-language support
+  - `LiquidMusicHandler`: Manages music file operations and directory scanning
+  - `StreamHandler`: Handles core streaming and dashboard routes
+
+This modular design means you can easily add new streaming modes, authentication methods, or features without disrupting existing functionality. If you're a developer looking to extend the system, this architecture makes it straightforward.
 
 ### Technology Stack
 
-- **Backend**: Python 3.9+
-- **Web Framework**: Flask 3.0.0
-- **Real-time Communication**: Flask-SocketIO 5.3.6
-- **Audio Processing**: PyAudio 0.2.14, FFmpeg
-- **Metadata Extraction**: Mutagen 1.47.0
-- **File Validation**: python-magic 0.4.27
-- **Configuration**: python-dotenv 1.0.0
-- **Localization**: PyYAML 6.0.1
+Audio Streamer uses modern, well-maintained technologies to ensure reliability and performance:
+
+- **Backend**: Python 3.9+ - chosen for its readability, extensive library ecosystem, and excellent audio processing capabilities
+- **Web Framework**: Flask 3.0.0 - lightweight yet powerful, perfect for building the web interface and API
+- **Real-time Communication**: Flask-SocketIO 5.3.6 - enables live updates to the dashboard (like real-time playlist updates during scanning)
+- **Audio Processing**:
+  - PyAudio 0.2.14 - for direct audio device access
+  - FFmpeg - for converting audio files to the streaming format
+- **Metadata Extraction**: Mutagen 1.47.0 - automatically reads song information (title, artist, album) from your music files
+- **File Validation**: python-magic 0.4.27 - ensures uploaded files are actually audio files (security measure)
+- **Configuration**: python-dotenv 1.0.0 - makes configuration easy with a simple `.env` file
+- **Localization**: PyYAML 6.0.1 - supports multiple languages through YAML configuration files
+
 
 ---
 
 ## Streaming Modes
 
+Audio Streamer supports three different streaming modes, each designed for specific use cases:
+
 ### 1. Microphone Mode (MicrophoneAudioStreamer)
 
-**Purpose**: Capture audio from system audio devices using `arecord`
+**Best for**: Simple setups, podcasts, voice broadcasts
 
-**Technical Implementation**:
-- Uses ALSA (Advanced Linux Sound Architecture) via `arecord` command
-- Supports built-in microphones and line-in jacks
-- Sample rate: 44.1kHz, 16-bit, stereo
-- Buffer size: Configurable via `AUDIO_CHUNK` environment variable (default: 1024)
+This mode captures audio from your computer's built-in microphone or line-in jack. It's the simplest way to get started if you just want to broadcast voice or audio from a basic source.
+
+**How it works**:
+- Uses ALSA (Advanced Linux Sound Architecture) via the `arecord` command
+- Supports built-in microphones and line-in jacks (3.5mm)
+- Captures audio at CD quality: 44.1kHz, 16-bit, stereo
+- Buffer size is configurable via the `AUDIO_CHUNK` environment variable (default: 1024)
 
 **Device Selection**:
-- Device 1: Built-in microphone (default)
-- Device 2: Line-in jack (3.5mm)
-- Device selection via ALSA device indices
+- Uses ALSA device selection (e.g., 'default' for built-in microphone, 'hw:0,2' for line-in)
+- Device selection is based on ALSA hardware notation
+- You can select devices via ALSA device indices for more control
 
-**Audio Pipeline**:
-```
-Audio Source → ALSA → arecord → PCM Buffer → Client Queues → HTTP Stream
-```
-
-**Advantages**:
+**Pros**:
 - Stable system audio capture
 - Low CPU overhead
 - Compatible with most Linux audio systems
+- Easy to set up
 
-**Limitations**:
-- Linux only (ALSA dependency)
+**Cons**:
+- Linux only (depends on ALSA)
 - Limited to 2 channels (stereo)
 - Fixed sample rate (44.1kHz)
 
 ### 2. Audio Interface Mode (CardAudioStreamer)
 
-**Purpose**: Professional audio interface support using PyAudio
+**Best for**: Professional audio setups, broadcast studios, multiple audio sources
 
-**Technical Implementation**:
+This mode uses PyAudio to work with professional audio interfaces. If you have a USB audio interface, a mixing console, or need to capture audio from multiple sources simultaneously, this is the mode for you.
+
+**How it works**:
 - Uses PyAudio (PortAudio wrapper) for direct audio device access
 - Supports multiple audio devices simultaneously
-- Sample rate: 44.1kHz, 16-bit, stereo
-- Configurable buffer size
+- Captures at 44.1kHz, 16-bit, stereo
+- Configurable buffer size for fine-tuning
 
 **Device Selection**:
-- Lists all available PyAudio devices
-- Supports multiple device indices (e.g., "0 1 2" for 3 devices)
-- Automatic device mixing
+- Lists all available PyAudio devices on startup
+- Supports multiple device indices (e.g., "0 1 2" to use 3 devices)
+- Note: PyAudio only supports single device per stream, so the first device from the list is used
 
-**Audio Pipeline**:
-```
-Audio Interface → PyAudio → PCM Buffer → Client Queues → HTTP Stream
-```
-
-**Advantages**:
+**Pros**:
 - Professional audio interface support
-- Multi-device mixing
-- Cross-platform (Windows, Linux, macOS)
+- Cross-platform (works on Windows, Linux, and macOS)
 - Peak listener tracking
 - Detailed statistics (data transferred, chunks processed)
 
-**Limitations**:
+**Cons**:
 - Higher CPU overhead
 - Requires PortAudio installation
 - May have latency issues with certain interfaces
 
 ### 3. Liquid Music Mode (LiquidMusicStreamer)
 
-**Purpose**: File-based music playback with playlist management
+**Best for**: Music streaming, automated radio stations, background music
 
-**Technical Implementation**:
+This mode plays music files from your computer with automatic playlist management. It's perfect for when you want to stream your music library or create an automated radio station.
+
+**How it works**:
 - Uses FFmpeg for audio conversion and streaming
 - Supports MP3, WAV, FLAC, OGG, M4A formats
-- Automatic metadata extraction via Mutagen
+- Automatically extracts metadata (title, artist, album, year) from your files
 - Thread-safe playlist management
 - Playback state management (playing, paused, stopped)
 
-**Audio Pipeline**:
-```
-Audio File → FFmpeg → PCM Buffer → Client Queues → HTTP Stream
-```
-
 **Features**:
-- Manual track upload via dashboard
-- Local directory loading with **async scanning**
-- **Real-time playlist updates** during scanning via WebSocket
-- **Folder browser** for visual directory selection (server filesystem)
-- **Scan interruption** - stop scanning at any time
-- Playlist management (add, remove, skip)
-- Playback controls (play, pause, resume, stop, skip forward/backward)
-- Automatic metadata extraction (title, artist, album, year)
-- Playback stack (history of played tracks)
-- Security validation for uploaded files
+- **Manual track upload** via dashboard - upload individual files
+- **Local directory loading with async scanning** - select a folder and watch as files appear in your playlist in real-time
+- **Real-time playlist updates** via WebSocket - see the playlist populate as files are scanned
+- **Directory listing** - browse common directories on your server to select music folders
+- **Scan interruption** - stop scanning at any time if you change your mind
+- **Playlist management** - add, remove, skip tracks
+- **Playback controls** - play, pause, resume, stop, skip forward/backward
+- **Automatic metadata extraction** - no manual entry needed
+- **Playback stack** - history of played tracks
+- **Security validation** - uploaded files are validated to ensure they're actually audio
 
-**Advantages**:
+**Pros**:
 - No audio hardware required
 - Perfect for automated broadcasting
 - Metadata extraction eliminates manual entry
 - Secure file validation
 - Automatic cleanup of uploaded files
+- Async scanning means you can start streaming immediately while files are still being loaded
 
-**Limitations**:
+**Cons**:
 - File-based only (no live audio)
 - Requires disk space for uploaded files
 - FFmpeg dependency
@@ -154,9 +201,9 @@ Audio File → FFmpeg → PCM Buffer → Client Queues → HTTP Stream
 
 ## Configuration
 
-### Environment Variables
+All configuration is done through the `.env` file. It's simple - just copy `.env.example` to `.env` and edit the values you need.
 
-All configuration is done via the `.env` file. Copy `.env.example` to `.env` and configure:
+### Environment Variables
 
 ```bash
 # Audio Configuration
@@ -173,7 +220,6 @@ AUDIO_STREAMER_DEBUG=False    # Debug mode (default: False)
 RADIO_STATION_NAME=My Radio Station  # Custom station name
 
 # Streaming Configuration
-AUDIO_STREAMER_MAX_CLIENTS=10      # Max concurrent listeners (default: 10)
 AUDIO_STREAMER_QUEUE_SIZE=100      # Buffer queue size (default: 100)
 
 # Dashboard Authentication (Optional)
@@ -183,17 +229,21 @@ DASHBOARD_PASSWORD=admin123        # Dashboard password (default: admin123)
 
 ### Audio Quality Tuning
 
+Depending on your use case, you might want to tune the audio quality settings:
+
 **Lower Latency (for live performances)**:
 ```bash
 AUDIO_CHUNK=512
 AUDIO_RATE=44100
 ```
+Smaller buffer size reduces latency but may cause interruptions if your system can't keep up.
 
 **Higher Quality (for music streaming)**:
 ```bash
 AUDIO_CHUNK=2048
 AUDIO_RATE=48000
 ```
+Larger buffer size and higher sample rate improve quality but increase latency.
 
 **Lower Bandwidth (for limited connections)**:
 ```bash
@@ -201,6 +251,8 @@ AUDIO_CHUNK=1024
 AUDIO_RATE=22050
 AUDIO_CHANNELS=1
 ```
+Lower sample rate and mono audio reduce bandwidth usage at the cost of audio quality.
+
 
 ---
 
@@ -208,21 +260,24 @@ AUDIO_CHANNELS=1
 
 ### Audio Processing
 
-**Sample Rate**: 44.1kHz (CD quality)
-**Bit Depth**: 16-bit
-**Channels**: Stereo (2 channels)
-**Format**: Raw PCM (s16le)
+**Audio Quality Settings**:
+- Sample Rate: 44.1kHz (CD quality)
+- Bit Depth: 16-bit
+- Channels: Stereo (2 channels)
+- Format: Raw PCM (s16le)
 
 **Buffer Management**:
-- Configurable chunk size via `AUDIO_CHUNK`
+- Chunk size is configurable via `AUDIO_CHUNK`
 - Default: 1024 samples per chunk
-- Larger chunks = higher latency, better continuity
-- Smaller chunks = lower latency, may cause interruptions
+- **Larger chunks** = higher latency but better continuity (less likely to have dropouts)
+- **Smaller chunks** = lower latency but may cause interruptions if system can't keep up
 
 ### Thread Safety
 
+Audio Streamer is designed to handle multiple listeners safely:
+
 **Client Management**:
-- Thread-safe queue for each connected client
+- Each connected client gets its own thread-safe queue
 - RLock (reentrant lock) for playlist and client management
 - Atomic operations for adding/removing clients
 
@@ -233,10 +288,12 @@ AUDIO_CHANNELS=1
 
 ### Error Recovery
 
+The application is designed to handle errors gracefully:
+
 **Audio Device Issues**:
 - Automatic retry on device access errors
 - Graceful degradation on device disconnection
-- Logging of all audio errors
+- All audio errors are logged for troubleshooting
 
 **Network Issues**:
 - Auto-reconnect on client side (WebSocket)
@@ -247,30 +304,34 @@ AUDIO_CHANNELS=1
 
 ## Liquid Music Mode
 
+This section dives deeper into the Liquid Music mode, which is perfect for music streaming and automated radio stations.
+
 ### Metadata Extraction
 
-**Implementation**:
-- Uses Mutagen library for metadata extraction
-- Extracts from file headers (ID3, Vorbis comments, etc.)
+**How it works**:
+- Uses the Mutagen library to extract metadata from audio files
+- Reads from file headers (ID3, Vorbis comments, etc.)
 - Supports multiple audio formats
 
-**Extracted Fields**:
-- Title (TIT2 / title)
-- Artist (TPE1 / artist)
-- Album (TALB / album)
-- Year (TDRC / date)
+**What gets extracted**:
+- Title (from TIT2 / title fields)
+- Artist (from TPE1 / artist fields)
+- Album (from TALB / album fields)
+- Year (from TDRC / date fields)
 
-**Fallback Behavior**:
-- If metadata is missing, fields are left empty
-- No default values or placeholders
+**Fallback behavior**:
+- If metadata is missing, fields are left empty (no fake values)
 - Filename is used as fallback for display only if needed
+- The system doesn't guess - if it can't find the metadata, it shows nothing rather than incorrect information
 
 ### File Upload Security
 
-**Validation Layers**:
+Audio Streamer takes file security seriously. All uploaded files go through multiple validation layers:
+
+**Validation Pipeline**:
 1. **Extension Check**: First-level filter for allowed extensions (.mp3, .wav, .flac, .ogg, .m4a)
-2. **MIME Type Check**: Magic bytes validation using python-magic
-3. **Mutagen Validation**: Confirms file is valid audio with proper structure
+2. **MIME Type Check**: Magic bytes validation using python-magic - checks the actual file signature, not just the extension
+3. **Mutagen Validation**: Confirms the file is valid audio with proper structure
 4. **Suspicious Content Check**: Detects executable headers (MZ, ELF, shebangs)
 5. **File Size Limit**: Maximum 50MB to prevent DoS attacks
 
@@ -300,14 +361,15 @@ self.playbackStack = []  # History of played tracks
 **Operations**:
 - **Add Track**: Extracts metadata and appends to playlist
 - **Remove Track**: Removes by index, updates metadata
-- **Skip Forward**: Increments index, wraps around
-- **Skip Backward**: Decrements index, wraps around
+- **Skip Forward**: Increments index, wraps around to beginning
+- **Skip Backward**: Decrements index, wraps around to end
 - **Clear**: Empties playlist and metadata
 
 **State Management**:
 - `isPlaying`: Playback active state
 - `isPaused`: Playback paused state
 - `onAir`: Streaming active state
+- `isScanning`: Directory scanning in progress
 - Thread-safe state transitions
 
 ### Automatic Cleanup
@@ -315,18 +377,8 @@ self.playbackStack = []  # History of played tracks
 **Startup Behavior**:
 - All uploaded tracks are deleted on application startup
 - Upload folder (`uploads/music`) is cleared
-- Prevents disk space accumulation
+- This prevents disk space accumulation
 - Maintains clean state between sessions
-
-**Implementation**:
-```python
-def clear_upload_folder(self):
-    if os.path.exists(self.upload_dir):
-        for filename in os.listdir(self.upload_dir):
-            file_path = os.path.join(self.upload_dir, filename)
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-```
 
 ---
 
@@ -334,10 +386,12 @@ def clear_upload_folder(self):
 
 ### HTTP Basic Authentication
 
-**Dashboard Protection**:
+The dashboard is protected by HTTP Basic Authentication to prevent unauthorized access.
+
+**What's Protected**:
 - All dashboard routes require authentication
-- Credentials configured via environment variables
-- Default: admin/admin123
+- Credentials are configured via environment variables
+- Default: admin/admin123 (change this in production!)
 - Applied to:
   - `/dashboard`
   - `/dashboard_liquid`
@@ -347,7 +401,7 @@ def clear_upload_folder(self):
 **Implementation**:
 - AuthHandler class manages authentication
 - Decorator pattern for route protection
-- Secure credential storage in environment variables
+- Credentials are stored in environment variables (not in code)
 
 ### File Upload Security
 
@@ -363,25 +417,31 @@ def clear_upload_folder(self):
 - Prevents executable file uploads
 - Blocks script uploads
 - Validates audio file structure
-- Limits file size to prevent DoS
+- Limits file size to prevent DoS attacks
 - Automatic deletion of invalid files
 
 ### Network Security
 
 **Recommended Practices**:
-- Use reverse proxy with SSL/TLS
+- Use a reverse proxy with SSL/TLS for production
 - Implement rate limiting
 - Restrict access via firewall
 - Disable debug mode in production
 - Use strong dashboard credentials
+- Keep the application updated
+
 
 ---
 
 ## API Reference
 
+This section is for developers who want to integrate Audio Streamer with other systems or build custom applications on top of it.
+
 ### Statistics API
 
 **Endpoint**: `GET /stats`
+
+Get real-time statistics about the streaming server.
 
 **Response**:
 ```json
@@ -418,69 +478,113 @@ def clear_upload_folder(self):
 }
 ```
 
+**Use Cases**:
+- Monitor server health
+- Display current status in custom dashboards
+- Track listener counts over time
+- Integrate with monitoring systems
+
 ### Liquid Music Endpoints
 
+These endpoints control the Liquid Music (file playback) mode.
+
 **Upload Track**: `POST /liquid/upload_track`
+- Upload a single audio file
 - Content-Type: multipart/form-data
 - Parameter: `track` (file)
 - Response: `{"success": true, "filename": "...", "path": "..."}`
 
 **Play**: `POST /liquid/play`
+- Start playback
 - Response: `{"success": true}`
 
 **Stop**: `POST /liquid/stop`
+- Stop playback
 - Response: `{"success": true}`
 
 **Pause**: `POST /liquid/pause`
+- Pause playback
 - Response: `{"success": true}`
 
 **Resume**: `POST /liquid/resume`
+- Resume paused playback
 - Response: `{"success": true}`
 
 **Skip Forward**: `POST /liquid/skip_forward`
+- Skip to next track
 - Response: `{"success": true}`
 
 **Skip Backward**: `POST /liquid/skip_backward`
+- Skip to previous track
 - Response: `{"success": true}`
 
 **Set Local Path**: `POST /liquid/set_local_path`
+- Set a local directory to scan for music files
 - Content-Type: application/json
 - Body: `{"path": "/path/to/music"}`
 - Response: `{"success": true}`
-- Note: Starts async scanning; playlist updates in real-time via WebSocket
+- Note: Starts async scanning; playlist updates in real-time via WebSocket. You can start streaming immediately while files are being scanned.
 
 **Stop Scan**: `POST /liquid/stop_scan`
+- Interrupt an ongoing directory scan
 - Response: `{"success": true}`
-- Note: Interrupts ongoing directory scan; playlist contains files scanned so far
+- Note: Stops the scanning process; the playlist will contain all files that were scanned before stopping.
 
 **List Directories**: `POST /liquid/list_directories`
+- List directories in a given path (for folder browser UI)
 - Content-Type: application/json
-- Body: `{"path": "/path/to/list"}` (empty for root directories)
+- Body: `{"path": "/path/to/list"}` (empty string for root directories)
 - Response: `{"directories": [{"name": "...", "path": "...", "is_root": false}], "current_path": "..."}`
-- Note: Lists only directories (no files) from server filesystem
+- Note: Lists only directories (no files) from the server's filesystem. Use this to build folder selection UIs.
 
 **Get Playlist**: `GET /liquid/playlist`
+- Get the current playlist with metadata
 - Response: `{"playlist": [...], "current_index": 0}`
 
 **Get Stack**: `GET /liquid/stack`
+- Get the playback stack (history)
 - Response: `{"stack": [...]}`
 
 **Remove Track**: `POST /liquid/remove_track`
+- Remove a track from the playlist
 - Content-Type: application/json
 - Body: `{"index": 0}`
 - Response: `{"success": true}`
 
 ### WebSocket Events
 
+Audio Streamer uses WebSocket for real-time updates. This is perfect for building responsive interfaces that react to changes immediately.
+
 **Client → Server**:
 - `connect`: Client connection
 - `disconnect`: Client disconnection
 
 **Server → Client**:
-- `stats`: Real-time statistics update (includes `is_scanning` state)
+- `stats`: Real-time statistics update
+  - Includes `is_scanning` state to track directory scanning progress
+  - Use this to update your dashboard in real-time
 - `track_info`: Track information update
+  - Sent when the current track changes
 - `file_scanned`: Emitted when a file is scanned during async directory scanning
   - Data: `{"filename": "...", "path": "...", "title": "...", "artist": "...", "album": "...", "year": "...", "index": 1, "total": 100}`
+  - Use this to show real-time progress as files are added to the playlist
+
+**Integration Example**:
+```javascript
+const socket = io();
+
+socket.on('stats', (data) => {
+    console.log('Listeners:', data.listeners);
+    console.log('On air:', data.on_air);
+    console.log('Scanning:', data.is_scanning);
+});
+
+socket.on('file_scanned', (data) => {
+    console.log(`Scanned ${data.index}/${data.total}: ${data.filename}`);
+    // Update your playlist UI in real-time
+});
+```
+
 
 ---
 
@@ -510,7 +614,7 @@ brew install portaudio libmagic
 
 ### Process Management
 
-**PM2**:
+**PM2** (recommended for production):
 ```bash
 npm install -g pm2
 pm2 start app.py --name "radio-station" --interpreter python3
@@ -518,7 +622,7 @@ pm2 startup
 pm2 save
 ```
 
-**Systemd**:
+**Systemd** (alternative for production):
 ```ini
 [Unit]
 Description=Audio Streamer Radio Station
@@ -538,6 +642,8 @@ WantedBy=multi-user.target
 ```
 
 ### Reverse Proxy (Nginx)
+
+For production deployments, use Nginx as a reverse proxy with SSL/TLS:
 
 ```nginx
 server {
@@ -646,6 +752,7 @@ curl http://localhost:4986/stats
 - Verify playlist is not empty
 - Check FFmpeg can play file: `ffmpeg -i file.mp3 -f null -`
 - Check playback state in logs
+
 
 ---
 
