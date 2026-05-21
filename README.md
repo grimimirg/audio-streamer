@@ -17,16 +17,14 @@
 
 ---
 
-<table>
-<tr>
-<td width="50%">
-<img src="screenshots/player.png" alt="Player Interface"/>
-</td>
-<td width="50%">
-<img src="screenshots/dashboard.png" alt="Dashboard Interface"/>
-</td>
-</tr>
-</table>
+<p align="center">
+  <img src="screenshots/player.png" alt="Player Interface" width="1000"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/dashboard.png" alt="Dashboard Interface" width="600"/>
+  <img src="screenshots/dashboard_liquid.png" alt="Liquid Music Dashboard" width="600"/>
+</p>
 
 <table>
 <tr>
