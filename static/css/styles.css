@@ -183,7 +183,7 @@ body {
 
 .play-btn {
     background: var(--accent-color);
-    color: var(--text-color);
+    color: #000000;
     border: 1px solid var(--glass-border);
     padding: 15px 50px;
     font-size: 1.2em;
@@ -204,6 +204,10 @@ body {
 
 .play-btn:active {
     transform: translateY(0);
+}
+
+body.light .play-btn {
+    color: #666666;
 }
 
 .volume-control {
@@ -682,7 +686,7 @@ body.light .history-card-cover-placeholder {
 
 .dashboard-page .btn {
     background: #b7ddea;
-    color: #1a3a4a;
+    color: #000000;
     border: none;
     padding: 12px 24px;
     border-radius: 6px;
@@ -694,7 +698,7 @@ body.light .history-card-cover-placeholder {
 
 .dashboard-page.light .btn {
     background: rgba(26, 58, 74, 0.15);
-    color: #1a3a4a;
+    color: #666666;
 }
 
 .dashboard-page .btn:hover {
@@ -899,12 +903,12 @@ body.light .history-card-cover-placeholder {
 }
 
 .dashboard-page.light .selector-box select {
-    color: #1a1a1a;
+    color: #1a3a4a;
 }
 
 .dashboard-page.light .selector-box select option {
     background: rgba(255, 255, 255, 0.95);
-    color: #1a1a1a;
+    color: #1a3a4a;
 }
 
 .dashboard-page.light .theme-toggle-btn {
