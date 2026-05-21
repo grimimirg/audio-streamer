@@ -112,7 +112,7 @@ Display artist, album, year, and album cover for your listeners
 </td>
 <td bgcolor="#BBDEFB">
 <strong>📤 Easy Track Management</strong><br/>
-Upload album covers via URL or file directly from the dashboard
+Upload album covers directly from the dashboard
 </td>
 </tr>
 <tr>
@@ -192,7 +192,7 @@ Option 1: Built-in Microphone (default)
 Option 2: Line-in Jack (3.5mm)
 ==================================================
 
-Choose a device index (1 for built-in mic, 2 for line-in, or ENTER for default):
+Choose a device index (uses ALSA device notation, or ENTER for default):
 ```
 
 **For Audio Interface Mode:**
@@ -316,7 +316,7 @@ Enjoy enterprise-grade features including light/dark themes, auto-reconnect tech
   - Built-in microphone for voice/podcasting
   - Line-in jack (3.5mm) for external audio sources
   - Professional audio interfaces for music production
-- **Thread-Safe**: Handle unlimited concurrent listeners
+- **Thread-Safe**: Handle multiple concurrent listeners
 - **Error Recovery**: Automatic recovery from audio device issues
 - **Professional Audio**: 44.1kHz CD-quality stereo streaming
 
@@ -375,13 +375,6 @@ export AUDIO_STREAMER_DEBUG=false      # Production mode
 pm2 start app.py --name "my-radio-station"
 ```
 
-### Multi-Device Studio Setup
-```
-Device 0: USB Turntable (Left Channel)
-Device 1: USB Turntable (Right Channel)  
-Device 2: Mixer Backup
-```
-Enter: `0 1 2` when prompted to mix all sources
 
 ---
 
@@ -506,8 +499,8 @@ AUDIO_STREAMER_DEBUG=false python app.py
 - **Dashboard**: `http://localhost:4986/dashboard`
 
 ### Audio Device Tips
-- **Built-in Microphone**: Choose option 1, then device 1 for voice/podcasting
-- **Line-in Jack**: Choose option 1, then device 2 for external audio sources
+- **Built-in Microphone**: Choose option 1, then select the built-in microphone device
+- **Line-in Jack**: Choose option 1, then select the line-in device (uses ALSA notation)
 - **Audio Interface**: Choose option 2 for professional music production
 - **Liquid Music**: Choose option 3 for file-based music playback
 - **Test First**: Always test your device before going live
