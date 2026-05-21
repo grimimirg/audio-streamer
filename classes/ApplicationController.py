@@ -74,7 +74,7 @@ class ApplicationController:
             # Create the appropriate streamer
             self.audioStreamer = self._createStreamer(input_method)
             self.audioStreamer.startTime = self.startTime  # Set application start time
-            self.audioHttpFacade = AudioHttpFacade(self.audioStreamer)
+            self.audioHttpFacade = AudioHttpFacade(self.audioStreamer, input_method)
 
             # For liquid music, skip device selection and don't auto-start streaming
             if input_method == "liquid_music":

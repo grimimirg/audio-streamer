@@ -1,4 +1,4 @@
-from flask import Response
+from flask import Response, request
 from functools import wraps
 
 
@@ -50,7 +50,6 @@ class AuthHandler:
         """
         @wraps(f)
         def decorated(*args, **kwargs):
-            from flask import request
             auth = request.authorization
             if not auth or not self.check_auth(auth.username, auth.password):
                 return self.authenticate()

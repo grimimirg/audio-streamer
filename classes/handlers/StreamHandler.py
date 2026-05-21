@@ -2,6 +2,7 @@ import queue
 import struct
 from flask import render_template, Response
 
+from classes.streamer.streamers.LiquidMusicStreamer import LiquidMusicStreamer
 from utilities.Constants import CLIENT_QUEUE_SIZE
 from utilities.Logger import Logger
 
@@ -82,7 +83,6 @@ class StreamHandler:
             str: Rendered HTML template for the dashboard
         """
         # Check if the streamer is LiquidMusicStreamer
-        from classes.streamer.streamers.LiquidMusicStreamer import LiquidMusicStreamer
         if isinstance(self.audio_streamer, LiquidMusicStreamer):
             return render_template('dashboard_liquid.html', radio_station_name=self.radio_station_name)
         return render_template('dashboard.html', radio_station_name=self.radio_station_name)
@@ -101,7 +101,6 @@ class StreamHandler:
         Returns:
             dict: JSON response with the streamer type
         """
-        from classes.streamer.streamers.LiquidMusicStreamer import LiquidMusicStreamer
         streamer_type = 'standard'
         if isinstance(self.audio_streamer, LiquidMusicStreamer):
             streamer_type = 'liquid'

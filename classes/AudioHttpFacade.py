@@ -1,14 +1,15 @@
 import os
-from flask import Flask, Response
-from flask_socketio import SocketIO, emit
+from functools import wraps
 from dotenv import load_dotenv
+from flask import Flask, Response, jsonify, request
+from flask_socketio import SocketIO, emit
 
-from utilities.Logger import Logger
 from classes.handlers.AuthHandler import AuthHandler
 from classes.handlers.CoverUploadHandler import CoverUploadHandler
-from classes.handlers.LocalizationHandler import LocalizationHandler
 from classes.handlers.LiquidMusicHandler import LiquidMusicHandler
+from classes.handlers.LocalizationHandler import LocalizationHandler
 from classes.handlers.StreamHandler import StreamHandler
+from utilities.Logger import Logger
 
 
 class AudioHttpFacade:
@@ -18,11 +19,12 @@ class AudioHttpFacade:
     Handles client connections and audio data delivery with proper error handling.
     """
 
-    def __init__(self, audioStreamer):
+    def __init__(self, audioStreamer, input_method=None):
         """Initialize the HTTP facade with audio streaming backend.
         
         Args:
             audioStreamer: Instance of AudioStreamer for audio capture
+            input_method: The input method selected (microphone, interface, or liquid_music)
         """
         # Load environment variables from .env file
         root_dir = os.path.dirname(os.path.dirname(__file__))
@@ -46,6 +48,7 @@ class AudioHttpFacade:
         self.app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
         self.audioStreamer = audioStreamer
+        self.input_method = input_method
         self.radio_station_name = os.getenv('RADIO_STATION_NAME', 'My Radio Station')
         self.dashboard_username = os.getenv('DASHBOARD_USERNAME', 'admin')
         self.dashboard_password = os.getenv('DASHBOARD_PASSWORD', 'admin123')
@@ -88,36 +91,96 @@ class AudioHttpFacade:
         """
         return self.auth_handler.requires_auth(f)
 
+    def _requires_liquid_mode(self, f):
+        """Decorator to require Liquid Music mode for dashboard access.
+
+        Args:
+            f: The function to decorate
+
+        Returns:
+            The decorated function
+        """
+
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if self.input_method != 'liquid_music':
+                return jsonify({
+                    'error': 'Access denied',
+                    'message': 'The Liquid Music Dashboard is only available when the application is started in Liquid Music mode (option 3). '
+                               'To use this dashboard, please restart the application and select option 3 (Liquid Music) when prompted for the audio input method.'
+                }), 403
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    def _requires_streaming_mode(self, f):
+        """Decorator to require streaming mode (microphone or interface) for dashboard access.
+
+        Args:
+            f: The function to decorate
+
+        Returns:
+            The decorated function
+        """
+
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if self.input_method == 'liquid_music':
+                return jsonify({
+                    'error': 'Access denied',
+                    'message': 'The regular Dashboard is only available when the application is started in streaming mode (option 1 or 2). '
+                               'To use this dashboard, please restart the application and select option 1 (Microphone) or option 2 (Audio Interface) when prompted for the audio input method.'
+                }), 403
+            return f(*args, **kwargs)
+
+        return decorated_function
+
     def _add_routes(self):
         """Configure Flask URL routes for the application."""
         # Standard routes
         self.app.add_url_rule('/', 'player', self.stream_handler.player)
         self.app.add_url_rule('/stream', 'stream', self.stream_handler.stream)
         self.app.add_url_rule('/stats', 'stats', self._stats)
-        self.app.add_url_rule('/dashboard', 'dashboard', self._requires_auth(self.stream_handler.dashboard))
-        self.app.add_url_rule('/dashboard_liquid', 'dashboard_liquid', self._requires_auth(self.stream_handler.dashboard_liquid))
+        self.app.add_url_rule('/dashboard', 'dashboard',
+                              self._requires_auth(self._requires_streaming_mode(self.stream_handler.dashboard)))
+        self.app.add_url_rule('/dashboard_liquid', 'dashboard_liquid',
+                              self._requires_auth(self._requires_liquid_mode(self.stream_handler.dashboard_liquid)))
         self.app.add_url_rule('/locales/<lang>', 'locales', self.localization_handler.get_locale)
-        self.app.add_url_rule('/upload_cover', 'upload_cover', self._requires_auth(self._upload_cover), methods=['POST'])
+        self.app.add_url_rule('/upload_cover', 'upload_cover', self._requires_auth(self._upload_cover),
+                              methods=['POST'])
         self.app.add_url_rule('/uploads/covers/<filename>', 'uploaded_cover', self.cover_handler.serve_cover)
         self.app.add_url_rule('/streamer_type', 'streamer_type', self._streamer_type)
-        
+
         # Liquid Music routes
-        self.app.add_url_rule('/liquid/upload_track', 'upload_track', self._requires_auth(self.liquid_music_handler.upload_track), methods=['POST'])
-        self.app.add_url_rule('/liquid/play', 'play', self._requires_auth(self.liquid_music_handler.play), methods=['POST'])
-        self.app.add_url_rule('/liquid/stop', 'stop', self._requires_auth(self.liquid_music_handler.stop), methods=['POST'])
-        self.app.add_url_rule('/liquid/pause', 'pause', self._requires_auth(self.liquid_music_handler.pause), methods=['POST'])
-        self.app.add_url_rule('/liquid/resume', 'resume', self._requires_auth(self.liquid_music_handler.resume), methods=['POST'])
-        self.app.add_url_rule('/liquid/skip_forward', 'skip_forward', self._requires_auth(self.liquid_music_handler.skip_forward), methods=['POST'])
-        self.app.add_url_rule('/liquid/skip_backward', 'skip_backward', self._requires_auth(self.liquid_music_handler.skip_backward), methods=['POST'])
-        self.app.add_url_rule('/liquid/set_local_path', 'set_local_path', self._requires_auth(self.liquid_music_handler.set_local_path), methods=['POST'])
-        self.app.add_url_rule('/liquid/stop_scan', 'stop_scan', self._requires_auth(self.liquid_music_handler.stop_scan), methods=['POST'])
-        self.app.add_url_rule('/liquid/list_directories', 'list_directories', self._requires_auth(self.liquid_music_handler.list_directories), methods=['POST'])
-        self.app.add_url_rule('/liquid/playlist', 'playlist', self._requires_auth(self.liquid_music_handler.get_playlist))
+        self.app.add_url_rule('/liquid/upload_track', 'upload_track',
+                              self._requires_auth(self.liquid_music_handler.upload_track), methods=['POST'])
+        self.app.add_url_rule('/liquid/play', 'play', self._requires_auth(self.liquid_music_handler.play),
+                              methods=['POST'])
+        self.app.add_url_rule('/liquid/stop', 'stop', self._requires_auth(self.liquid_music_handler.stop),
+                              methods=['POST'])
+        self.app.add_url_rule('/liquid/pause', 'pause', self._requires_auth(self.liquid_music_handler.pause),
+                              methods=['POST'])
+        self.app.add_url_rule('/liquid/resume', 'resume', self._requires_auth(self.liquid_music_handler.resume),
+                              methods=['POST'])
+        self.app.add_url_rule('/liquid/skip_forward', 'skip_forward',
+                              self._requires_auth(self.liquid_music_handler.skip_forward), methods=['POST'])
+        self.app.add_url_rule('/liquid/skip_backward', 'skip_backward',
+                              self._requires_auth(self.liquid_music_handler.skip_backward), methods=['POST'])
+        self.app.add_url_rule('/liquid/set_local_path', 'set_local_path',
+                              self._requires_auth(self.liquid_music_handler.set_local_path), methods=['POST'])
+        self.app.add_url_rule('/liquid/stop_scan', 'stop_scan',
+                              self._requires_auth(self.liquid_music_handler.stop_scan), methods=['POST'])
+        self.app.add_url_rule('/liquid/list_directories', 'list_directories',
+                              self._requires_auth(self.liquid_music_handler.list_directories), methods=['POST'])
+        self.app.add_url_rule('/liquid/playlist', 'playlist',
+                              self._requires_auth(self.liquid_music_handler.get_playlist))
         self.app.add_url_rule('/liquid/stack', 'stack', self._requires_auth(self.liquid_music_handler.get_stack))
-        self.app.add_url_rule('/liquid/remove_track', 'remove_track', self._requires_auth(self.liquid_music_handler.remove_track), methods=['POST'])
+        self.app.add_url_rule('/liquid/remove_track', 'remove_track',
+                              self._requires_auth(self.liquid_music_handler.remove_track), methods=['POST'])
 
     def _add_socketio_events(self):
         """Configure SocketIO event handlers for real-time updates."""
+
         @self.socketio.on('connect')
         def handle_connect(data=None):
             Logger.info('WebSocket client connected')
@@ -156,7 +219,6 @@ class AudioHttpFacade:
 
     def _upload_cover(self):
         """Handle album cover image upload."""
-        from flask import request
         if 'cover' not in request.files:
             return {'error': 'No file provided'}, 400
         return self.cover_handler.upload_cover(request.files['cover'])
@@ -167,5 +229,4 @@ class AudioHttpFacade:
 
     def _streamer_type(self):
         """Get the current streamer type."""
-        from flask import jsonify
         return jsonify(self.stream_handler.streamer_type())
