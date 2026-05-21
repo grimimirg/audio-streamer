@@ -110,6 +110,8 @@ class AudioHttpFacade:
         self.app.add_url_rule('/liquid/skip_forward', 'skip_forward', self._requires_auth(self.liquid_music_handler.skip_forward), methods=['POST'])
         self.app.add_url_rule('/liquid/skip_backward', 'skip_backward', self._requires_auth(self.liquid_music_handler.skip_backward), methods=['POST'])
         self.app.add_url_rule('/liquid/set_local_path', 'set_local_path', self._requires_auth(self.liquid_music_handler.set_local_path), methods=['POST'])
+        self.app.add_url_rule('/liquid/stop_scan', 'stop_scan', self._requires_auth(self.liquid_music_handler.stop_scan), methods=['POST'])
+        self.app.add_url_rule('/liquid/list_directories', 'list_directories', self._requires_auth(self.liquid_music_handler.list_directories), methods=['POST'])
         self.app.add_url_rule('/liquid/playlist', 'playlist', self._requires_auth(self.liquid_music_handler.get_playlist))
         self.app.add_url_rule('/liquid/stack', 'stack', self._requires_auth(self.liquid_music_handler.get_stack))
         self.app.add_url_rule('/liquid/remove_track', 'remove_track', self._requires_auth(self.liquid_music_handler.remove_track), methods=['POST'])

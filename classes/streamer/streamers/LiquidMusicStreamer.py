@@ -37,12 +37,14 @@ class LiquidMusicStreamer:
             localMusicPath: Path to local music directory
             playbackStack: History of played tracks
             uploadDir: Directory path for uploaded music files
+            scanCallback: Callback function for emitting scan progress events
         """
         self.playbackProcess = None
         self.onAir = False
         self.listeningClients = []
         self._lock = threading.RLock()
         self.startTime = None  # Set by ApplicationController
+        self.scanCallback = None  # Callback for scan progress events
         
         # Playlist management
         self.playlist = []  # List of file paths in order
@@ -54,6 +56,11 @@ class LiquidMusicStreamer:
         
         # Playback stack queue
         self.playbackStack = []  # History of played tracks
+        
+        # Scanning state
+        self.isScanning = False
+        self.scanThread = None
+        self.scanStopEvent = threading.Event()
         
         # Upload directory
         self.uploadDir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'uploads', 'music')
@@ -138,12 +145,21 @@ class LiquidMusicStreamer:
             self.playlistMetadata[filePath] = metadata
             Logger.info(f"Added track to playlist: {filePath}")
 
+    def setScanCallback(self, callback):
+        """Set the callback function for scan progress events.
+        
+        Args:
+            callback: Function to call when a file is scanned during async scanning.
+                     Called with (file_path, metadata, index, total) as arguments.
+        """
+        self.scanCallback = callback
+
     def setLocalMusicPath(self, path: str):
         """Set the local music directory path and load all audio files with metadata.
         
-        Scans the specified directory for audio files (mp3, wav, flac, ogg, m4a)
-        and loads them into the playlist in alphabetical order.
-        Extracts metadata from each file.
+        Starts an asynchronous scan of the specified directory for audio files
+        (mp3, wav, flac, ogg, m4a) and loads them into the playlist in alphabetical order.
+        Extracts metadata from each file and emits progress events via callback.
         
         Args:
             path: Absolute path to the local directory containing music files
@@ -151,30 +167,113 @@ class LiquidMusicStreamer:
         Note:
             This replaces the current playlist with files from the local directory.
             Only files with supported audio extensions are loaded.
+            Scanning happens asynchronously in a background thread.
+            Returns immediately; files are added progressively as they are scanned.
         """
         with self._lock:
+            if self.isScanning:
+                Logger.warning("Scan already in progress, cannot change path")
+                return
+            
             self.localMusicPath = path
-            if os.path.exists(path) and os.path.isdir(path):
-                # Load all audio files from the directory
-                audio_extensions = ['.mp3', '.wav', '.flac', '.ogg', '.m4a']
-                files = []
-                for file in os.listdir(path):
-                    if any(file.lower().endswith(ext) for ext in audio_extensions):
-                        files.append(os.path.join(path, file))
+            if not os.path.exists(path) or not os.path.isdir(path):
+                Logger.error(f"Invalid local path: {path}")
+                return
+            
+            # Clear current playlist
+            self.playlist = []
+            self.playlistMetadata = {}
+            self.currentTrackIndex = 0
+            
+            # Start async scanning
+            self.isScanning = True
+            self.scanStopEvent.clear()
+            self.scanThread = threading.Thread(target=self._scanDirectoryAsync, args=(path,))
+            self.scanThread.daemon = True
+            self.scanThread.start()
+            Logger.info(f"Started async scan of local path: {path}")
+
+    def _scanDirectoryAsync(self, path: str):
+        """Asynchronously scan directory and load files into playlist.
+        
+        This method runs in a background thread and scans the directory
+        for audio files, extracting metadata and adding them to the playlist
+        one by one. Emits progress events via the scan callback.
+        
+        Args:
+            path: Absolute path to the local directory containing music files
+        """
+        try:
+            audio_extensions = ['.mp3', '.wav', '.flac', '.ogg', '.m4a']
+            files = []
+            
+            # Collect all audio files
+            for file in os.listdir(path):
+                if self.scanStopEvent.is_set():
+                    Logger.info("Scan stopped by user")
+                    break
+                    
+                if any(file.lower().endswith(ext) for ext in audio_extensions):
+                    files.append(os.path.join(path, file))
+            
+            # Sort files to maintain order
+            files.sort()
+            total_files = len(files)
+            
+            # Process files one by one
+            for index, file_path in enumerate(files):
+                if self.scanStopEvent.is_set():
+                    Logger.info(f"Scan stopped at {index}/{total_files}")
+                    break
                 
-                # Sort files to maintain order
-                files.sort()
-                self.playlist = files
-                self.playlistMetadata = {}  # Clear old metadata
+                # Extract metadata
+                metadata = self._extract_metadata(file_path)
                 
-                # Extract metadata for each file
-                for file_path in files:
-                    metadata = self._extract_metadata(file_path)
+                # Add to playlist
+                with self._lock:
+                    self.playlist.append(file_path)
                     self.playlistMetadata[file_path] = metadata
                 
-                Logger.info(f"Loaded {len(files)} tracks from local path: {path}")
+                # Emit progress event via callback
+                if self.scanCallback:
+                    self.scanCallback(file_path, metadata, index + 1, total_files)
+                
+                Logger.info(f"Scanned {index + 1}/{total_files}: {os.path.basename(file_path)}")
+            
+            if not self.scanStopEvent.is_set():
+                Logger.info(f"Completed scan: loaded {len(files)} tracks from local path: {path}")
             else:
-                Logger.error(f"Invalid local path: {path}")
+                Logger.info(f"Partial scan completed: loaded {len(self.playlist)} tracks")
+                
+        except Exception as e:
+            Logger.error(f"Error during async scan: {e}")
+        finally:
+            with self._lock:
+                self.isScanning = False
+
+    def stopScan(self):
+        """Stop the ongoing directory scan.
+        
+        Signals the scanning thread to stop and waits for it to terminate.
+        The playlist will contain all files that were scanned before stopping.
+        """
+        with self._lock:
+            if not self.isScanning:
+                Logger.warning("No scan in progress")
+                return
+            
+            self.scanStopEvent.set()
+            Logger.info("Stopping scan...")
+        
+        # Wait for scan thread to finish
+        if self.scanThread and self.scanThread.is_alive():
+            self.scanThread.join(timeout=5)
+            if self.scanThread.is_alive():
+                Logger.warning("Scan thread did not stop in time")
+        
+        with self._lock:
+            self.isScanning = False
+            Logger.info(f"Scan stopped. Playlist contains {len(self.playlist)} tracks")
 
     def startAudioStream(self, listeningDeviceIndexes: Optional[List[int]] = None):
         """Start audio streaming from the playlist.
@@ -378,6 +477,7 @@ class LiquidMusicStreamer:
                 'artist': current_metadata.get('artist', ''),
                 'album_name': current_metadata.get('album', ''),
                 'track_year': current_metadata.get('year', ''),
+                'is_scanning': self.isScanning,
                 'playlist_length': len(self.playlist),
                 'current_track_index': self.currentTrackIndex,
                 'playback_stack_length': len(self.playbackStack),

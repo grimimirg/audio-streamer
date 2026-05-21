@@ -41,9 +41,11 @@
                     <div class="info-label"><span data-i18n="dashboard.upload_tracks"></span></div>
                     <input type="file" id="trackUpload" accept=".mp3,.wav,.flac,.ogg,.m4a" multiple
                            style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 1rem;">
-                    <button class="btn" onclick="uploadTracks()" style="margin-top: 10px;">📤 <span
-                            data-i18n="dashboard.upload"></span></button>
-                    <div id="uploadStatus" style="margin-top: 10px; color: #4ade80; font-weight: 600;"></div>
+                    <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
+                        <button class="btn" onclick="uploadTracks()">📤 <span
+                                data-i18n="dashboard.upload"></span></button>
+                        <div id="uploadStatus" style="color: #4ade80; font-weight: 600; margin-left: auto;"></div>
+                    </div>
                 </div>
 
                 <!-- Playlist Display -->
@@ -78,11 +80,33 @@
             <div class="liquid-controls-content">
                 <div style="margin-bottom: 20px;">
                     <div class="info-label"><span data-i18n="dashboard.local_path"></span></div>
-                    <input type="text" id="localPathInput" placeholder="/path/to/music/directory"
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 1rem;">
-                    <button class="btn" onclick="setLocalPath()" style="margin-top: 10px;">📂 <span
-                            data-i18n="dashboard.load_local"></span></button>
-                    <div id="localPathStatus" style="margin-top: 10px; color: #4ade80; font-weight: 600;"></div>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <input type="text" id="localPathInput" placeholder="/path/to/music/directory"
+                               style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 1rem;">
+                        <button class="btn" onclick="openFolderSelector()" title="Browse folders">📁</button>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
+                        <button class="btn" id="loadLocalBtn" onclick="setLocalPath()">📂 <span
+                                data-i18n="dashboard.load_local"></span></button>
+                        <button class="btn" id="stopScanBtn" onclick="stopScan()" style="display: none; background: rgba(239, 68, 68, 0.3);">🛑 Stop Scan</button>
+                        <div id="localPathStatus" style="color: #4ade80; font-weight: 600; margin-left: auto;"></div>
+                    </div>
+                </div>
+
+                <!-- Folder Selector Modal -->
+                <div id="folderSelectorModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+                    <div style="background: rgba(30, 30, 40, 0.95); padding: 30px; border-radius: 12px; width: 600px; max-height: 80vh; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; color: white;">📁 Select Folder</h2>
+                            <button onclick="closeFolderSelector()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+                        </div>
+                        <div id="folderBreadcrumb" style="margin-bottom: 15px; color: #9ca3af; font-size: 0.9rem;"></div>
+                        <div id="folderList" style="min-height: 300px; max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.3);"></div>
+                        <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                            <button class="btn" onclick="closeFolderSelector()" style="background: rgba(255,255,255,0.1);">Cancel</button>
+                            <button class="btn" onclick="selectFolder()" style="background: rgba(74, 222, 128, 0.3);">Select</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Playlist Display -->
@@ -241,6 +265,24 @@
                 startTime = data.start_time * 1000; // Convert to milliseconds
                 startUptimeCounter();
             }
+
+            // Update scanning state in UI
+            updateScanningState(data.is_scanning);
+        });
+
+        socket.on('file_scanned', (data) => {
+            // Add scanned file to playlist in real-time
+            playlist.push({
+                index: playlist.length,
+                filename: data.filename,
+                path: data.path,
+                title: data.title,
+                artist: data.artist,
+                album: data.album,
+                year: data.year
+            });
+            renderPlaylist(0);
+            updatePlaylistCount();
         });
 
         socket.on('disconnect', () => {
@@ -359,12 +401,15 @@
         const files = fileInput.files;
 
         if (files.length === 0) {
-            document.getElementById('uploadStatus').textContent = 'Please select files';
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.textContent = 'Please select files';
+            statusDiv.style.color = '#facc15'; // Yellow warning color
             return;
         }
 
         const statusDiv = document.getElementById('uploadStatus');
         statusDiv.textContent = `Uploading ${files.length} file(s)...`;
+        statusDiv.style.color = '#4ade80'; // Green for success
 
         for (let i = 0; i < files.length; i++) {
             const formData = new FormData();
@@ -606,13 +651,141 @@
         }
     }
 
+    // Update playlist count
+    function updatePlaylistCount() {
+        document.getElementById('playlistCountLocal').textContent = playlist.length;
+    }
+
+    // Folder selector
+    let currentFolderPath = '';
+    let selectedFolderPath = '';
+
+    async function openFolderSelector() {
+        document.getElementById('folderSelectorModal').style.display = 'flex';
+        currentFolderPath = '';
+        await loadDirectories('');
+    }
+
+    function closeFolderSelector() {
+        document.getElementById('folderSelectorModal').style.display = 'none';
+    }
+
+    async function loadDirectories(path) {
+        try {
+            const response = await fetch('/liquid/list_directories', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: path})
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                currentFolderPath = data.current_path;
+                renderDirectories(data.directories, data.current_path);
+            } else {
+                const error = await response.json();
+                console.error('Error loading directories:', error.error);
+            }
+        } catch (error) {
+            console.error('Error loading directories:', error);
+        }
+    }
+
+    function renderDirectories(directories, currentPath) {
+        const folderList = document.getElementById('folderList');
+        const breadcrumb = document.getElementById('folderBreadcrumb');
+
+        // Update breadcrumb
+        if (currentPath) {
+            breadcrumb.innerHTML = `<span style="cursor: pointer; color: #4ade80;" onclick="loadDirectories('')">Root</span>`;
+            const parts = currentPath.split('/').filter(p => p);
+            let buildPath = '';
+            parts.forEach((part, index) => {
+                buildPath += '/' + part;
+                breadcrumb.innerHTML += ` / <span style="cursor: pointer; color: #4ade80;" onclick="loadDirectories('${buildPath}')">${part}</span>`;
+            });
+        } else {
+            breadcrumb.innerHTML = 'Root';
+        }
+
+        // Render directory list
+        if (directories.length === 0) {
+            folderList.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 20px;">No directories found</div>';
+            return;
+        }
+
+        folderList.innerHTML = directories.map(dir => `
+            <div class="folder-item" style="padding: 12px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; transition: background 0.2s;"
+                 onclick="navigateToDirectory('${dir.path}')"
+                 onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                 onmouseout="this.style.background='transparent'">
+                <span style="font-size: 1.2rem;">📁</span>
+                <span style="color: white; flex: 1;">${dir.name}</span>
+                ${dir.is_root ? '<span style="color: #9ca3af; font-size: 0.8rem;">Root</span>' : ''}
+            </div>
+        `).join('');
+    }
+
+    async function navigateToDirectory(path) {
+        selectedFolderPath = path;
+        await loadDirectories(path);
+    }
+
+    function selectFolder() {
+        if (selectedFolderPath) {
+            document.getElementById('localPathInput').value = selectedFolderPath;
+            closeFolderSelector();
+        } else if (currentFolderPath) {
+            document.getElementById('localPathInput').value = currentFolderPath;
+            closeFolderSelector();
+        } else {
+            alert('Please select a folder');
+        }
+    }
+
+    // Update scanning state in UI
+    function updateScanningState(isScanning) {
+        const pathInput = document.getElementById('localPathInput');
+        const loadBtn = document.getElementById('loadLocalBtn');
+        const stopBtn = document.getElementById('stopScanBtn');
+        const status = document.getElementById('localPathStatus');
+
+        if (isScanning) {
+            pathInput.disabled = true;
+            loadBtn.disabled = true;
+            stopBtn.style.display = 'inline-block';
+            status.textContent = '🔍 Scanning directory...';
+        } else {
+            pathInput.disabled = false;
+            loadBtn.disabled = false;
+            stopBtn.style.display = 'none';
+            if (status.textContent.includes('Scanning')) {
+                status.textContent = '✅ Scan complete';
+            }
+        }
+    }
+
+    // Stop scan
+    async function stopScan() {
+        try {
+            const response = await fetch('/liquid/stop_scan', {method: 'POST'});
+            if (response.ok) {
+                document.getElementById('localPathStatus').textContent = '🛑 Scan stopped';
+            }
+        } catch (error) {
+            console.error('Error stopping scan:', error);
+        }
+    }
+
     // Set local path
     async function setLocalPath() {
         const pathInput = document.getElementById('localPathInput');
         const path = pathInput.value.trim();
+        const status = document.getElementById('localPathStatus');
 
         if (!path) {
-            document.getElementById('localPathStatus').textContent = 'Please enter a path';
+            status.textContent = 'Please enter a path';
+            status.style.color = '#facc15'; // Yellow warning color
             return;
         }
 
@@ -624,15 +797,21 @@
             });
 
             if (response.ok) {
-                document.getElementById('localPathStatus').textContent = `Loaded music from: ${path}`;
-                setTimeout(loadPlaylist, 500);
+                status.textContent = `🔍 Scanning: ${path}`;
+                status.style.color = '#4ade80'; // Green for success
+                // Clear playlist to prepare for new scanned files
+                playlist = [];
+                renderPlaylist(0);
+                updatePlaylistCount();
             } else {
                 const error = await response.json();
-                document.getElementById('localPathStatus').textContent = `Error: ${error.error}`;
+                status.textContent = `Error: ${error.error}`;
+                status.style.color = '#facc15'; // Yellow for error
             }
         } catch (error) {
             console.error('Error setting local path:', error);
-            document.getElementById('localPathStatus').textContent = 'Error setting path';
+            status.textContent = 'Error setting path';
+            status.style.color = '#facc15'; // Yellow for error
         }
     }
 </script>

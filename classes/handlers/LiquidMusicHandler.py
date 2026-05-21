@@ -25,6 +25,10 @@ class LiquidMusicHandler:
         self.upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'uploads', 'music')
         os.makedirs(self.upload_dir, exist_ok=True)
         
+        # Set up scan callback for real-time updates
+        if hasattr(audio_streamer, 'setScanCallback'):
+            audio_streamer.setScanCallback(self._onFileScanned)
+        
         # Allowed MIME types for audio files
         self.allowed_mime_types = {
             'audio/mpeg',
@@ -263,10 +267,10 @@ class LiquidMusicHandler:
         try:
             data = request.get_json()
             path = data.get('path', '')
-            
+
             if not path:
                 return jsonify({'error': 'No path provided'}), 400
-            
+
             if hasattr(self.audio_streamer, 'setLocalMusicPath'):
                 self.audio_streamer.setLocalMusicPath(path)
                 self._broadcast_stats()
@@ -276,6 +280,69 @@ class LiquidMusicHandler:
         except Exception as e:
             Logger.error(f"Error setting local path: {e}")
             return jsonify({'error': 'Failed to set local path'}), 500
+
+    def stop_scan(self):
+        """Stop the ongoing directory scan."""
+        try:
+            if hasattr(self.audio_streamer, 'stopScan'):
+                self.audio_streamer.stopScan()
+                self._broadcast_stats()
+                return jsonify({'success': True})
+            else:
+                return jsonify({'error': 'Audio streamer does not support scan control'}), 400
+        except Exception as e:
+            Logger.error(f"Error stopping scan: {e}")
+            return jsonify({'error': 'Failed to stop scan'}), 500
+
+    def list_directories(self):
+        """List directories in the specified path for folder navigation.
+        
+        Args:
+            Request body should contain 'path' with the directory to list.
+            If path is empty or not provided, lists root directories.
+        """
+        try:
+            data = request.get_json()
+            path = data.get('path', '')
+
+            if not path:
+                # List root directories (common music locations on Linux)
+                common_paths = ['/home', '/media', '/mnt', '/']
+                directories = []
+                for p in common_paths:
+                    if os.path.exists(p) and os.path.isdir(p):
+                        directories.append({
+                            'name': os.path.basename(p) if p != '/' else 'Root',
+                            'path': p,
+                            'is_root': True
+                        })
+                return jsonify({'directories': directories, 'current_path': ''})
+
+            if not os.path.exists(path) or not os.path.isdir(path):
+                return jsonify({'error': 'Invalid path'}), 400
+
+            # List directories in the specified path
+            directories = []
+            try:
+                for item in os.listdir(path):
+                    item_path = os.path.join(path, item)
+                    if os.path.isdir(item_path) and not item.startswith('.'):
+                        directories.append({
+                            'name': item,
+                            'path': item_path,
+                            'is_root': False
+                        })
+            except PermissionError:
+                Logger.warning(f"Permission denied for path: {path}")
+                return jsonify({'error': 'Permission denied'}), 403
+
+            directories.sort(key=lambda x: x['name'].lower())
+
+            return jsonify({'directories': directories, 'current_path': path})
+
+        except Exception as e:
+            Logger.error(f"Error listing directories: {e}")
+            return jsonify({'error': 'Failed to list directories'}), 500
 
     def get_playlist(self):
         """Get current playlist for liquid music with metadata."""
@@ -345,6 +412,32 @@ class LiquidMusicHandler:
         except Exception as e:
             Logger.error(f"Error removing track: {e}")
             return jsonify({'error': 'Failed to remove track'}), 500
+
+    def _onFileScanned(self, file_path, metadata, index, total):
+        """Callback invoked when a file is scanned during async scanning.
+        
+        Emits a WebSocket event to update the frontend with the newly scanned file.
+        
+        Args:
+            file_path: Path to the scanned file
+            metadata: Extracted metadata dictionary
+            index: Current file index (1-based)
+            total: Total number of files to scan
+        """
+        try:
+            track_data = {
+                'filename': os.path.basename(file_path),
+                'path': file_path,
+                'title': metadata.get('title', ''),
+                'artist': metadata.get('artist', ''),
+                'album': metadata.get('album', ''),
+                'year': metadata.get('year', ''),
+                'index': index,
+                'total': total
+            }
+            self.socketio.emit('file_scanned', track_data)
+        except Exception as e:
+            Logger.error(f"Error emitting file_scanned event: {e}")
 
     def _broadcast_stats(self):
         """Broadcast updated stats to all WebSocket clients."""

@@ -128,7 +128,10 @@ Audio File → FFmpeg → PCM Buffer → Client Queues → HTTP Stream
 
 **Features**:
 - Manual track upload via dashboard
-- Local directory loading
+- Local directory loading with **async scanning**
+- **Real-time playlist updates** during scanning via WebSocket
+- **Folder browser** for visual directory selection (server filesystem)
+- **Scan interruption** - stop scanning at any time
 - Playlist management (add, remove, skip)
 - Playback controls (play, pause, resume, stop, skip forward/backward)
 - Automatic metadata extraction (title, artist, album, year)
@@ -400,7 +403,8 @@ def clear_upload_folder(self):
   "playlist_length": 10,
   "current_track_index": 3,
   "playback_stack_length": 5,
-  "local_music_path": "/path/to/music"
+  "local_music_path": "/path/to/music",
+  "is_scanning": false
 }
 ```
 
@@ -443,6 +447,17 @@ def clear_upload_folder(self):
 - Content-Type: application/json
 - Body: `{"path": "/path/to/music"}`
 - Response: `{"success": true}`
+- Note: Starts async scanning; playlist updates in real-time via WebSocket
+
+**Stop Scan**: `POST /liquid/stop_scan`
+- Response: `{"success": true}`
+- Note: Interrupts ongoing directory scan; playlist contains files scanned so far
+
+**List Directories**: `POST /liquid/list_directories`
+- Content-Type: application/json
+- Body: `{"path": "/path/to/list"}` (empty for root directories)
+- Response: `{"directories": [{"name": "...", "path": "...", "is_root": false}], "current_path": "..."}`
+- Note: Lists only directories (no files) from server filesystem
 
 **Get Playlist**: `GET /liquid/playlist`
 - Response: `{"playlist": [...], "current_index": 0}`
@@ -462,8 +477,10 @@ def clear_upload_folder(self):
 - `disconnect`: Client disconnection
 
 **Server → Client**:
-- `stats`: Real-time statistics update
+- `stats`: Real-time statistics update (includes `is_scanning` state)
 - `track_info`: Track information update
+- `file_scanned`: Emitted when a file is scanned during async directory scanning
+  - Data: `{"filename": "...", "path": "...", "title": "...", "artist": "...", "album": "...", "year": "...", "index": 1, "total": 100}`
 
 ---
 
