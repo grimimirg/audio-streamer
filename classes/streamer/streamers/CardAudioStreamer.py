@@ -58,7 +58,7 @@ class CardAudioStreamer:
 
     def __init__(self):
         """Initialize the audio streaming system.
-        
+
         Sets up PyAudio interface, streaming state, client management,
         and thread synchronization primitives.
         """
@@ -67,12 +67,21 @@ class CardAudioStreamer:
         self.onAir = False  # Streaming state flag
         self.listeningClients = []  # List of client queues for audio distribution
         self._lock = threading.RLock()  # Thread-safe lock for client management
-        
+
         # Additional metrics
         self.startTime = None  # Set by ApplicationController
         self.totalDataTransferred = 0  # Total bytes sent
         self.peakListeners = 0  # Maximum concurrent listeners
         self.chunkCount = 0  # Total audio chunks processed
+        self._listener_callback = None  # Callback for listener count changes
+
+    def set_listener_callback(self, callback):
+        """Set a callback function to be called when listener count changes.
+
+        Args:
+            callback: Function to call when listeners connect/disconnect
+        """
+        self._listener_callback = callback
 
     def listAvailableDevices(self):
         """Print all available audio input devices to the console.
@@ -165,7 +174,7 @@ class CardAudioStreamer:
 
     def addClient(self, clientQueue: queue.Queue):
         """Add a new client queue to receive audio data.
-        
+
         Args:
             clientQueue: Thread-safe queue for sending audio chunks to this client
         """
@@ -178,9 +187,13 @@ class CardAudioStreamer:
                 self.peakListeners = currentListeners
             Logger.info(f"New connected client. Number of connected clients: {currentListeners}")
 
+        # Notify callback if set
+        if self._listener_callback:
+            self._listener_callback()
+
     def removeClient(self, clientQueue: queue.Queue):
         """Remove a client queue from the distribution list.
-        
+
         Args:
             clientQueue: The queue to remove from active clients
         """
@@ -188,6 +201,10 @@ class CardAudioStreamer:
             if clientQueue in self.listeningClients:
                 self.listeningClients.remove(clientQueue)
                 Logger.info("Client disconnected")
+
+        # Notify callback if set
+        if self._listener_callback:
+            self._listener_callback()
 
     def getStats(self):
         """Get current streaming statistics.

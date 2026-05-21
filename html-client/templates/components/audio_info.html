@@ -1,0 +1,43 @@
+{% macro audio_info(show_bitrate=true, show_format=true, show_latency=true, liquid_mode=false) %}
+<div class="chart-container">
+    <div class="chart-title">🎛️ <span data-i18n="dashboard.audio_info"></span></div>
+    <div class="audio-info">
+        <div class="info-item">
+            <div class="info-label"><span data-i18n="dashboard.stream_status"></span></div>
+            <div class="info-value" id="streamStatus">---</div>
+        </div>
+        {% if show_bitrate and not liquid_mode %}
+        <div class="info-item">
+            <div class="info-label"><span data-i18n="dashboard.estimated_bitrate"></span></div>
+            <div class="info-value" id="bitrate">---</div>
+        </div>
+        {% endif %}
+        {% if show_format and not liquid_mode %}
+        <div class="info-item">
+            <div class="info-label"><span data-i18n="dashboard.audio_format"></span></div>
+            <div class="info-value" id="format">WAV 16-bit</div>
+        </div>
+        {% endif %}
+        {% if show_latency and not liquid_mode %}
+        <div class="info-item">
+            <div class="info-label"><span data-i18n="dashboard.latency"></span></div>
+            <div class="info-value" id="latency">~2s</div>
+        </div>
+        {% endif %}
+        {% if liquid_mode %}
+        <div class="info-item">
+            <div class="info-label"><span data-i18n="dashboard.current_track"></span></div>
+            <div class="info-value" id="currentTrack">---</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label"><span data-i18n="dashboard.playback_state"></span></div>
+            <div class="info-value" id="playbackState">---</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label"><span data-i18n="dashboard.playlist_length"></span></div>
+            <div class="info-value" id="playlistLength">0</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
