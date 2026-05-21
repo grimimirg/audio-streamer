@@ -65,7 +65,7 @@
 <tr>
 <td bgcolor="#FFCDD2" style="padding: 20px;">
 
-## ⚠️ Legal Disclaimer
+## Legal Disclaimer
 
 **IMPORTANT NOTICE**: This software is a tool for audio streaming. Users are solely responsible for ensuring compliance with all applicable laws and regulations regarding music streaming and broadcasting.
 
@@ -92,8 +92,6 @@ If you plan to stream to the public or use this for commercial purposes, you sho
 - Obtain appropriate webcasting or streaming licenses
 - Ensure compliance with all relevant copyright and performance rights regulations
 - Seek professional legal advice if uncertain about requirements
-
-**This disclaimer is provided for informational purposes only and does not constitute legal advice.**
 
 **Author Liability Disclaimer**
 
