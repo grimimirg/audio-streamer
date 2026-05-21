@@ -48,7 +48,7 @@
 <td width="50%">
 
 **Operations & Support**
-- [User Manual - Technical Details](USER_MANUAL.md) ⭐
+- [User Manual](USER_MANUAL.md)
 - [Quick Reference](#quick-reference)
 
 **Advanced & Community**
@@ -63,7 +63,7 @@
 
 <table border="3" bordercolor="#d32f2f" style="border-collapse: collapse;">
 <tr>
-<td bgcolor="#FFEBEE" style="padding: 20px;">
+<td bgcolor="#FFCDD2" style="padding: 20px;">
 
 ## ⚠️ Legal Disclaimer
 
