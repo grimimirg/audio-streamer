@@ -1,25 +1,25 @@
 :root {
-    --bg-gradient: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    --bg-gradient: linear-gradient(135deg, #1a3a4a 0%, #0d2a35 100%);
     --glass-bg: rgba(0, 0, 0, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(183, 221, 234, 0.2);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
     --text-color: #ffffff;
-    --accent-color: rgba(255, 255, 255, 0.1);
-    --accent-hover: rgba(255, 255, 255, 0.2);
+    --accent-color: rgba(183, 221, 234, 0.15);
+    --accent-hover: rgba(183, 221, 234, 0.25);
     --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --visualizer-color: rgba(255, 255, 255, 0.8);
+    --visualizer-color: rgba(183, 221, 234, 0.8);
 }
 
 body.light {
-    --bg-gradient: linear-gradient(135deg, #a8a8a8 0%, #888888 100%);
-    --glass-bg: rgba(255, 255, 255, 0.5);
-    --glass-border: rgba(0, 0, 0, 0.2);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-    --text-color: #1a1a1a;
-    --accent-color: rgba(0, 0, 0, 0.1);
-    --accent-hover: rgba(0, 0, 0, 0.2);
+    --bg-gradient: linear-gradient(135deg, #d4eef7 0%, #b7ddea 100%);
+    --glass-bg: rgba(255, 255, 255, 0.6);
+    --glass-border: rgba(0, 0, 0, 0.15);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+    --text-color: #1a3a4a;
+    --accent-color: rgba(26, 58, 74, 0.08);
+    --accent-hover: rgba(26, 58, 74, 0.15);
     --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --visualizer-color: rgba(0, 0, 0, 0.8);
+    --visualizer-color: rgba(26, 58, 74, 0.8);
 }
 
 * {
@@ -302,11 +302,11 @@ body {
 }
 
 .track-title {
-    color: #667eea;
+    color: #b7ddea;
 }
 
 body.light .track-title {
-    color: #5b21b6;
+    color: #1a3a4a;
 }
 
 @media (max-width: 600px) {
@@ -447,7 +447,7 @@ body.light .history-empty {
     border-radius: 8px;
     padding: 12px;
     margin-bottom: 10px;
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #b7ddea;
     transition: transform 0.2s ease, background 0.2s ease;
 }
 
@@ -490,11 +490,11 @@ body.light .history-empty {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #667eea;
+    color: #b7ddea;
 }
 
 body.light .history-card-title {
-    color: #5b21b6;
+    color: #1a3a4a;
 }
 
 .history-card-artist {
@@ -537,11 +537,11 @@ body.light .history-card-cover-placeholder {
 
 /* Dashboard-specific styles */
 .dashboard-page {
-    --bg-gradient: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    --bg-gradient: linear-gradient(135deg, #1a3a4a 0%, #0d2a35 100%);
     --container-bg: rgba(0, 0, 0, 0.6);
     --text-color: #ffffff;
-    --accent-color: #667eea;
-    --accent-hover: #764ba2;
+    --accent-color: #b7ddea;
+    --accent-hover: #64b4c8;
     --success-color: #4CAF50;
     --warning-color: #ff9800;
     --error-color: #f44336;
@@ -681,8 +681,8 @@ body.light .history-card-cover-placeholder {
 }
 
 .dashboard-page .btn {
-    background: #667eea;
-    color: white;
+    background: #b7ddea;
+    color: #1a3a4a;
     border: none;
     padding: 12px 24px;
     border-radius: 6px;
@@ -693,17 +693,17 @@ body.light .history-card-cover-placeholder {
 }
 
 .dashboard-page.light .btn {
-    background: rgba(0, 0, 0, 0.3);
-    color: #1a1a1a;
+    background: rgba(26, 58, 74, 0.15);
+    color: #1a3a4a;
 }
 
 .dashboard-page .btn:hover {
-    background: #764ba2;
+    background: #64b4c8;
     transform: translateY(-2px);
 }
 
 .dashboard-page.light .btn:hover {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(26, 58, 74, 0.25);
 }
 
 @keyframes fadeInDown {
@@ -883,11 +883,11 @@ body.light .history-card-cover-placeholder {
 }
 
 .dashboard-page.light {
-    --bg-gradient: linear-gradient(135deg, #a8a8a8 0%, #888888 100%);
-    --container-bg: rgba(255, 255, 255, 0.5);
-    --text-color: #1a1a1a;
-    --accent-color: rgba(0, 0, 0, 0.1);
-    --accent-hover: rgba(0, 0, 0, 0.2);
+    --bg-gradient: linear-gradient(135deg, #d4eef7 0%, #b7ddea 100%);
+    --container-bg: rgba(255, 255, 255, 0.6);
+    --text-color: #1a3a4a;
+    --accent-color: rgba(26, 58, 74, 0.1);
+    --accent-hover: rgba(26, 58, 74, 0.2);
     --success-color: #4CAF50;
     --warning-color: #ff9800;
     --error-color: #f44336;
@@ -925,12 +925,12 @@ body.light .history-card-cover-placeholder {
 
 .dashboard-page.light .card-title,
 .dashboard-page.light .chart-title {
-    color: #667eea;
+    color: #1a3a4a;
 }
 
 .dashboard-page.light .info-item {
-    background: rgba(0, 0, 0, 0.05);
-    border-left: 4px solid #667eea;
+    background: rgba(26, 58, 74, 0.05);
+    border-left: 4px solid #b7ddea;
 }
 
 .dashboard-page .history-stack {
@@ -1026,8 +1026,8 @@ body.light .history-card-cover-placeholder {
 }
 
 .dashboard-page.light .history-card {
-    background: rgba(0, 0, 0, 0.05);
-    border-left: 3px solid #667eea;
+    background: rgba(26, 58, 74, 0.05);
+    border-left: 3px solid #b7ddea;
 }
 
 .dashboard-page.light .history-card:hover {
