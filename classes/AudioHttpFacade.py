@@ -1,5 +1,6 @@
 import os
 from functools import wraps
+
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_socketio import SocketIO, emit
@@ -9,6 +10,7 @@ from classes.handlers.CoverUploadHandler import CoverUploadHandler
 from classes.handlers.LiquidMusicHandler import LiquidMusicHandler
 from classes.handlers.LocalizationHandler import LocalizationHandler
 from classes.handlers.StreamHandler import StreamHandler
+from utilities.Constants import STREAM_BITRATES
 from utilities.Logger import Logger
 
 
@@ -50,6 +52,7 @@ class AudioHttpFacade:
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
         self.audioStreamer = audioStreamer
         self.input_method = input_method
+        self.stream_bitrates = STREAM_BITRATES
         self.radio_station_name = os.getenv('RADIO_STATION_NAME', 'My Radio Station')
         self.dashboard_username = os.getenv('DASHBOARD_USERNAME', 'admin')
         self.dashboard_password = os.getenv('DASHBOARD_PASSWORD', 'admin123')
