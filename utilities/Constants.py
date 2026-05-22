@@ -41,7 +41,7 @@ try:
     CLIENT_QUEUE_SIZE = int(os.getenv('AUDIO_STREAMER_QUEUE_SIZE', '100'))
     STREAM_BITRATES = [
         int(bitrate.strip())
-        for bitrate in os.getenv('STREAM_BITRATES', '128').split(',')
+        for bitrate in os.getenv('AUDIO_STREAM_BITRATES', '128').split(',')
     ]
 
     for bitrate in STREAM_BITRATES:
@@ -51,5 +51,5 @@ try:
             )
 except ValueError as e:
     print(f"\nERROR: Invalid streaming configuration in .env file: {e}")
-    print("Please check AUDIO_STREAMER_MAX_CLIENTS, AUDIO_STREAMER_QUEUE_SIZE, and STREAM_BITRATES values.")
+    print("Please check AUDIO_STREAMER_MAX_CLIENTS, AUDIO_STREAMER_QUEUE_SIZE, and AUDIO_STREAM_BITRATES values.")
     sys.exit(1)
