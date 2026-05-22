@@ -67,6 +67,7 @@
 - [Quick Reference](#quick-reference)
 
 **Advanced & Community**
+- [Roadmap](#roadmap)
 - [Contributing & Support](#contributing--support)
 - [License](#license)
 
@@ -422,6 +423,15 @@ python app.py
 # Start professional streaming!
 ```
 
+### Liquid Music Mode (File-Based Music Playback)
+```bash
+python app.py
+# Choose option 3: Liquid Music
+# Open the dashboard at http://localhost:4986/dashboard
+# Upload your music files or load from local folder
+# Click Play to start broadcasting your music collection
+```
+
 ### Environment Configuration
 ```bash
 # Configure your station
@@ -510,10 +520,19 @@ Stream Only: http://your-station:4986/stream
 - Contribute code improvements
 - Help others in the community
 
+### Developer Contributions
+For detailed information on how to contribute to the project, including development setup, architecture, and coding guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### Technical Support
 - **User Manual**: For detailed technical information, see [USER_MANUAL.md](USER_MANUAL.md)
 - **Quick Reference**: See the section below for essential commands
 - **Community**: Share experiences and get help from other broadcasters
+
+---
+
+## Roadmap
+
+Check out the [ROADMAP.md](ROADMAP.md) document to see the planned features and future developments for the Audio Streamer project. The roadmap includes:
 
 ---
 
