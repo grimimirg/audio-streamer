@@ -1,8 +1,9 @@
 import os
 import sys
+from pathlib import Path
+
 import pyaudio
 from dotenv import load_dotenv
-from pathlib import Path
 
 # Load environment variables from .env file
 env_path = Path('.env')
@@ -38,7 +39,17 @@ except ValueError as e:
 try:
     MAX_CLIENTS = int(os.getenv('AUDIO_STREAMER_MAX_CLIENTS', '10'))
     CLIENT_QUEUE_SIZE = int(os.getenv('AUDIO_STREAMER_QUEUE_SIZE', '100'))
+    STREAM_BITRATES = [
+        int(bitrate.strip())
+        for bitrate in os.getenv('AUDIO_STREAM_BITRATES', '128').split(',')
+    ]
+
+    for bitrate in STREAM_BITRATES:
+        if bitrate < 64 or bitrate > 320:
+            raise ValueError(
+                f"Bitrate {bitrate} is out of valid range (64-320)"
+            )
 except ValueError as e:
     print(f"\nERROR: Invalid streaming configuration in .env file: {e}")
-    print("Please check AUDIO_STREAMER_MAX_CLIENTS and AUDIO_STREAMER_QUEUE_SIZE values.")
+    print("Please check AUDIO_STREAMER_MAX_CLIENTS, AUDIO_STREAMER_QUEUE_SIZE, and AUDIO_STREAM_BITRATES values.")
     sys.exit(1)
