@@ -6,13 +6,27 @@ Welcome to Audio Streamer! This manual will guide you through everything you nee
 - [Getting Started](#getting-started)
 - [Technical Overview](#technical-overview)
 - [Streaming Modes](#streaming-modes)
+  - [Microphone Mode](#1-microphone-mode-microphoneaudiostreamer)
+  - [Audio Interface Mode](#2-audio-interface-mode-cardaudiostreamer)
+  - [Liquid Music Mode](#3-liquid-music-mode-liquidmusicstreamer)
+  - [Bitrate-Based Streaming](#4-bitrate-based-streaming)
 - [Configuration](#configuration)
 - [Audio Engine Details](#audio-engine-details)
 - [Liquid Music Mode](#liquid-music-mode)
 - [Security Implementation](#security-implementation)
 - [API Reference](#api-reference)
+  - [Streaming Endpoints](#streaming-endpoints)
+  - [Statistics API](#statistics-api)
+  - [Liquid Music Endpoints](#liquid-music-endpoints)
+  - [WebSocket Events](#websocket-events)
 - [Advanced Configuration](#advanced-configuration)
 - [Troubleshooting](#troubleshooting)
+  - [Audio Device Issues](#audio-device-issues)
+  - [Streaming Issues](#streaming-issues)
+  - [File Upload Issues](#file-upload-issues)
+  - [Network Issues](#network-issues)
+  - [Liquid Music Issues](#liquid-music-issues)
+  - [Bitrate Streaming Issues](#bitrate-streaming-issues)
 
 ---
 
@@ -31,19 +45,25 @@ Whether you're a radio enthusiast, a podcaster, or just want to share music with
 - **Support multiple listeners** simultaneously over the network - share your stream with anyone on your network
 - **Work with various audio formats** (MP3, WAV, FLAC, OGG, M4A) - no need to convert your files
 - **Control everything from a web dashboard** - easy to use, no technical knowledge required
+- **Choose streaming quality** - offer multiple bitrates (64-320 kbps) to accommodate different bandwidth constraints
+- **Automatic quality adaptation** - listeners can select appropriate quality based on their connection
 
 ### Quick Start Guide
 
 If you just want to get up and running quickly, here's what you need to do:
 
-1. **Install the application** - follow the installation instructions for your system
-2. **Configure basic settings** - edit the `.env` file to set your server port and station name
+1. **Install the application** - follow the installation instructions for your system (including FFmpeg for bitrate-based streaming)
+2. **Configure basic settings** - edit the `.env` file to set your server port, station name, and desired streaming bitrates
 3. **Choose how you want to stream**:
    - **For music files**: Use the "Liquid Music" mode. You can either upload files directly or select a folder from your computer - the app will scan it asynchronously and you'll see files appear in your playlist in real-time
    - **For live audio**: Connect a microphone or audio interface to your computer
 4. **Open the dashboard** - point your browser to `http://your-server:4986/dashboard` (or `http://your-server:4986/dashboard_liquid` for music mode)
 5. **Start streaming** - click the play button in the dashboard
-6. **Share the stream** - give your listeners the stream URL and they can tune in
+6. **Share the stream** - give your listeners the appropriate stream URL:
+   - `/stream` for high-quality WAV (best for local networks)
+   - `/stream/128` for standard quality MP3 (good for most connections)
+   - `/stream/320` for highest quality MP3
+   - Other bitrates as configured in your `.env` file
 
 That's really all there is to it! The application handles all the technical details behind the scenes - audio encoding, network streaming, playlist management, metadata extraction - so you can focus on the content.
 
@@ -197,6 +217,50 @@ This mode plays music files from your computer with automatic playlist managemen
 - Requires disk space for uploaded files
 - FFmpeg dependency
 
+### 4. Bitrate-Based Streaming
+
+**Best for**: Bandwidth-constrained environments, mobile listeners, quality control
+
+Audio Streamer supports multiple quality streams simultaneously, allowing listeners to choose the appropriate bitrate based on their bandwidth and quality preferences.
+
+**How it works**:
+- Uses FFmpeg to re-encode audio to MP3 at specified bitrates
+- Creates separate streaming endpoints for each bitrate (e.g., `/stream/128`, `/stream/192`, `/stream/320`)
+- Original `/stream` endpoint continues to provide WAV format without re-encoding
+- Threading-based architecture prevents blocking during re-encoding
+- Configurable queue sizes and timeouts for optimal performance
+- FFmpeg stderr monitoring for error detection
+
+**Available Endpoints**:
+- `/stream` - Original WAV stream (no re-encoding, highest quality)
+- `/stream/64` - 64 kbps MP3 (lowest bandwidth, lowest quality)
+- `/stream/128` - 128 kbps MP3 (standard quality, good for most connections)
+- `/stream/192` - 192 kbps MP3 (high quality)
+- `/stream/256` - 256 kbps MP3 (very high quality)
+- `/stream/320` - 320 kbps MP3 (maximum MP3 quality)
+
+**Configuration**:
+- `AUDIO_STREAM_BITRATES` - Comma-separated list of bitrates to enable (e.g., `128,192,320`)
+- `FFMPEG_OUTPUT_QUEUE_SIZE` - Buffer size for encoded MP3 data (default: 50)
+- `FFMPEG_QUEUE_TIMEOUT` - Timeout for waiting for encoded data (default: 0.1s)
+
+**Requirements**:
+- FFmpeg must be installed on the system
+- FFmpeg is used for real-time audio re-encoding
+- Higher bitrates require more CPU resources
+
+**Performance Considerations**:
+- Higher bitrates = better audio quality but more bandwidth and CPU usage
+- Lower bitrates = less bandwidth but lower audio quality
+- Queue size affects memory usage and drop resistance
+- Larger queues reduce audio drops during network slowdowns
+
+**Use Cases**:
+- Mobile listeners with limited data plans can use lower bitrates
+- High-bandwidth listeners can use higher bitrates for better quality
+- Automatic quality selection based on connection conditions
+- Bandwidth-constrained networks can still access the stream
+
 ---
 
 ## Configuration
@@ -207,24 +271,30 @@ All configuration is done through the `.env` file. It's simple - just copy `.env
 
 ```bash
 # Audio Configuration
-AUDIO_CHUNK=1024              # Buffer size (512-4096, default: 1024)
-AUDIO_CHANNELS=2              # 1=mono, 2=stereo (default: 2)
-AUDIO_RATE=44100              # Sample rate (22050, 44100, 48000, default: 44100)
+AUDIO_CHUNK=512               # Buffer size in samples (512-2048, default: 512)
+AUDIO_CHANNELS=2               # 1=mono, 2=stereo (default: 2)
+AUDIO_RATE=44100               # Sample rate in Hz (22050, 44100, 48000, default: 44100)
 
 # Network Configuration
-AUDIO_STREAMER_HOST=0.0.0.0   # Bind address (default: 0.0.0.0)
-AUDIO_STREAMER_PORT=4986      # Server port (default: 4986)
-AUDIO_STREAMER_DEBUG=False    # Debug mode (default: False)
-
-# Station Configuration
-RADIO_STATION_NAME=My Radio Station  # Custom station name
+AUDIO_STREAMER_HOST=0.0.0.0    # Bind address (default: 0.0.0.0)
+AUDIO_STREAMER_PORT=4986       # Server port (default: 4986)
+AUDIO_STREAMER_DEBUG=False     # Debug mode (default: False)
 
 # Streaming Configuration
-AUDIO_STREAMER_QUEUE_SIZE=100      # Buffer queue size (default: 100)
+AUDIO_STREAMER_MAX_CLIENTS=10  # Maximum concurrent listeners (default: 10)
+AUDIO_STREAMER_QUEUE_SIZE=100 # Buffer queue size per client (default: 100)
+AUDIO_STREAM_BITRATES=128,192,320  # Available bitrates in kbps (default: 128,192,320)
+
+# Bitrate Streaming Configuration (FFmpeg-based)
+FFMPEG_OUTPUT_QUEUE_SIZE=50   # FFmpeg output queue size (default: 50)
+FFMPEG_QUEUE_TIMEOUT=0.1      # FFmpeg queue timeout in seconds (default: 0.1)
+
+# Station Configuration
+RADIO_STATION_NAME=My Streamer  # Custom station name (default: My Streamer)
 
 # Dashboard Authentication (Optional)
-DASHBOARD_USERNAME=admin           # Dashboard username (default: admin)
-DASHBOARD_PASSWORD=admin123        # Dashboard password (default: admin123)
+DASHBOARD_USERNAME=admin        # Dashboard username (default: admin)
+DASHBOARD_PASSWORD=admin123     # Dashboard password (default: admin123)
 ```
 
 ### Audio Quality Tuning
@@ -437,6 +507,44 @@ The dashboard is protected by HTTP Basic Authentication to prevent unauthorized 
 
 This section is for developers who want to integrate Audio Streamer with other systems or build custom applications on top of it.
 
+### Streaming Endpoints
+
+**Default Stream**: `GET /stream`
+- Streams audio in WAV format without re-encoding
+- Highest quality, no compression
+- Best for local networks or high-bandwidth connections
+
+**Bitrate-Based Streams**: `GET /stream/{bitrate}`
+- Streams audio re-encoded to MP3 at specified bitrate
+- Bitrate options: 64, 128, 192, 256, 320 kbps
+- Lower bitrates use less bandwidth but lower quality
+- Requires FFmpeg to be installed
+- Valid range: 64-320 kbps
+
+**Example Usage**:
+```bash
+# Default WAV stream
+curl http://localhost:4986/stream
+
+# 128 kbps MP3 stream
+curl http://localhost:4986/stream/128
+
+# 320 kbps MP3 stream (highest quality MP3)
+curl http://localhost:4986/stream/320
+```
+
+**Player Integration**:
+```html
+<!-- Default stream -->
+<audio src="http://your-server:4986/stream" autoplay></audio>
+
+<!-- Low bitrate for mobile -->
+<audio src="http://your-server:4986/stream/128"></audio>
+
+<!-- High bitrate for desktop -->
+<audio src="http://your-server:4986/stream/320"></audio>
+```
+
 ### Statistics API
 
 **Endpoint**: `GET /stats`
@@ -595,22 +703,28 @@ socket.on('file_scanned', (data) => {
 **Linux (Debian/Ubuntu)**:
 ```bash
 sudo apt update
-sudo apt install -y python3-dev portaudio19-dev libmagic1
+sudo apt install -y python3-dev portaudio19-dev libmagic1 ffmpeg
 ```
 
 **Linux (Fedora/RHEL)**:
 ```bash
-sudo dnf install python3-devel portaudio-devel file-libs
+sudo dnf install python3-devel portaudio-devel file-libs ffmpeg
 ```
 
 **macOS**:
 ```bash
-brew install portaudio libmagic
+brew install portaudio libmagic ffmpeg
 ```
 
 **Windows**:
 - Install PortAudio from http://www.portaudio.com/
 - Install python-magic binary from https://github.com/ahupp/python-magic
+- Install FFmpeg from https://ffmpeg.org/download.html
+
+**FFmpeg Requirement**:
+- FFmpeg is required for bitrate-based streaming features
+- Also required for Liquid Music mode (file playback)
+- Install via your system package manager or download from ffmpeg.org
 
 ### Process Management
 
@@ -742,6 +856,42 @@ curl http://localhost:4986/stats
 - Check file paths are valid
 - Verify file permissions
 - Check FFmpeg is installed: `ffmpeg -version`
+
+### Bitrate Streaming Issues
+
+**FFmpeg not found**:
+```bash
+# Check if FFmpeg is installed
+ffmpeg -version
+
+# Install FFmpeg on Debian/Ubuntu
+sudo apt update
+sudo apt install -y ffmpeg
+
+# Install FFmpeg on Fedora/RHEL
+sudo dnf install -y ffmpeg
+
+# Install FFmpeg on macOS
+brew install ffmpeg
+```
+
+**Bitrate stream not working**:
+- Verify FFmpeg is installed and accessible
+- Check that the bitrate is in valid range (64-320 kbps)
+- Review logs for FFmpeg errors
+- Ensure `AUDIO_STREAM_BITRATES` includes the desired bitrate
+
+**Audio drops during bitrate streaming**:
+- Increase `FFMPEG_OUTPUT_QUEUE_SIZE` (try 100 instead of 50)
+- Increase `FFMPEG_QUEUE_TIMEOUT` (try 0.2 instead of 0.1)
+- Check CPU usage - re-encoding requires CPU resources
+- Try lower bitrates to reduce CPU load
+
+**High CPU usage with bitrate streaming**:
+- Reduce number of enabled bitrates
+- Use lower bitrates
+- Increase `FFMPEG_QUEUE_TIMEOUT` to reduce CPU usage
+- Consider using default `/stream` endpoint (no re-encoding) if acceptable
 
 **Metadata not extracting**:
 - Verify Mutagen is installed: `pip show mutagen`

@@ -43,6 +43,8 @@ try:
         int(bitrate.strip())
         for bitrate in os.getenv('AUDIO_STREAM_BITRATES', '128').split(',')
     ]
+    FFMPEG_OUTPUT_QUEUE_SIZE = int(os.getenv('FFMPEG_OUTPUT_QUEUE_SIZE', '50'))
+    FFMPEG_QUEUE_TIMEOUT = float(os.getenv('FFMPEG_QUEUE_TIMEOUT', '0.1'))
 
     for bitrate in STREAM_BITRATES:
         if bitrate < 64 or bitrate > 320:
@@ -51,5 +53,5 @@ try:
             )
 except ValueError as e:
     print(f"\nERROR: Invalid streaming configuration in .env file: {e}")
-    print("Please check AUDIO_STREAMER_MAX_CLIENTS, AUDIO_STREAMER_QUEUE_SIZE, and AUDIO_STREAM_BITRATES values.")
+    print("Please check AUDIO_STREAMER_MAX_CLIENTS, AUDIO_STREAMER_QUEUE_SIZE, AUDIO_STREAM_BITRATES, FFMPEG_OUTPUT_QUEUE_SIZE, and FFMPEG_QUEUE_TIMEOUT values.")
     sys.exit(1)
