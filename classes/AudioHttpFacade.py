@@ -148,6 +148,13 @@ class AudioHttpFacade:
         # Standard routes
         self.app.add_url_rule('/', 'player', self.stream_handler.player)
         self.app.add_url_rule('/stream', 'stream', self.stream_handler.stream)
+        
+        # Bitrate-specific streaming routes
+        for bitrate in self.stream_bitrates:
+            route_name = f'stream_{bitrate}'
+            self.app.add_url_rule(f'/stream/{bitrate}', route_name, 
+                                 lambda bitrate=bitrate: self.stream_handler.stream(bitrate))
+        
         self.app.add_url_rule('/stats', 'stats', self._stats)
         self.app.add_url_rule('/dashboard', 'dashboard',
                               self._requires_auth(self._requires_streaming_mode(self.stream_handler.dashboard)))

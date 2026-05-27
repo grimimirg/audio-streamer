@@ -54,3 +54,5 @@ Thumbs.db
 *.flac
 audio_recordings/
 uploads/
+
+issue.md
