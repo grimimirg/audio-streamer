@@ -47,22 +47,6 @@ class LiquidMusicStreamer:
         self.scanCallback = None  # Callback for scan progress events
         self._listener_callback = None  # Callback for listener count changes
 
-    def set_listener_callback(self, callback):
-        """Set a callback function to be called when listener count changes.
-
-        Args:
-            callback: Function to call when listeners connect/disconnect
-        """
-        self._listener_callback = callback
-
-    def set_scan_callback(self, callback):
-        """Set a callback function for scan progress events.
-
-        Args:
-            callback: Function to call with scan progress updates
-        """
-        self.scanCallback = callback
-
         # Playlist management
         self.playlist = []  # List of file paths in order
         self.playlistMetadata = {}  # Dictionary mapping file paths to metadata
@@ -82,6 +66,22 @@ class LiquidMusicStreamer:
         # Upload directory
         self.uploadDir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'uploads', 'music')
         os.makedirs(self.uploadDir, exist_ok=True)
+
+    def set_listener_callback(self, callback):
+        """Set a callback function to be called when listener count changes.
+
+        Args:
+            callback: Function to call when listeners connect/disconnect
+        """
+        self._listener_callback = callback
+
+    def set_scan_callback(self, callback):
+        """Set a callback function for scan progress events.
+
+        Args:
+            callback: Function to call with scan progress updates
+        """
+        self.scanCallback = callback
 
     def listAvailableDevices(self):
         """List available music sources for liquid music.
