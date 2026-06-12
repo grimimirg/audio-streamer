@@ -574,6 +574,18 @@ AUDIO_STREAMER_DEBUG=false python app.py
 - **Radio Player**: `http://localhost:4986`
 - **Audio Stream**: `http://localhost:4986/stream`
 - **Dashboard**: `http://localhost:4986/dashboard`
+- **API Base URL**: `http://localhost:4986/api/v1/`
+- **Swagger UI**: `http://localhost:4986/api/docs`
+
+### API Structure
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/stream` | GET | Stream status and metadata |
+| `/api/v1/tracks` | GET | List available tracks |
+| `/api/v1/config` | GET/PUT | Read/update streamer config |
+
+All API responses use a consistent wrapper: `{"status": "ok", "data": {...}}`. See `classes/api/` for implementation and OpenAPI/Swagger docs at `/api/docs`.
 
 ### Audio Device Tips
 - **Built-in Microphone**: Choose option 1, then select the built-in microphone device
