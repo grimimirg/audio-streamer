@@ -84,4 +84,5 @@ dashboard:
 
 player:
   history: "Verlauf"
+  quality_original: "Original (WAV)"
   history_empty: "Keine Titel im Verlauf"

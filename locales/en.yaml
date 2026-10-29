@@ -84,4 +84,5 @@ dashboard:
 
 player:
   history: "History"
+  quality_original: "Original (WAV)"
   history_empty: "No tracks in history"

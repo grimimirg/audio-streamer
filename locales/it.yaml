@@ -84,4 +84,5 @@ dashboard:
 
 player:
   history: "Cronologia"
+  quality_original: "Originale (WAV)"
   history_empty: "Nessun brano nella cronologia"
