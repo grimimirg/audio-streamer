@@ -149,6 +149,8 @@ function updateUI(stats) {
     // Audio info
     document.getElementById('streamStatus').textContent = stats.on_air ? i18n.t('dashboard.active') : i18n.t('dashboard.inactive');
     document.getElementById('bitrate').textContent = calculateBitrate(stats.sample_rate, stats.channels);
+
+    updateCpuCard(stats);
 }
 
 // Calculate bitrate
@@ -270,4 +272,20 @@ function renderHistory() {
                 </div>
             `;
     }).join('');
+}
+
+// Update the CPU usage card
+function updateCpuCard(stats) {
+    const cpuElement = document.getElementById('cpuPercent');
+    if (!cpuElement) return;
+
+    if (stats.cpu_percent === null || stats.cpu_percent === undefined) {
+        cpuElement.textContent = '--';
+        cpuElement.title = i18n.t('dashboard.cpu_unavailable');
+    } else {
+        cpuElement.textContent = stats.cpu_percent.toFixed(1) + '%';
+        cpuElement.title = stats.cpu_warning ? i18n.t('dashboard.cpu_high') : '';
+    }
+    cpuElement.classList.toggle('metric-warning', Boolean(stats.cpu_warning));
+    document.getElementById('activeEncoders').textContent = stats.active_encoders || 0;
 }

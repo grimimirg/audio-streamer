@@ -7,6 +7,7 @@ Thank you for your interest in contributing to Audio Streamer! This document pro
 ## Table of Contents
 
 - [Development Setup](#development-setup)
+- [Running the Tests](#running-the-tests)
 - [Project Architecture](#project-architecture)
 - [Adding a New Language](#adding-a-new-language)
 - [Creating a New API Endpoint](#creating-a-new-api-endpoint)
@@ -81,6 +82,34 @@ The frontend is vanilla JavaScript located in the `html-client/` directory. No b
 1. Make changes to JavaScript files in `html-client/src/`
 2. Refresh your browser to see changes
 3. For CSS changes, edit files in `html-client/static/`
+
+---
+
+## Running the Tests
+
+Backend code is covered by unit tests using [pytest](https://docs.pytest.org/).
+
+1. **Install the development dependencies** (this also installs the runtime ones):
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+2. **Run the suite** from the repository root:
+   ```bash
+   pytest
+   ```
+
+   Run a single file or test while iterating:
+   ```bash
+   pytest tests/test_stream_handler.py
+   pytest tests/test_cpu_monitor.py::test_recovery_clears_the_warning_flag
+   ```
+
+Tests live in `tests/`, named `test_<module>.py`, and mirror the module they
+cover. They are unit tests: ffmpeg, audio devices and the filesystem are stubbed,
+so no `.env`, sound card or ffmpeg install is needed to run them. Shared fakes
+(`FakeStreamer`, `FakeProcess`) live in `tests/conftest.py` - reuse them rather
+than writing new ones.
 
 ---
 
@@ -361,6 +390,7 @@ async function setVolume(volume) {
 - Use async/await for asynchronous operations
 
 ### General
+- Backend changes ship with unit tests in the same pull request (see [Running the Tests](#running-the-tests))
 - Write clear, descriptive commit messages
 - Keep functions small and focused
 - Don't repeat yourself (DRY principle)

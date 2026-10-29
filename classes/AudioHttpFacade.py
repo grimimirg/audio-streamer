@@ -10,7 +10,8 @@ from classes.handlers.CoverUploadHandler import CoverUploadHandler
 from classes.handlers.LiquidMusicHandler import LiquidMusicHandler
 from classes.handlers.LocalizationHandler import LocalizationHandler
 from classes.handlers.StreamHandler import StreamHandler
-from utilities.Constants import STREAM_BITRATES
+from utilities.Constants import CPU_MONITOR_INTERVAL, CPU_WARNING_THRESHOLD, STREAM_BITRATES
+from utilities.CpuMonitor import CpuMonitor
 from utilities.Logger import Logger
 
 
@@ -65,6 +66,13 @@ class AudioHttpFacade:
         self.stream_handler = StreamHandler(audioStreamer, self.radio_station_name)
         self.liquid_music_handler = LiquidMusicHandler(audioStreamer, self.socketio)
 
+        # Monitor CPU usage of the app and its ffmpeg encoders
+        self.cpu_monitor = CpuMonitor(
+            threshold=CPU_WARNING_THRESHOLD,
+            interval=CPU_MONITOR_INTERVAL,
+            encoder_counter=lambda: self.stream_handler.encoder_pool.active_encoders
+        )
+
         # Register callback for listener count changes
         if hasattr(audioStreamer, 'set_listener_callback'):
             audioStreamer.set_listener_callback(self._notify_listener_change)
@@ -75,6 +83,11 @@ class AudioHttpFacade:
         self._add_routes()
         self._add_socketio_events()
 
+    def shutdown(self):
+        """Stop background workers owned by the HTTP layer."""
+        self.cpu_monitor.stop()
+        self.stream_handler.shutdown()
+
     def run(self, host: str, port: int, debug: bool):
         """Start the Flask HTTP server.
         
@@ -84,6 +97,7 @@ class AudioHttpFacade:
             debug: Enable Flask debug mode
         """
         Logger.info(f"Server listening on http://{host}:{port}")
+        self.cpu_monitor.start()
         self.socketio.run(self.app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
 
     # -- PRIVATES --
@@ -233,6 +247,7 @@ class AudioHttpFacade:
         stats['album_name'] = self.track_info['album_name']
         stats['track_year'] = self.track_info['track_year']
         stats['album_cover'] = self.track_info['album_cover']
+        stats.update(self.cpu_monitor.get_stats())
         return stats
 
     def _upload_cover(self):

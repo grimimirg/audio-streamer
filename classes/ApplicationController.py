@@ -3,6 +3,7 @@ import time
 
 from classes.streamer.AudioStreamerFactory import AudioStreamerFactory
 from .AudioHttpFacade import AudioHttpFacade
+from utilities.FfmpegCapabilities import log_encoding_capabilities
 from utilities.Logger import Logger
 
 
@@ -68,6 +69,9 @@ class ApplicationController:
             self: Returns self for method chaining, or None if setup fails
         """
         try:
+            # Record what the host's ffmpeg can do before any encoding starts
+            log_encoding_capabilities()
+
             # First, ask user for input method
             input_method = self._askForInputMethod()
 
@@ -129,6 +133,8 @@ class ApplicationController:
         """Cleanly shutdown the application by stopping audio streaming."""
         Logger.info("Shutting down application...")
         try:
+            if self.audioHttpFacade:
+                self.audioHttpFacade.shutdown()
             self.audioStreamer.stopAudioStream()
             Logger.info("Application shutdown completed")
         except Exception as e:
