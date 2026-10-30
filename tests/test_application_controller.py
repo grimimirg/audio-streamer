@@ -114,16 +114,54 @@ def test_last_choice_selects_every_configured_relay(controller, relays):
 
 
 @pytest.mark.parametrize('relays', [('icecast',)], indirect=True)
-def test_a_single_relay_is_not_offered_as_an_all_option(controller, relays):
-    # With one relay there is nothing to combine, so 3 is out of range and the
-    # menu asks again rather than quietly treating it as "all"
-    prompt = FakePrompt(['3', '2'])
+def test_a_single_relay_is_not_offered_as_an_all_option(controller, relays, capsys):
+    # With one usable relay there is nothing to combine, so no "all" option
+    prompt = FakePrompt(['2'])
 
     selected = controller._askForProtocol(relays, prompt=prompt)
 
     assert classes_of(selected) == [IcecastStreamer]
+    # every protocol is still listed, so the range covers the unconfigured one
+    assert prompt.prompts[0].endswith('(1-3): ')
+    assert 'Direct + Shoutcast' in capsys.readouterr().out
+
+
+def test_every_protocol_is_listed_even_when_none_is_configured(controller, capsys, monkeypatch):
+    # A relay that is never mentioned cannot be discovered, which is the whole
+    # point of listing the unconfigured ones
+    monkeypatch.setattr(application_controller_module, 'ICECAST_ENABLED', False)
+    monkeypatch.setattr(application_controller_module, 'SHOUTCAST_ENABLED', False)
+
+    controller._askForProtocol([], prompt=FakePrompt(['1']))
+
+    output = capsys.readouterr().out
+    assert 'Direct + Icecast' in output
+    assert 'Direct + Shoutcast' in output
+    assert 'not configured: set ICECAST_ENABLED in .env' in output
+    assert 'not configured: set SHOUTCAST_ENABLED in .env' in output
+
+
+@pytest.mark.parametrize('relays', [('icecast',)], indirect=True)
+def test_a_configured_relay_is_not_marked_as_unconfigured(controller, relays, capsys):
+    controller._askForProtocol(relays, prompt=FakePrompt(['1']))
+
+    output = capsys.readouterr().out
+    assert 'not configured: set ICECAST_ENABLED' not in output
+    assert 'not configured: set SHOUTCAST_ENABLED' in output
+
+
+@pytest.mark.parametrize('relays', [('icecast',)], indirect=True)
+def test_choosing_an_unconfigured_relay_explains_and_asks_again(controller, relays, capsys):
+    prompt = FakePrompt(['3', '2'])
+
+    selected = controller._askForProtocol(relays, prompt=prompt)
+
+    output = capsys.readouterr().out
+    assert 'Shoutcast is not configured' in output
+    assert 'SHOUTCAST_ENABLED=True' in output
     assert len(prompt.prompts) == 2
-    assert prompt.prompts[0].endswith('(1-2): ')
+    # and it is never started, however the operator insists
+    assert classes_of(selected) == [IcecastStreamer]
 
 
 @pytest.mark.parametrize('answer', ['', '0', '9', 'icecast', '-1'])
@@ -150,24 +188,21 @@ def test_an_interrupt_falls_back_to_every_configured_relay(controller, relays):
 
 # -- _startSelectedRelays --
 
-def test_nothing_is_asked_when_no_relay_is_configured(controller, monkeypatch):
+def test_an_unconfigured_station_still_sees_the_menu(controller, monkeypatch, capsys):
     monkeypatch.setattr(application_controller_module, 'ICECAST_ENABLED', False)
     monkeypatch.setattr(application_controller_module, 'SHOUTCAST_ENABLED', False)
-
-    def fail(*args, **kwargs):
-        raise AssertionError('a direct-only station must not be asked to choose')
-
-    controller._askForProtocol = fail
+    controller._askForProtocol = lambda configured, **kwargs: list(configured)
 
     controller._startSelectedRelays()
 
     assert controller.protocols == ['direct']
     assert controller.icecastStreamer is None
     assert controller.shoutcastStreamer is None
+    assert 'Streaming protocol: Direct' in capsys.readouterr().out
 
 
 def test_the_selected_relay_is_started_and_published(controller, relays):
-    controller._askForProtocol = lambda entries, **kwargs: [entries[0]]
+    controller._askForProtocol = lambda configured, **kwargs: [configured[0]]
 
     controller._startSelectedRelays()
 
@@ -177,7 +212,7 @@ def test_the_selected_relay_is_started_and_published(controller, relays):
 
 
 def test_an_unselected_relay_is_left_alone(controller, relays):
-    controller._askForProtocol = lambda entries, **kwargs: [entries[0]]
+    controller._askForProtocol = lambda configured, **kwargs: [configured[0]]
 
     controller._startSelectedRelays()
 
@@ -187,7 +222,7 @@ def test_an_unselected_relay_is_left_alone(controller, relays):
 
 
 def test_every_relay_is_started_when_all_are_selected(controller, relays):
-    controller._askForProtocol = lambda entries, **kwargs: list(entries)
+    controller._askForProtocol = lambda configured, **kwargs: list(configured)
 
     controller._startSelectedRelays()
 
@@ -200,7 +235,7 @@ def test_a_relay_that_cannot_start_is_published_as_absent(controller, relays):
     # _startRelay reports a failure as None rather than raising, so the station
     # stays on the air and the dashboard shows the relay as disconnected
     controller._startRelay = lambda relay_class: None
-    controller._askForProtocol = lambda entries, **kwargs: [entries[0]]
+    controller._askForProtocol = lambda configured, **kwargs: [configured[0]]
 
     controller._startSelectedRelays()
 
@@ -213,3 +248,81 @@ def test_a_relay_that_cannot_start_is_published_as_absent(controller, relays):
 def test_relay_labels_read_the_way_the_manual_does():
     assert ApplicationController._relayLabel(IcecastStreamer) == 'Icecast'
     assert ApplicationController._relayLabel(ShoutcastStreamer) == 'Shoutcast'
+
+
+# -- startup visibility (#61) --
+#
+# Logger suppresses every level, errors included, unless AUDIO_STREAMER_DEBUG is
+# set, so anything the operator must see at startup has to be printed.
+
+def test_a_direct_only_station_is_told_it_is_direct_only(controller, capsys, monkeypatch):
+    monkeypatch.setattr(application_controller_module, 'ICECAST_ENABLED', False)
+    monkeypatch.setattr(application_controller_module, 'SHOUTCAST_ENABLED', False)
+    controller._askForProtocol = lambda configured, **kwargs: []
+
+    controller._startSelectedRelays()
+
+    output = capsys.readouterr().out
+    assert 'Streaming protocol: Direct' in output
+    assert 'no relay is configured' in output
+
+
+def test_a_direct_only_station_is_told_how_to_enable_a_relay(controller, capsys, monkeypatch):
+    monkeypatch.setattr(application_controller_module, 'ICECAST_ENABLED', False)
+    monkeypatch.setattr(application_controller_module, 'SHOUTCAST_ENABLED', False)
+    controller._askForProtocol = lambda configured, **kwargs: []
+
+    controller._startSelectedRelays()
+
+    output = capsys.readouterr().out
+    assert 'ICECAST_ENABLED' in output
+    assert 'SHOUTCAST_ENABLED' in output
+    assert '.env.example' in output
+
+
+def test_the_active_protocols_are_printed_after_the_relays_start(controller, relays, capsys):
+    controller._askForProtocol = lambda configured, **kwargs: [configured[0]]
+
+    controller._startSelectedRelays()
+
+    assert 'Streaming protocol: Direct + Icecast' in capsys.readouterr().out
+
+
+def test_every_active_protocol_is_printed(controller, relays, capsys):
+    controller._askForProtocol = lambda configured, **kwargs: list(configured)
+
+    controller._startSelectedRelays()
+
+    assert 'Streaming protocol: Direct + Icecast + Shoutcast' in capsys.readouterr().out
+
+
+def test_a_dropped_relay_is_not_printed_as_active(controller, relays, capsys):
+    controller._startRelay = lambda relay_class: None
+    controller._askForProtocol = lambda configured, **kwargs: [configured[0]]
+
+    controller._startSelectedRelays()
+
+    output = capsys.readouterr().out
+    assert 'Streaming protocol: Direct' in output
+    assert 'Icecast' not in output.split('Streaming protocol:')[1]
+
+
+def test_a_relay_that_cannot_start_is_reported_on_the_console(capsys, mocker):
+    # The Logger line alone is invisible without debug logging, which is how a
+    # station could silently fall back to direct-only
+    controller = ApplicationController()
+    controller.audioStreamer = object()
+    mocker.patch.object(IcecastStreamer, 'test_connection')
+    mocker.patch.object(IcecastStreamer, '__init__',
+                        side_effect=RuntimeError('Could not connect to Icecast'))
+
+    assert controller._startRelay(IcecastStreamer) is None
+
+    output = capsys.readouterr().out
+    assert 'WARNING: Icecast relay disabled: Could not connect to Icecast' in output
+
+
+def test_the_unattended_fallback_says_why_it_chose(controller, relays, capsys):
+    controller._askForProtocol(relays, prompt=FakePrompt([EOFError()]))
+
+    assert 'No console to choose on' in capsys.readouterr().out
