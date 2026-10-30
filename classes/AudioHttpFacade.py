@@ -100,6 +100,14 @@ class AudioHttpFacade:
         """
         self.stream_handler.shoutcast_streamer = shoutcast_streamer
 
+    def set_protocols(self, protocols):
+        """Register the protocols active for this run so the dashboard shows them.
+
+        Args:
+            protocols: Active protocol names, e.g. ["direct", "icecast"]
+        """
+        self.stream_handler.protocols = protocols
+
     def shutdown(self):
         """Stop background workers owned by the HTTP layer."""
         self.cpu_monitor.stop()

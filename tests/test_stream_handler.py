@@ -225,3 +225,26 @@ def test_wav_header_is_unchanged(handler):
         b'RIFF\xff\xff\xff\xffWAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00'
         b'\x44\xac\x00\x00\x10\xb1\x02\x00\x04\x00\x10\x00data\xff\xff\xff\xff'
     )
+
+
+def test_stats_report_the_direct_protocol_by_default(fake_streamer):
+    handler = StreamHandler(fake_streamer, 'Test Radio', encoder_pool=FakePool())
+
+    assert handler.stats()['protocols'] == ['direct']
+
+
+def test_stats_report_the_protocols_chosen_at_startup(fake_streamer):
+    handler = StreamHandler(fake_streamer, 'Test Radio', encoder_pool=FakePool(),
+                            protocols=['direct', 'shoutcast'])
+
+    assert handler.stats()['protocols'] == ['direct', 'shoutcast']
+
+
+def test_stats_copy_the_protocol_list_so_callers_cannot_mutate_it(fake_streamer):
+    protocols = ['direct', 'icecast']
+    handler = StreamHandler(fake_streamer, 'Test Radio', encoder_pool=FakePool(),
+                            protocols=protocols)
+
+    handler.stats()['protocols'].append('shoutcast')
+
+    assert protocols == ['direct', 'icecast']

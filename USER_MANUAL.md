@@ -13,6 +13,7 @@ Welcome to Audio Streamer! This manual will guide you through everything you nee
 - [Configuration](#configuration)
 - [Icecast Streaming](#icecast-streaming)
 - [Shoutcast Streaming](#shoutcast-streaming)
+- [Switching Protocols](#switching-protocols)
 - [Audio Engine Details](#audio-engine-details)
 - [Liquid Music Mode](#liquid-music-mode)
 - [Security Implementation](#security-implementation)
@@ -496,6 +497,75 @@ the Icecast one, reporting `Connected` or `Disconnected` with the mount and
 bitrate. The card is hidden when `SHOUTCAST_ENABLED` is false. The same state is
 available from the statistics API as `shoutcast_enabled`, `shoutcast_connected`,
 `shoutcast_mount` and `shoutcast_bitrate`.
+
+---
+
+## Switching Protocols
+
+The station always serves listeners directly. Icecast and Shoutcast are relays
+added on top of that, and which of them run is chosen each time the station
+starts.
+
+### The startup menu
+
+After the audio input and device prompts, the station asks which protocol to
+use:
+
+```
+==================================================
+Choose your streaming protocol:
+1. Direct only (listeners connect to this server)
+2. Direct + Icecast
+3. Direct + Shoutcast
+4. Direct + all configured relays
+==================================================
+Enter your choice (1-4):
+```
+
+The menu only lists relays that are **configured**, meaning `ICECAST_ENABLED`
+or `SHOUTCAST_ENABLED` is true and the matching `.env` block is filled in. That
+keeps the menu from offering a server it has no host or password for:
+
+| `.env` state | What the menu offers |
+|---|---|
+| Neither relay enabled | No prompt at all; the station streams directly |
+| One relay enabled | Direct only, or direct plus that relay |
+| Both relays enabled | Direct only, either relay, or both |
+
+So `.env` decides what a protocol *can* be used, and the menu decides what is
+used *this run*.
+
+### Changing protocol
+
+Stop the station and start it again, then pick a different option. The relays
+hold a live connection to their server for as long as the station runs, so there
+is no way to switch without a restart.
+
+To add a protocol that is not offered, fill in its `.env` block, set its
+`*_ENABLED` to true, and restart; it then appears in the menu.
+
+### Unattended startup
+
+systemd units and containers run without a console, so there is nothing to
+answer the prompt. In that case the station logs
+
+```
+No protocol selected, using all configured relays
+```
+
+and starts every configured relay — exactly what the `.env` file describes. An
+unattended deployment is therefore configured entirely through `.env`, and
+adding the menu does not change how it behaves.
+
+### Dashboard
+
+The **Streaming Protocol** card shows what is active for the current run, for
+example `Direct + Icecast`, and notes that changing it needs a restart. A relay
+that was selected but failed to connect is not listed there; its own relay card
+reports it as disconnected instead.
+
+The same value is available from the statistics API as `protocols`, a list such
+as `["direct", "icecast"]`.
 
 ---
 

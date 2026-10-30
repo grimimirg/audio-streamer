@@ -153,6 +153,7 @@ function updateUI(stats) {
     updateCpuCard(stats);
     updateRelayCard('icecast', stats);
     updateRelayCard('shoutcast', stats);
+    updateProtocolCard(stats);
 
     // Playback state
     let stateText = '---';
@@ -615,6 +616,17 @@ function updateCpuCard(stats) {
     }
     cpuElement.classList.toggle('metric-warning', Boolean(stats.cpu_warning));
     document.getElementById('activeEncoders').textContent = stats.active_encoders || 0;
+}
+
+// Update the active protocol card from the startup selection
+function updateProtocolCard(stats) {
+    const element = document.getElementById('protocolMode');
+    if (!element) return;
+
+    const protocols = stats.protocols || [];
+    element.textContent = protocols.length
+        ? protocols.map((name) => i18n.t(`dashboard.protocol_${name}`)).join(' + ')
+        : '--';
 }
 
 // Update one relay card, hidden entirely when that relay is disabled
