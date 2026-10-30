@@ -204,19 +204,39 @@ OR
 Turntable/Mixer → Audio Interface → Computer
 ```
 
-### Step 2: Install & Configure
+### Step 2: Install System Prerequisites
+
+Audio Streamer needs a few system packages that `pip` cannot provide:
+
+| Package | Why it is needed |
+| --- | --- |
+| Python 3.9+ and its development headers | Required to build PyAudio |
+| PortAudio | Audio capture backend used by PyAudio |
+| ffmpeg | Bitrate conversion for the multi-quality streams |
+| libmagic | Validates uploaded music files in Liquid Music mode |
+
+**Debian / Ubuntu**
+```bash
+sudo apt update
+sudo apt install -y python3-dev portaudio19-dev ffmpeg libmagic1
+```
+
+**Arch Linux**
+```bash
+sudo pacman -S --needed python portaudio ffmpeg file
+```
+
+### Step 3: Install & Configure
 ```bash
 # Clone and install
 git clone <this-repository>
 cd audio-streamer
 
-# Option 1: Quick install (recommended for new systems)
+# Option 1: Quick install (installs the system packages above, then the Python ones)
 ./install.sh
 
 # Option 2: Manual install
-# First install system dependencies for PyAudio:
-sudo apt update && sudo apt install -y python3-dev portaudio19-dev
-# Then install Python requirements:
+# Install the system prerequisites for your distribution (see Step 2), then:
 pip install -r requirements.txt
 
 # REQUIRED: Create configuration file
@@ -227,9 +247,12 @@ nano .env  # Edit your settings
 python app.py
 ```
 
+**Note:** Install the Python requirements **before** running `python app.py`. Starting
+the app without them fails with `ModuleNotFoundError: No module named 'pyaudio'`.
+
 **Note:** The `.env` file is **required**. The application will not start without it.
 
-### Step 3: Choose Your Input Method
+### Step 4: Choose Your Input Method
 When you run the app, you'll see:
 ```
 🎤 Choose your audio input method:
@@ -241,7 +264,7 @@ When you run the app, you'll see:
 Enter your choice (1, 2, or 3):
 ```
 
-### Step 4: Select Your Audio Device
+### Step 5: Select Your Audio Device
 Depending on your choice, you'll see available devices:
 
 **For Microphone Mode:**
@@ -274,7 +297,7 @@ Choose device index(es) to stream from (or ENTER for default):
 Streaming will start when you press play in the dashboard
 ```
 
-### Step 5: Go Live
+### Step 6: Go Live
 1. Select your audio device from the list
 2. Open `http://localhost:4986` in your browser
 3. Click **Play** to start broadcasting
