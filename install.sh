@@ -10,13 +10,15 @@ VENV_DIR="venv"
 #   python headers + portaudio -> building PyAudio
 #   ffmpeg                     -> bitrate conversion
 #   libmagic                   -> upload validation in Liquid Music mode
+#   libshout headers           -> building python-shout for Icecast streaming
 echo "Installing system dependencies..."
 
 if command -v apt >/dev/null 2>&1; then
     sudo apt update
-    sudo apt install -y python3-dev python3-venv portaudio19-dev ffmpeg libmagic1
+    sudo apt install -y python3-dev python3-venv portaudio19-dev ffmpeg libmagic1 \
+        libshout3-dev pkg-config
 elif command -v pacman >/dev/null 2>&1; then
-    sudo pacman -S --needed --noconfirm python portaudio ffmpeg file
+    sudo pacman -S --needed --noconfirm python portaudio ffmpeg file libshout pkgconf
 else
     echo "Error: no supported package manager found (apt, pacman)." >&2
     echo "Install the prerequisites listed in the README manually, then run:" >&2

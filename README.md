@@ -214,16 +214,18 @@ Audio Streamer needs a few system packages that `pip` cannot provide:
 | PortAudio | Audio capture backend used by PyAudio |
 | ffmpeg | Bitrate conversion for the multi-quality streams |
 | libmagic | Validates uploaded music files in Liquid Music mode |
+| libshout + development headers, pkg-config | Required to build python-shout, used to stream to Icecast |
 
 **Debian / Ubuntu**
 ```bash
 sudo apt update
-sudo apt install -y python3-dev portaudio19-dev ffmpeg libmagic1
+sudo apt install -y python3-dev python3-venv portaudio19-dev ffmpeg libmagic1 \
+    libshout3-dev pkg-config
 ```
 
 **Arch Linux**
 ```bash
-sudo pacman -S --needed python portaudio ffmpeg file
+sudo pacman -S --needed python portaudio ffmpeg file libshout pkgconf
 ```
 
 ### Step 3: Install & Configure
