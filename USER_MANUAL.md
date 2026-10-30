@@ -11,6 +11,7 @@ Welcome to Audio Streamer! This manual will guide you through everything you nee
   - [Liquid Music Mode](#3-liquid-music-mode-liquidmusicstreamer)
   - [Bitrate-Based Streaming](#4-bitrate-based-streaming)
 - [Configuration](#configuration)
+- [Icecast Streaming](#icecast-streaming)
 - [Audio Engine Details](#audio-engine-details)
 - [Liquid Music Mode](#liquid-music-mode)
 - [Security Implementation](#security-implementation)
@@ -323,6 +324,84 @@ AUDIO_CHANNELS=1
 ```
 Lower sample rate and mono audio reduce bandwidth usage at the cost of audio quality.
 
+
+---
+
+## Icecast Streaming
+
+Audio Streamer can relay its live audio to an [Icecast](https://icecast.org/)
+server as a *source client*, so listeners can tune in through standard streaming
+infrastructure as well as through this application. The relay is additional, not
+a replacement: the built-in player and the `/stream` endpoints keep working
+exactly as before.
+
+### How it works
+
+The relay attaches to whichever streamer is capturing - microphone, audio
+interface or Liquid Music - reads the same PCM the local listeners get, encodes
+it to MP3 with ffmpeg, and pushes it to a mount point on your Icecast server
+using libshout.
+
+```
+audio source -> capturing streamer -+-> local listeners (/stream, /stream/<bitrate>)
+                                    |
+                                    +-> IcecastStreamer -> ffmpeg -> Icecast mount
+```
+
+### Requirements
+
+The relay needs libshout and its development headers installed before the Python
+requirements, because `python-shout` is built from source. `./install.sh` handles
+this; see the prerequisites in the README for the manual commands.
+
+### Configuration
+
+Set these in your `.env`:
+
+| Setting | Meaning |
+| --- | --- |
+| `ICECAST_ENABLED` | Set to `True` to start the relay at startup |
+| `ICECAST_HOST` | Hostname or IP of the Icecast server |
+| `ICECAST_PORT` | Port Icecast listens on (its own default is 8000) |
+| `ICECAST_MOUNT` | Mount point to publish on, including the leading slash |
+| `ICECAST_USER` | Source user, almost always `source` |
+| `ICECAST_PASSWORD` | The `<source-password>` from your `icecast.xml` |
+| `ICECAST_BITRATE` | Bitrate in kbps for the relayed stream (64-320) |
+| `ICECAST_PROTOCOL` | `http` for Icecast 2, `icy` or `xaudiocast` for older servers |
+| `ICECAST_RECONNECT_DELAY` | Seconds before the first reconnection attempt |
+| `ICECAST_RECONNECT_MAX_DELAY` | Longest wait between reconnection attempts |
+
+`ICECAST_BITRATE` is independent of `AUDIO_STREAM_BITRATES`: the latter only
+affects listeners connecting to this application directly.
+
+The configuration is validated at startup, but only when `ICECAST_ENABLED` is
+true - a station that never streams to Icecast does not have to fill these in.
+
+### Verifying the mount is live
+
+1. Set the values above and set `ICECAST_ENABLED=True`
+2. Start the application with `AUDIO_STREAMER_DEBUG=True`, so the relay logs are visible
+3. Look for `Connected to Icecast mount /stream` followed by `Relaying to icecast://...`
+4. Open your Icecast status page, usually `http://ICECAST_HOST:ICECAST_PORT/status.xsl`,
+   and confirm the mount is listed with a current source
+5. Tune in at `http://ICECAST_HOST:ICECAST_PORT/stream`
+
+### Behaviour on failure
+
+A relay that cannot connect does **not** take the station off the air. The error
+is logged and the application keeps serving local listeners, since the local
+stream is the primary service. If the connection drops while streaming, the relay
+reconnects on its own with an exponential backoff between
+`ICECAST_RECONNECT_DELAY` and `ICECAST_RECONNECT_MAX_DELAY`.
+
+Common failures:
+
+| Log message | Likely cause |
+| --- | --- |
+| `Could not open icecast://...: Couldn't connect` | Server not running, or wrong host/port |
+| `Could not open icecast://...` with an auth error | Wrong `ICECAST_USER` or `ICECAST_PASSWORD` |
+| `Could not open icecast://...` mentioning the mount | Mount already in use by another source |
+| `python-shout is not available` | libshout headers missing when the requirements were installed |
 
 ---
 

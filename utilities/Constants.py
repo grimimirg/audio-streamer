@@ -79,3 +79,47 @@ except ValueError as e:
     print(f"\nERROR: Invalid CPU monitoring configuration in .env file: {e}")
     print("Please check CPU_WARNING_THRESHOLD and CPU_MONITOR_INTERVAL values.")
     sys.exit(1)
+
+# Icecast source configuration
+# Only validated when the relay is enabled, so a station that never streams to
+# Icecast is not forced to fill these in.
+try:
+    ICECAST_ENABLED = os.getenv('ICECAST_ENABLED', 'False').lower() in ('true', '1', 'yes')
+    ICECAST_HOST = os.getenv('ICECAST_HOST', 'localhost')
+    ICECAST_PORT = int(os.getenv('ICECAST_PORT', '8000'))
+    ICECAST_MOUNT = os.getenv('ICECAST_MOUNT', '/stream')
+    ICECAST_USER = os.getenv('ICECAST_USER', 'source')
+    ICECAST_PASSWORD = os.getenv('ICECAST_PASSWORD', '')
+    ICECAST_BITRATE = int(os.getenv('ICECAST_BITRATE', '128'))
+    ICECAST_PROTOCOL = os.getenv('ICECAST_PROTOCOL', 'http').strip().lower()
+    ICECAST_RECONNECT_DELAY = float(os.getenv('ICECAST_RECONNECT_DELAY', '2.0'))
+    ICECAST_RECONNECT_MAX_DELAY = float(os.getenv('ICECAST_RECONNECT_MAX_DELAY', '60.0'))
+
+    if not ICECAST_MOUNT.startswith('/'):
+        ICECAST_MOUNT = f"/{ICECAST_MOUNT}"
+
+    if ICECAST_ENABLED:
+        if not 0 < ICECAST_PORT < 65536:
+            raise ValueError(f"ICECAST_PORT {ICECAST_PORT} is out of valid range (1-65535)")
+        if not ICECAST_PASSWORD:
+            raise ValueError("ICECAST_PASSWORD is required when ICECAST_ENABLED is true")
+        if ICECAST_BITRATE < 64 or ICECAST_BITRATE > 320:
+            raise ValueError(f"ICECAST_BITRATE {ICECAST_BITRATE} is out of valid range (64-320)")
+        if ICECAST_PROTOCOL not in ('http', 'icy', 'xaudiocast'):
+            raise ValueError(
+                f"ICECAST_PROTOCOL '{ICECAST_PROTOCOL}' is not one of http, icy, xaudiocast"
+            )
+        if ICECAST_RECONNECT_DELAY <= 0:
+            raise ValueError("ICECAST_RECONNECT_DELAY must be greater than zero")
+        if ICECAST_RECONNECT_MAX_DELAY < ICECAST_RECONNECT_DELAY:
+            raise ValueError(
+                "ICECAST_RECONNECT_MAX_DELAY cannot be smaller than ICECAST_RECONNECT_DELAY"
+            )
+except ValueError as e:
+    print(f"\nERROR: Invalid Icecast configuration in .env file: {e}")
+    print("Please check ICECAST_PORT, ICECAST_PASSWORD, ICECAST_BITRATE, ICECAST_PROTOCOL, "
+          "ICECAST_RECONNECT_DELAY, and ICECAST_RECONNECT_MAX_DELAY values.")
+    sys.exit(1)
+
+# Station identity, shared by the web interface and the Icecast mount metadata
+RADIO_STATION_NAME = os.getenv('RADIO_STATION_NAME', 'My Radio Station')

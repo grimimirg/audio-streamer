@@ -2,7 +2,9 @@ from typing import Optional, List
 import time
 
 from classes.streamer.AudioStreamerFactory import AudioStreamerFactory
+from classes.streamer.streamers.IcecastStreamer import IcecastStreamer
 from .AudioHttpFacade import AudioHttpFacade
+from utilities.Constants import ICECAST_ENABLED
 from utilities.FfmpegCapabilities import log_encoding_capabilities
 from utilities.Logger import Logger
 
@@ -18,6 +20,7 @@ class ApplicationController:
         # We'll choose the best streamer based on device selection
         self.audioStreamer = None
         self.audioHttpFacade = None
+        self.icecastStreamer = None
         self._setupSuccessful = False
         self.startTime = time.time()  # Application start time
 
@@ -100,6 +103,9 @@ class ApplicationController:
                     Logger.error("Failed to start audio streaming")
                     return None
 
+            if ICECAST_ENABLED:
+                self._startIcecastRelay()
+
             self._setupSuccessful = True
             Logger.info("Application setup completed successfully")
             return self
@@ -133,6 +139,8 @@ class ApplicationController:
         """Cleanly shutdown the application by stopping audio streaming."""
         Logger.info("Shutting down application...")
         try:
+            if self.icecastStreamer:
+                self.icecastStreamer.stop()
             if self.audioHttpFacade:
                 self.audioHttpFacade.shutdown()
             self.audioStreamer.stopAudioStream()
@@ -149,6 +157,20 @@ class ApplicationController:
             pass  # Ignore errors during cleanup
 
     # -- PRIVATES --
+
+    def _startIcecastRelay(self):
+        """Start relaying the live audio to the configured Icecast mount point.
+
+        A failure here is logged but does not abort startup: the local stream is
+        the primary service, and losing the Icecast relay should not take the
+        station off the air.
+        """
+        try:
+            self.icecastStreamer = IcecastStreamer(self.audioStreamer)
+            self.icecastStreamer.start()
+        except RuntimeError as e:
+            Logger.error(f"Icecast relay disabled: {e}")
+            self.icecastStreamer = None
 
     def _askForDeviceIndex(self) -> Optional[List[int]]:
         """Prompt user to select audio input device indexes.

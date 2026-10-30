@@ -2,7 +2,6 @@ import queue
 
 import pytest
 
-from classes.handlers import StreamHandler as stream_handler_module
 from classes.handlers.StreamHandler import StreamHandler
 from classes.streamer.BitrateEncoderPool import Subscription
 
@@ -122,43 +121,11 @@ def test_consume_stops_when_the_encoder_is_no_longer_running(handler):
 
 # -- FFmpeg command --
 
-def test_command_carries_the_requested_bitrate(handler):
-    command = handler._build_ffmpeg_command(192)
+def test_command_building_is_delegated_to_the_shared_builder(handler):
+    """The relay and the listener endpoints must encode with the same command."""
+    from utilities.FfmpegCommand import build_mp3_command
 
-    assert command[0] == 'ffmpeg'
-    assert command[command.index('-b:a') + 1] == '192k'
-    assert command[-1] == '-'
-
-
-def test_command_omits_resampling_when_the_source_already_matches(handler):
-    command = handler._build_ffmpeg_command(128)
-
-    assert '-ar' not in command
-    assert '-ac' not in command
-
-
-def test_command_resamples_when_the_source_differs(handler, monkeypatch):
-    monkeypatch.setattr(stream_handler_module, 'RATE', 48000)
-    monkeypatch.setattr(stream_handler_module, 'CHANNELS', 1)
-
-    command = handler._build_ffmpeg_command(128)
-
-    assert command[command.index('-ar') + 1] == '44100'
-    assert command[command.index('-ac') + 1] == '2'
-
-
-def test_command_omits_thread_limit_when_unset(handler):
-    command = handler._build_ffmpeg_command(128)
-
-    assert '-threads' not in command
-
-
-def test_command_applies_the_configured_thread_limit(handler, monkeypatch):
-    monkeypatch.setattr(stream_handler_module, 'FFMPEG_THREADS', 2)
-
-    command = handler._build_ffmpeg_command(128)
-
-    assert command[command.index('-threads') + 1] == '2'
+    assert handler._build_ffmpeg_command(192) == build_mp3_command(192)
 
 
 # -- WAV header --

@@ -4,8 +4,8 @@ from flask import render_template, Response
 from classes.streamer.BitrateEncoderPool import BitrateEncoderPool
 from classes.streamer.streamers.LiquidMusicStreamer import LiquidMusicStreamer
 from utilities.AudioFormat import build_wav_header
-from utilities.Constants import CHANNELS, CLIENT_QUEUE_SIZE, FFMPEG_QUEUE_TIMEOUT, FFMPEG_THREADS, RATE, \
-    STREAM_BITRATES
+from utilities.Constants import CHANNELS, CLIENT_QUEUE_SIZE, FFMPEG_QUEUE_TIMEOUT, RATE, STREAM_BITRATES
+from utilities.FfmpegCommand import build_mp3_command
 from utilities.Logger import Logger
 
 
@@ -161,36 +161,13 @@ class StreamHandler:
     def _build_ffmpeg_command(self, bitrate: int):
         """Build ffmpeg command for MP3 encoding.
 
-        Resampling and channel-mixing flags are only emitted when the output
-        format actually differs from the source, since forcing them makes ffmpeg
-        resample every chunk for no gain.
-
         Args:
             bitrate: Bitrate in kbps for re-encoding
 
         Returns:
             list: FFmpeg command as list of arguments
         """
-        command = [
-            'ffmpeg',
-            '-nostdin',
-            '-loglevel', 'error',
-            '-i', 'pipe:0',
-            '-vn',
-            '-f', 'mp3',
-            '-codec:a', 'libmp3lame',
-            '-b:a', f'{bitrate}k',
-        ]
-
-        if RATE != 44100:
-            command += ['-ar', '44100']
-        if CHANNELS != 2:
-            command += ['-ac', '2']
-        if FFMPEG_THREADS > 0:
-            command += ['-threads', str(FFMPEG_THREADS)]
-
-        command += ['-bufsize', '64k', '-']
-        return command
+        return build_mp3_command(bitrate)
 
     def _consume_subscription(self, subscription):
         """Yield encoded chunks from a subscription until its encoder stops.

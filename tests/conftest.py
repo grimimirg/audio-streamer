@@ -18,6 +18,17 @@ os.environ.setdefault('FFMPEG_QUEUE_TIMEOUT', '0.01')
 os.environ.setdefault('FFMPEG_THREADS', '0')
 os.environ.setdefault('CPU_WARNING_THRESHOLD', '80')
 os.environ.setdefault('CPU_MONITOR_INTERVAL', '5.0')
+os.environ.setdefault('ICECAST_ENABLED', 'False')
+os.environ.setdefault('ICECAST_HOST', 'icecast.test')
+os.environ.setdefault('ICECAST_PORT', '8000')
+os.environ.setdefault('ICECAST_MOUNT', '/stream')
+os.environ.setdefault('ICECAST_USER', 'source')
+os.environ.setdefault('ICECAST_PASSWORD', 'hackme')
+os.environ.setdefault('ICECAST_BITRATE', '128')
+os.environ.setdefault('ICECAST_PROTOCOL', 'http')
+os.environ.setdefault('ICECAST_RECONNECT_DELAY', '0.01')
+os.environ.setdefault('ICECAST_RECONNECT_MAX_DELAY', '0.04')
+os.environ.setdefault('RADIO_STATION_NAME', 'Test Station')
 
 import pytest  # noqa: E402  (must follow the environment setup above)
 
@@ -101,6 +112,58 @@ class FakeProcess:
     def wait(self, timeout=None):
         self.waited = True
         return self._return_code
+
+
+class FakeShout:
+    """Stand-in for a libshout handle, recording configuration and traffic.
+
+    Mirrors python-shout's interface: settings are plain attributes, and
+    open/send/sync/close raise on failure.
+    """
+
+    def __init__(self, open_error=None, send_errors=0):
+        """Initialize the handle.
+
+        Args:
+            open_error: Exception to raise from open(), or None to succeed
+            send_errors: Number of initial send() calls that should fail
+        """
+        self.open_error = open_error
+        self.send_errors = send_errors
+        self.sent = b''
+        self.opens = 0
+        self.closes = 0
+        self.syncs = 0
+        self.settings = {}
+
+    def __setattr__(self, name, value):
+        # Record the libshout settings without shadowing our own attributes
+        if name not in ('open_error', 'send_errors', 'sent', 'opens', 'closes', 'syncs', 'settings'):
+            self.settings[name] = value
+        object.__setattr__(self, name, value)
+
+    def open(self):
+        self.opens += 1
+        if self.open_error:
+            raise self.open_error
+
+    def send(self, chunk):
+        if self.send_errors > 0:
+            self.send_errors -= 1
+            raise RuntimeError('send failed')
+        self.sent += chunk
+
+    def sync(self):
+        self.syncs += 1
+
+    def close(self):
+        self.closes += 1
+
+
+@pytest.fixture
+def fake_shout():
+    """A libshout handle stand-in that connects successfully."""
+    return FakeShout()
 
 
 @pytest.fixture

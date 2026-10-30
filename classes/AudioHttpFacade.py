@@ -10,7 +10,8 @@ from classes.handlers.CoverUploadHandler import CoverUploadHandler
 from classes.handlers.LiquidMusicHandler import LiquidMusicHandler
 from classes.handlers.LocalizationHandler import LocalizationHandler
 from classes.handlers.StreamHandler import StreamHandler
-from utilities.Constants import CPU_MONITOR_INTERVAL, CPU_WARNING_THRESHOLD, STREAM_BITRATES
+from utilities.Constants import CPU_MONITOR_INTERVAL, CPU_WARNING_THRESHOLD, RADIO_STATION_NAME, \
+    STREAM_BITRATES
 from utilities.CpuMonitor import CpuMonitor
 from utilities.Logger import Logger
 
@@ -54,7 +55,7 @@ class AudioHttpFacade:
         self.audioStreamer = audioStreamer
         self.input_method = input_method
         self.stream_bitrates = STREAM_BITRATES
-        self.radio_station_name = os.getenv('RADIO_STATION_NAME', 'My Radio Station')
+        self.radio_station_name = RADIO_STATION_NAME
         self.dashboard_username = os.getenv('DASHBOARD_USERNAME', 'admin')
         self.dashboard_password = os.getenv('DASHBOARD_PASSWORD', 'admin123')
         self.track_info = {'artist': '', 'track_title': '', 'album_name': '', 'track_year': '', 'album_cover': ''}
