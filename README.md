@@ -20,23 +20,17 @@
 ### Dark Theme
 
 <p align="center">
-  <img src="screenshots/player_black.png" alt="Player Interface - Dark Theme" width="450"/>
-  <img src="screenshots/dashboard_black.png" alt="Dashboard Interface - Dark Theme" width="450"/>
-</p>
-
-<p align="center">
-  <img src="screenshots/dashboard_liquid_black.png" alt="Liquid Music Dashboard - Dark Theme" width="450"/>
+  <img src="screenshots/player_black.png" alt="Player Interface - Dark Theme" width="280"/>
+  <img src="screenshots/dashboard_black.png" alt="Dashboard Interface - Dark Theme" width="280"/>
+  <img src="screenshots/dashboard_liquid_black.png" alt="Liquid Music Dashboard - Dark Theme" width="280"/>
 </p>
 
 ### Light Theme
 
 <p align="center">
-  <img src="screenshots/player_white.png" alt="Player Interface - Light Theme" width="450"/>
-  <img src="screenshots/dashboard_white.png" alt="Dashboard Interface - Light Theme" width="450"/>
-</p>
-
-<p align="center">
-  <img src="screenshots/dashboard_liquid_white.png" alt="Liquid Music Dashboard - Light Theme" width="450"/>
+  <img src="screenshots/player_white.png" alt="Player Interface - Light Theme" width="280"/>
+  <img src="screenshots/dashboard_white.png" alt="Dashboard Interface - Light Theme" width="280"/>
+  <img src="screenshots/dashboard_liquid_white.png" alt="Liquid Music Dashboard - Light Theme" width="280"/>
 </p>
 
 ---
