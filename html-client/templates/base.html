@@ -1,3 +1,4 @@
+{% import "components/icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="{{ lang or 'en' }}">
 <head>
@@ -12,6 +13,9 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
+{# One sprite per page; every icon on it is a reference to this #}
+{{ icons.sprite() }}
+
 {% block top_controls %}
 {% endblock %}
 
@@ -19,6 +23,7 @@
 {% endblock %}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script src="/js/icons.js"></script>
 <script src="/js/i18n.js"></script>
 {% block extra_scripts %}{% endblock %}
 </body>

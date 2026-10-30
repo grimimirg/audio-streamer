@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "components/icons.html" as icons %}
 {% import "components/top_controls.html" as top_controls %}
 
 {% block title %}{{ radio_station_name }}{% endblock %}
@@ -19,20 +20,15 @@
     </div>
 
     <div class="glass-content">
-        <div class="track-info-container" id="trackInfoContainer" style="display: none; margin-bottom: 15px;">
+        <div class="track-info-container" id="trackInfoContainer" style="display: none;">
             <div class="track-info-flex">
-                <div class="track-cover" id="trackCover"
-                     style="width: 120px; height: 120px; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,0.1); display: none; flex-shrink: 0;">
-                    <img id="trackCoverImg" src="" alt="Album Cover"
-                         style="width: 100%; height: 100%; object-fit: cover;">
+                <div class="track-cover" id="trackCover" style="display: none;">
+                    <img id="trackCoverImg" src="" alt="Album Cover" class="cover-img">
                 </div>
-                <div class="track-details"
-                     style="flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; max-width: 400px;">
-                    <div class="track-artist" id="trackArtist"
-                         style="font-size: 1.1rem; font-weight: bold; opacity: 0.9; margin-bottom: 8px;"></div>
-                    <div class="track-album" id="trackAlbum"
-                         style="font-size: 0.95rem; opacity: 0.8; margin-bottom: 5px;"></div>
-                    <div class="track-title" id="trackTitle" style="font-size: 1.5rem; font-weight: bold;"></div>
+                <div class="track-details">
+                    <div class="track-artist" id="trackArtist"></div>
+                    <div class="track-album" id="trackAlbum"></div>
+                    <div class="track-title" id="trackTitle"></div>
                 </div>
             </div>
         </div>
@@ -44,7 +40,7 @@
         <div class="controls-container">
             <button id="playBtn" onclick="togglePlay()" class="play-btn"></button>
             <div class="volume-control">
-                <span class="volume-icon">🔊</span>
+                <span class="volume-icon">{{ icons.icon('volume') }}</span>
                 <input type="range" id="volume" min="0" max="100" value="70"
                        oninput="changeVolume(this.value)" class="volume-slider">
                 <span id="volumeValue" class="volume-value">70%</span>
@@ -53,7 +49,7 @@
 
         <div class="status-container">
             <div class="status-item">
-                <span class="status-icon">🎧</span>
+                <span class="status-icon">{{ icons.icon('headphones') }}</span>
                 <span class="listeners" id="listeners">0</span>
             </div>
             <div class="status-divider"></div>
@@ -62,7 +58,7 @@
             </div>
             <div class="status-divider"></div>
             <div class="status-item quality-control">
-                <span class="quality-icon">🎵</span>
+                <span class="quality-icon">{{ icons.icon('music') }}</span>
                 <select id="qualitySelect" onchange="changeQuality(this.value)" class="quality-select"
                         aria-label="Stream quality">
                     <option value="original" data-i18n="player.quality_original"></option>

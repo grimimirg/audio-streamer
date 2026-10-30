@@ -33,7 +33,7 @@ function togglePlay() {
 function startStreaming() {
     updateStatus('status.connecting', 'loading');
     playBtn.disabled = true;
-    playBtn.textContent = i18n.t('controls.connecting');
+    setStatus(playBtn, 'refresh', i18n.t('controls.connecting'));
 
     // Set up event listeners before assigning src (important for Firefox)
     audio.addEventListener('loadstart', onLoadStart);
@@ -66,8 +66,8 @@ function stopStreaming() {
     audio.removeEventListener('error', onError);
     audio.removeEventListener('stalled', onStalled);
 
-    playBtn.textContent = i18n.t('controls.play');
-    playBtn.style.background = '';
+    setStatus(playBtn, 'play', i18n.t('controls.play'));
+    playBtn.classList.remove('is-playing');
     playBtn.disabled = false;
     isPlaying = false;
     reconnectAttempts = 0;
@@ -81,8 +81,8 @@ function onLoadStart() {
 }
 
 function onCanPlay() {
-    playBtn.textContent = i18n.t('controls.pause');
-    playBtn.style.background = '#90EE90';
+    setStatus(playBtn, 'pause', i18n.t('controls.pause'));
+    playBtn.classList.add('is-playing');
     playBtn.disabled = false;
     isPlaying = true;
     reconnectAttempts = 0;
@@ -95,7 +95,7 @@ function onError(e) {
     if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts++;
         const retryMsg = i18n.t('status.connection_failed');
-        connectionStatus.textContent = `🔄 ${retryMsg} (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`;
+        setStatus(connectionStatus, 'refresh', `${retryMsg} (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
         connectionStatus.className = 'error';
 
         setTimeout(() => {
@@ -216,7 +216,7 @@ function renderHistory() {
     historyStack.innerHTML = trackHistory.map(track => {
         const coverHtml = track.album_cover
             ? `<img src="${track.album_cover}" class="history-card-cover" alt="Cover">`
-            : `<div class="history-card-cover-placeholder">🎵</div>`;
+            : `<div class="history-card-cover-placeholder">${icon('music', 'icon-lg')}</div>`;
         
         const albumYear = track.album_name && track.track_year
             ? `${track.album_name} (${track.track_year})`
@@ -230,7 +230,7 @@ function renderHistory() {
                     <div class="history-card-artist">${track.artist}</div>
                     <div class="history-card-album">${albumYear}</div>
                 </div>
-                <div style="clear: both;"></div>
+                <div class="row-clear"></div>
             </div>
         `;
     }).join('');
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     restoreQuality();
 
-    playBtn.textContent = i18n.t('controls.play');
+    setStatus(playBtn, 'play', i18n.t('controls.play'));
     updateStatus('status.ready', 'loading');
 
     // Connect to WebSocket for real-time stats
@@ -332,7 +332,7 @@ changeLanguage = async function(lang) {
     if (success) {
         updateStaticTexts();
         if (!isPlaying) {
-            playBtn.textContent = i18n.t('controls.play');
+            setStatus(playBtn, 'play', i18n.t('controls.play'));
         }
     }
 };

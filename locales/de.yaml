@@ -4,19 +4,19 @@ language:
   de: "🇩🇪"
 
 controls:
-  play: "▶️"
-  pause: "⏸️"
+  play: "Wiedergabe"
+  pause: "Pause"
   connecting: "Verbinden..."
 
 status:
-  ready: "🔄 Bereit zum Verbinden"
-  connecting: "🔄 Verbindung zum Stream..."
-  buffering: "🔄 Puffern..."
-  streaming: "🎵 Streaming"
-  connection_failed: "🔄 Verbindung fehlgeschlagen, erneuter Versuch..."
-  error: "❌ Verbindung fehlgeschlagen. Überprüfen Sie, ob der Server läuft."
-  server_stopped: "⚠️ Server hat Streaming gestoppt"
-  connection_lost: "⚠️ Verbindung zum Server verloren"
+  ready: "Bereit zum Verbinden"
+  connecting: "Verbindung zum Stream..."
+  buffering: "Puffern..."
+  streaming: "Streaming"
+  connection_failed: "Verbindung fehlgeschlagen, erneuter Versuch..."
+  error: "Verbindung fehlgeschlagen. Überprüfen Sie, ob der Server läuft."
+  server_stopped: "Server hat Streaming gestoppt"
+  connection_lost: "Verbindung zum Server verloren"
 
 dashboard:
   listeners: "Zuhörer"
@@ -54,8 +54,8 @@ dashboard:
   pause_auto: "Auto pausieren"
   resume_auto: "Auto fortsetzen"
   open_player: "Player öffnen"
-  active: "🟢 Aktiv"
-  inactive: "🔴 Inaktiv"
+  active: "Aktiv"
+  inactive: "Inaktiv"
   too_many_errors: "Zu viele fehlgeschlagene Verbindungen. Auto-Refresh deaktiviert."
   connection_error: "Verbindungsfehler"
   stats_error: "Fehler beim Abrufen der Statistiken"

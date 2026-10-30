@@ -257,7 +257,7 @@ function renderHistory() {
     historyStack.innerHTML = trackHistory.map(track => {
         const coverHtml = track.album_cover
             ? `<img src="${track.album_cover}" class="history-card-cover" alt="Cover">`
-            : `<div class="history-card-cover-placeholder">🎵</div>`;
+            : `<div class="history-card-cover-placeholder">${icon('music', 'icon-lg')}</div>`;
 
         const albumYear = track.album_name && track.track_year
             ? `${track.album_name} (${track.track_year})`
@@ -271,7 +271,7 @@ function renderHistory() {
                         <div class="history-card-artist">${track.artist}</div>
                         <div class="history-card-album">${albumYear}</div>
                     </div>
-                    <div style="clear: both;"></div>
+                    <div class="row-clear"></div>
                 </div>
             `;
     }).join('');

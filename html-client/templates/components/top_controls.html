@@ -1,3 +1,4 @@
+{% import "components/icons.html" as icons %}
 {% macro top_controls(show_player_btn=false, show_dashboard_btn=false, show_history_btn=false) %}
 <div class="top-right-controls" x-data="{
     isLight: localStorage.getItem('theme') === 'light',
@@ -21,21 +22,22 @@
 }">
     {% if show_player_btn %}
     <button onclick="openPlayer()" class="theme-toggle-btn" title="Open Player">
-        <span>🎧</span>
+        {{ icons.icon('headphones') }}
     </button>
     {% endif %}
     {% if show_dashboard_btn %}
     <button onclick="openDashboard()" class="theme-toggle-btn" title="Dashboard">
-        <span>📈</span>
+        {{ icons.icon('chart') }}
     </button>
     {% endif %}
     {% if show_history_btn %}
     <button id="historyToggleBtn" onclick="toggleHistory()" class="theme-toggle-btn" title="History">
-        <span>🔄</span>
+        {{ icons.icon('history') }}
     </button>
     {% endif %}
     <button @click="toggleTheme()" class="theme-toggle-btn" title="Toggle theme">
-        <span x-text="isLight ? '🌙' : '☀️'">🌓</span>
+        <span x-show="!isLight">{{ icons.icon('sun') }}</span>
+        <span x-show="isLight">{{ icons.icon('moon') }}</span>
     </button>
     <div class="selector-box">
         <select id="languageDropdown" x-model="language" @change="changeLanguage($el.value)">

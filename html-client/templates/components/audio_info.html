@@ -1,6 +1,7 @@
+{% import "components/icons.html" as icons %}
 {% macro audio_info(show_bitrate=true, show_format=true, show_latency=true, liquid_mode=false) %}
 <div class="chart-container">
-    <div class="chart-title">🎛️ <span data-i18n="dashboard.audio_info"></span></div>
+    <div class="chart-title">{{ icons.icon('sliders') }} <span data-i18n="dashboard.audio_info"></span></div>
     <div class="audio-info">
         <div class="info-item">
             <div class="info-label"><span data-i18n="dashboard.stream_status"></span></div>

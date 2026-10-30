@@ -4,19 +4,19 @@ language:
   de: "🇩🇪"
 
 controls:
-  play: "▶️"
-  pause: "⏸️"
-  connecting: "⏳"
+  play: "Riproduci"
+  pause: "Pausa"
+  connecting: "Connessione..."
 
 status:
-  ready: "🔄 Pronto per connettersi"
-  connecting: "🔄 Connessione allo stream..."
-  buffering: "🔄 Buffering..."
-  streaming: "🎵 In riproduzione"
-  connection_failed: "🔄 Connessione fallita, riprovo..."
-  error: "❌ Connessione fallita. Verifica che il server sia attivo."
-  server_stopped: "⚠️ Il server ha interrotto lo streaming"
-  connection_lost: "⚠️ Connessione al server persa"
+  ready: "Pronto per connettersi"
+  connecting: "Connessione allo stream..."
+  buffering: "Buffering..."
+  streaming: "In riproduzione"
+  connection_failed: "Connessione fallita, riprovo..."
+  error: "Connessione fallita. Verifica che il server sia attivo."
+  server_stopped: "Il server ha interrotto lo streaming"
+  connection_lost: "Connessione al server persa"
 
 dashboard:
   listeners: "Ascoltatori"
@@ -54,8 +54,8 @@ dashboard:
   pause_auto: "Pausa Auto"
   resume_auto: "Riprendi Auto"
   open_player: "Apri Player"
-  active: "🟢 Attivo"
-  inactive: "🔴 Inattivo"
+  active: "Attivo"
+  inactive: "Inattivo"
   too_many_errors: "Troppe connessioni fallite. Auto-refresh disabilitato."
   connection_error: "Errore di connessione"
   stats_error: "Errore nel recupero delle statistiche"
