@@ -228,27 +228,38 @@ sudo pacman -S --needed python portaudio ffmpeg file
 
 ### Step 3: Install & Configure
 ```bash
-# Clone and install
+# Clone the repository
 git clone <this-repository>
 cd audio-streamer
 
-# Option 1: Quick install (installs the system packages above, then the Python ones)
+# Option 1: Quick install (system packages, virtual environment, Python
+# requirements and a starter .env - safe to re-run)
 ./install.sh
 
 # Option 2: Manual install
 # Install the system prerequisites for your distribution (see Step 2), then:
-pip install -r requirements.txt
-
-# REQUIRED: Create configuration file
+python3 -m venv venv
+./venv/bin/pip install -r requirements.txt
 cp .env.example .env
-nano .env  # Edit your settings
+
+# Edit your settings
+nano .env
 
 # Start your radio station
+./startup.sh
+```
+
+`startup.sh` runs the app from the virtual environment and from the project root,
+so it works no matter which directory you call it from. To run `app.py` directly,
+activate the environment first:
+
+```bash
+source venv/bin/activate
 python app.py
 ```
 
-**Note:** Install the Python requirements **before** running `python app.py`. Starting
-the app without them fails with `ModuleNotFoundError: No module named 'pyaudio'`.
+**Note:** Install the Python requirements **before** starting the app. Running it
+without them fails with `ModuleNotFoundError: No module named 'pyaudio'`.
 
 **Note:** The `.env` file is **required**. The application will not start without it.
 
@@ -584,13 +595,13 @@ https://www.gnu.org/licenses/gpl-3.0.html
 ### Essential Commands
 ```bash
 # Start station
-python app.py
+./startup.sh
 
 # Custom port
-AUDIO_STREAMER_PORT=8080 python app.py
+AUDIO_STREAMER_PORT=8080 ./startup.sh
 
 # Production mode
-AUDIO_STREAMER_DEBUG=false python app.py
+AUDIO_STREAMER_DEBUG=false ./startup.sh
 ```
 
 ### Important URLs
