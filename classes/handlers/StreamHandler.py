@@ -13,7 +13,7 @@ class StreamHandler:
     """Handles audio streaming and basic routes."""
 
     def __init__(self, audio_streamer, radio_station_name: str, encoder_pool=None,
-                 icecast_streamer=None, shoutcast_streamer=None):
+                 icecast_streamer=None, shoutcast_streamer=None, protocols=None):
         """Initialize the stream handler.
 
         Args:
@@ -22,12 +22,15 @@ class StreamHandler:
             encoder_pool: Shared bitrate encoder pool, injectable for testing
             icecast_streamer: The Icecast relay, set once it has started
             shoutcast_streamer: The Shoutcast relay, set once it has started
+            protocols: Protocol names active for this run, set once chosen
         """
         self.audio_streamer = audio_streamer
         self.radio_station_name = radio_station_name
         self.encoder_pool = encoder_pool or BitrateEncoderPool(audio_streamer, self._build_ffmpeg_command)
         self.icecast_streamer = icecast_streamer
         self.shoutcast_streamer = shoutcast_streamer
+        # The direct stream always serves listeners; relays are added on top
+        self.protocols = protocols or ['direct']
 
     def player(self):
         """Serve the main web player interface.
@@ -121,6 +124,7 @@ class StreamHandler:
         stats = self.audio_streamer.getStats()
         stats.update(self._relay_stats('icecast', self.icecast_streamer))
         stats.update(self._relay_stats('shoutcast', self.shoutcast_streamer))
+        stats['protocols'] = list(self.protocols)
         return stats
 
     def dashboard(self):

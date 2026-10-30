@@ -16,6 +16,14 @@ class ApplicationController:
     Handles device selection, audio streaming setup, and server lifecycle management.
     """
 
+    # The relays that can be offered at startup, in menu order. Each entry maps
+    # the relay class to the attribute holding it and the facade setter that
+    # publishes its state, so adding a protocol is a one-line change here.
+    _RELAYS = (
+        (IcecastStreamer, 'icecastStreamer', 'set_icecast_streamer'),
+        (ShoutcastStreamer, 'shoutcastStreamer', 'set_shoutcast_streamer'),
+    )
+
     def __init__(self):
         """Initialize the application with audio streaming and HTTP components."""
         # We'll choose the best streamer based on device selection
@@ -23,6 +31,8 @@ class ApplicationController:
         self.audioHttpFacade = None
         self.icecastStreamer = None
         self.shoutcastStreamer = None
+        # Always at least the direct stream; the startup menu may add relays
+        self.protocols = ['direct']
         self._setupSuccessful = False
         self.startTime = time.time()  # Application start time
 
@@ -105,13 +115,8 @@ class ApplicationController:
                     Logger.error("Failed to start audio streaming")
                     return None
 
-            if ICECAST_ENABLED:
-                self.icecastStreamer = self._startRelay(IcecastStreamer)
-                self.audioHttpFacade.set_icecast_streamer(self.icecastStreamer)
-
-            if SHOUTCAST_ENABLED:
-                self.shoutcastStreamer = self._startRelay(ShoutcastStreamer)
-                self.audioHttpFacade.set_shoutcast_streamer(self.shoutcastStreamer)
+            self._startSelectedRelays()
+            self.audioHttpFacade.set_protocols(self.protocols)
 
             self._setupSuccessful = True
             Logger.info("Application setup completed successfully")
@@ -167,6 +172,112 @@ class ApplicationController:
 
     # -- PRIVATES --
 
+    def _configuredRelays(self):
+        """List the relays whose configuration is filled in.
+
+        Being configured is what makes a relay selectable: the .env block
+        carries the host and password, and Constants only validates it when the
+        relay is enabled. A relay the operator never configured is therefore
+        never offered, so the menu cannot start a server without credentials.
+
+        Returns:
+            list: The configured relay entries, in menu order
+        """
+        enabled = {
+            IcecastStreamer: ICECAST_ENABLED,
+            ShoutcastStreamer: SHOUTCAST_ENABLED,
+        }
+        return [entry for entry in self._RELAYS if enabled[entry[0]]]
+
+    def _askForProtocol(self, relays, prompt=input):
+        """Ask which of the configured relays to use for this run.
+
+        The protocol is chosen per run rather than per configuration, so
+        restarting the station is how an operator switches protocols.
+
+        Args:
+            relays: The configured relay entries to offer
+            prompt: Input function, injectable for testing
+
+        Returns:
+            list: The relay entries to start, empty for the direct stream only
+        """
+        # "all" is only meaningful with more than one relay to combine
+        offer_all = len(relays) > 1
+        last = len(relays) + (2 if offer_all else 1)
+
+        while True:
+            try:
+                print("\n" + "=" * 50)
+                print("Choose your streaming protocol:")
+                print("1. Direct only (listeners connect to this server)")
+                for index, (relay_class, _, _) in enumerate(relays, start=2):
+                    label = self._relayLabel(relay_class)
+                    print(f"{index}. Direct + {label}")
+                if offer_all:
+                    print(f"{last}. Direct + all configured relays")
+                print("=" * 50)
+
+                choice = prompt(f"Enter your choice (1-{last}): ").strip()
+
+                if choice == "1":
+                    Logger.info("User selected: direct streaming only")
+                    return []
+                if offer_all and choice == str(last):
+                    Logger.info("User selected: direct streaming plus all configured relays")
+                    return list(relays)
+
+                index = int(choice) - 2
+                if 0 <= index < len(relays):
+                    selected = relays[index]
+                    Logger.info(f"User selected: direct streaming plus {self._relayLabel(selected[0])}")
+                    return [selected]
+
+                raise ValueError(choice)
+
+            except ValueError:
+                print(f"Invalid choice. Please enter a number between 1 and {last}.")
+                continue
+
+            except (EOFError, KeyboardInterrupt):
+                # No console to answer on - systemd units and containers run
+                # without stdin. Falling back to every configured relay keeps
+                # unattended deployments behaving exactly as their .env says.
+                Logger.info("No protocol selected, using all configured relays")
+                return list(relays)
+
+    def _startSelectedRelays(self):
+        """Start the relays chosen at startup and publish their state."""
+        relays = self._configuredRelays()
+
+        if not relays:
+            # Nothing is configured, so there is nothing to choose between and
+            # a direct-only station is never asked a question it cannot answer
+            Logger.info("No relay configured, streaming directly only")
+            return
+
+        for relay_class, attribute, setter in self._askForProtocol(relays):
+            relay = self._startRelay(relay_class)
+            setattr(self, attribute, relay)
+            getattr(self.audioHttpFacade, setter)(relay)
+
+            # A relay that could not start is not an active protocol, so the
+            # dashboard does not claim the station is relaying to it
+            if relay is not None:
+                self.protocols.append(self._relayLabel(relay_class).lower())
+
+    @staticmethod
+    def _relayLabel(relay_class) -> str:
+        """Name a relay the way the manual does, e.g. "IcecastStreamer" -> "Icecast".
+
+        Args:
+            relay_class: The relay class to name
+
+        Returns:
+            str: The human-readable relay name
+        """
+        return relay_class.__name__.removesuffix('Streamer')
+
     def _startRelay(self, relay_class):
         """Start one relay, reporting rather than raising when it cannot run.
 
@@ -184,8 +295,7 @@ class ApplicationController:
         # such, rather than surfacing as an opaque mount failure.
         relay_class.test_connection()
 
-        # "IcecastStreamer" -> "Icecast", so the log reads the way the manual does
-        label = relay_class.__name__.removesuffix('Streamer')
+        label = self._relayLabel(relay_class)
 
         try:
             relay = relay_class(self.audioStreamer)
