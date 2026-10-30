@@ -49,6 +49,17 @@ class FakeStreamer:
         if client_queue in self.clients:
             self.clients.remove(client_queue)
 
+    def getStats(self):
+        return {
+            'on_air': self.onAir,
+            'listeners': len(self.clients),
+            'sample_rate': 44100,
+            'channels': 2,
+            'uptime_seconds': 0,
+            'uptime_formatted': '0s',
+            'start_time': None,
+        }
+
 
 class FakePipe:
     """Writable pipe recording everything written to it."""

@@ -84,6 +84,14 @@ class AudioHttpFacade:
         self._add_routes()
         self._add_socketio_events()
 
+    def set_icecast_streamer(self, icecast_streamer):
+        """Register the Icecast relay so its state appears in the statistics.
+
+        Args:
+            icecast_streamer: The running relay, or None when it is not active
+        """
+        self.stream_handler.icecast_streamer = icecast_streamer
+
     def shutdown(self):
         """Stop background workers owned by the HTTP layer."""
         self.cpu_monitor.stop()

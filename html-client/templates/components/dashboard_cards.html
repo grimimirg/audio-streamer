@@ -46,5 +46,16 @@
             <span data-i18n="dashboard.active_encoders"></span>: <span id="activeEncoders">0</span>
         </div>
     </div>
+
+    <!-- Revealed by the dashboard script only when the Icecast relay is enabled -->
+    <div class="card" id="icecastCard" style="display: none;">
+        <div class="card-title">
+            <span>📡</span> <span data-i18n="dashboard.icecast_status"></span>
+        </div>
+        <div class="metric-value" id="icecastState">--</div>
+        <div class="metric-label">
+            <span data-i18n="dashboard.icecast_mount"></span>: <span id="icecastMount">--</span>
+        </div>
+    </div>
 </div>
 {% endmacro %}

@@ -370,6 +370,7 @@ Set these in your `.env`:
 | `ICECAST_PROTOCOL` | `http` for Icecast 2, `icy` or `xaudiocast` for older servers |
 | `ICECAST_RECONNECT_DELAY` | Seconds before the first reconnection attempt |
 | `ICECAST_RECONNECT_MAX_DELAY` | Longest wait between reconnection attempts |
+| `ICECAST_TEST_TIMEOUT` | Timeout for the startup reachability check |
 
 `ICECAST_BITRATE` is independent of `AUDIO_STREAM_BITRATES`: the latter only
 affects listeners connecting to this application directly.
@@ -377,14 +378,40 @@ affects listeners connecting to this application directly.
 The configuration is validated at startup, but only when `ICECAST_ENABLED` is
 true - a station that never streams to Icecast does not have to fill these in.
 
+### Startup validation
+
+When the relay is enabled, startup checks the server in two stages, so a failure
+tells you which half is wrong:
+
+1. **Reachability** - a short TCP connection to `ICECAST_HOST:ICECAST_PORT`,
+   bounded by `ICECAST_TEST_TIMEOUT`. Failure logs
+   `Icecast server at ...: is not reachable`, which points at the host, the port,
+   or a server that is not running.
+2. **Mount** - opening the mount point with your credentials. Failure points at
+   `ICECAST_USER`, `ICECAST_PASSWORD`, or a mount already in use.
+
+Neither failure stops the application: the local stream is the primary service.
+
+### Dashboard status
+
+With the relay enabled, the dashboard shows an **Icecast Relay** card reporting
+`Connected` or `Disconnected`, with the mount point and bitrate beneath it. The
+card is hidden entirely when `ICECAST_ENABLED` is false, so stations that do not
+use Icecast do not see an empty panel.
+
+The same state is available from the statistics API as `icecast_enabled`,
+`icecast_connected`, `icecast_mount` and `icecast_bitrate`.
+
 ### Verifying the mount is live
 
 1. Set the values above and set `ICECAST_ENABLED=True`
 2. Start the application with `AUDIO_STREAMER_DEBUG=True`, so the relay logs are visible
-3. Look for `Connected to Icecast mount /stream` followed by `Relaying to icecast://...`
-4. Open your Icecast status page, usually `http://ICECAST_HOST:ICECAST_PORT/status.xsl`,
+3. Look for `Icecast server reachable at ...`, then
+   `Connected to Icecast mount /stream` followed by `Relaying to icecast://...`
+4. Check the dashboard: the Icecast Relay card should read `Connected`
+5. Open your Icecast status page, usually `http://ICECAST_HOST:ICECAST_PORT/status.xsl`,
    and confirm the mount is listed with a current source
-5. Tune in at `http://ICECAST_HOST:ICECAST_PORT/stream`
+6. Tune in at `http://ICECAST_HOST:ICECAST_PORT/stream`
 
 ### Behaviour on failure
 

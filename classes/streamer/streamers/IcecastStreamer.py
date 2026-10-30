@@ -1,4 +1,5 @@
 import queue
+import socket
 import subprocess
 import threading
 import time
@@ -16,6 +17,7 @@ from utilities.Constants import (
     ICECAST_PROTOCOL,
     ICECAST_RECONNECT_DELAY,
     ICECAST_RECONNECT_MAX_DELAY,
+    ICECAST_TEST_TIMEOUT,
     ICECAST_USER,
     RADIO_STATION_NAME,
     RATE,
@@ -87,6 +89,38 @@ class IcecastStreamer:
         self._lock = threading.Lock()
         self._source_queue = queue.Queue(maxsize=CLIENT_QUEUE_SIZE)
         self._threads = []
+
+    @staticmethod
+    def test_connection(connect=socket.create_connection) -> bool:
+        """Check that the configured Icecast server is reachable.
+
+        This answers "is the server there?" only. Whether the credentials and
+        mount point are accepted is decided when the mount is opened in start(),
+        because opening a second connection as a dry run would collide with the
+        relay's own mount.
+
+        Args:
+            connect: Connection factory, injectable for testing
+
+        Returns:
+            bool: True if the server accepted a TCP connection
+        """
+        try:
+            connection = connect((ICECAST_HOST, ICECAST_PORT), ICECAST_TEST_TIMEOUT)
+        except (OSError, socket.timeout) as e:
+            Logger.warning(
+                f"Icecast server at {ICECAST_HOST}:{ICECAST_PORT} is not reachable: {e}. "
+                "Check ICECAST_HOST and ICECAST_PORT, and that the server is running."
+            )
+            return False
+
+        try:
+            connection.close()
+        except OSError:
+            pass
+
+        Logger.info(f"Icecast server reachable at {ICECAST_HOST}:{ICECAST_PORT}")
+        return True
 
     def start(self):
         """Connect to Icecast, start encoding, and begin relaying audio.

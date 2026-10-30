@@ -151,6 +151,7 @@ function updateUI(stats) {
     document.getElementById('currentTrack').textContent = stats.current_track || '---';
 
     updateCpuCard(stats);
+    updateIcecastCard(stats);
 
     // Playback state
     let stateText = '---';
@@ -613,4 +614,29 @@ function updateCpuCard(stats) {
     }
     cpuElement.classList.toggle('metric-warning', Boolean(stats.cpu_warning));
     document.getElementById('activeEncoders').textContent = stats.active_encoders || 0;
+}
+
+// Update the Icecast relay card, hidden entirely when the relay is disabled
+function updateIcecastCard(stats) {
+    const card = document.getElementById('icecastCard');
+    if (!card) return;
+
+    if (!stats.icecast_enabled) {
+        card.style.display = 'none';
+        return;
+    }
+
+    card.style.display = '';
+
+    const stateElement = document.getElementById('icecastState');
+    const connected = Boolean(stats.icecast_connected);
+    stateElement.textContent = connected
+        ? i18n.t('dashboard.icecast_connected')
+        : i18n.t('dashboard.icecast_disconnected');
+    stateElement.classList.toggle('metric-warning', !connected);
+
+    const mount = stats.icecast_mount || '--';
+    const bitrate = stats.icecast_bitrate;
+    document.getElementById('icecastMount').textContent =
+        bitrate ? `${mount} (${bitrate} kbps)` : mount;
 }
