@@ -263,30 +263,35 @@ body.light input[type="number"]:focus {
     font-size: 1.2em;
 }
 
+/* Sits inside .status-container, which already provides the pill background,
+   so this control carries no chrome of its own. Stream quality is a rarely
+   used setting and is deliberately kept small and secondary. */
 .quality-control {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: var(--accent-color);
-    padding: 15px 25px;
-    border-radius: 50px;
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    gap: 6px;
 }
 
 .quality-icon {
-    font-size: 1.2em;
+    font-size: 0.9em;
+    opacity: 0.7;
 }
 
 .quality-select {
     background: transparent;
     color: inherit;
     border: none;
-    font-size: 1em;
+    font-size: 0.8em;
     font-family: inherit;
     cursor: pointer;
     outline: none;
+    opacity: 0.8;
+    max-width: 120px;
+}
+
+.quality-select:hover,
+.quality-select:focus-visible {
+    opacity: 1;
 }
 
 .quality-select option {
