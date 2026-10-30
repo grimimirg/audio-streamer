@@ -4,7 +4,8 @@ from flask import render_template, Response
 from classes.streamer.BitrateEncoderPool import BitrateEncoderPool
 from classes.streamer.streamers.LiquidMusicStreamer import LiquidMusicStreamer
 from utilities.AudioFormat import build_wav_header
-from utilities.Constants import CHANNELS, CLIENT_QUEUE_SIZE, FFMPEG_QUEUE_TIMEOUT, FFMPEG_THREADS, RATE
+from utilities.Constants import CHANNELS, CLIENT_QUEUE_SIZE, FFMPEG_QUEUE_TIMEOUT, FFMPEG_THREADS, RATE, \
+    STREAM_BITRATES
 from utilities.Logger import Logger
 
 
@@ -29,7 +30,9 @@ class StreamHandler:
         Returns:
             str: Rendered HTML template for the audio player
         """
-        return render_template('index.html', radio_station_name=self.radio_station_name)
+        return render_template('index.html',
+                               radio_station_name=self.radio_station_name,
+                               stream_bitrates=STREAM_BITRATES)
 
     def stream(self, bitrate: int = None):
         """Serve the audio streaming endpoint.
