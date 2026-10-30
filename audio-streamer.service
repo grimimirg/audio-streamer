@@ -9,7 +9,7 @@ WorkingDirectory=/path/to/audio-streamer
 Environment="AUDIO_STREAMER_HOST=0.0.0.0"
 Environment="AUDIO_STREAMER_PORT=4986"
 Environment="AUDIO_STREAMER_DEBUG=false"
-ExecStart=/usr/bin/python3 /path/to/audio-streamer/app.py
+ExecStart=/path/to/audio-streamer/startup.sh
 Restart=always
 RestartSec=10
 StandardOutput=journal
