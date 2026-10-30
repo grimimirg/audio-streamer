@@ -522,15 +522,25 @@ Choose your streaming protocol:
 Enter your choice (1-4):
 ```
 
-The menu only lists relays that are **configured**, meaning `ICECAST_ENABLED`
-or `SHOUTCAST_ENABLED` is true and the matching `.env` block is filled in. That
-keeps the menu from offering a server it has no host or password for:
+Every protocol is listed, whether or not it is configured, so a relay cannot go
+unnoticed. A relay is **configured** when `ICECAST_ENABLED` or
+`SHOUTCAST_ENABLED` is true and the matching `.env` block is filled in; one that
+is not says so and cannot be selected:
 
-| `.env` state | What the menu offers |
-|---|---|
-| Neither relay enabled | No prompt at all; the station streams directly |
-| One relay enabled | Direct only, or direct plus that relay |
-| Both relays enabled | Direct only, either relay, or both |
+```
+2. Direct + Icecast     [not configured: set ICECAST_ENABLED in .env]
+```
+
+Choosing it explains what it needs and asks again, so the station never attempts
+a connection that cannot succeed:
+
+```
+Icecast is not configured. Copy the Icecast block from
+.env.example into .env and set ICECAST_ENABLED=True.
+```
+
+The "all configured relays" option appears only when more than one relay is
+usable, since there is otherwise nothing to combine.
 
 So `.env` decides what a protocol *can* be used, and the menu decides what is
 used *this run*.

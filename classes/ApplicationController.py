@@ -189,31 +189,42 @@ class ApplicationController:
         }
         return [entry for entry in self._RELAYS if enabled[entry[0]]]
 
-    def _askForProtocol(self, relays, prompt=input):
-        """Ask which of the configured relays to use for this run.
+    def _askForProtocol(self, configured, prompt=input):
+        """Ask which streaming protocol to use for this run.
+
+        Every protocol the application supports is listed, whether or not it is
+        configured: an operator cannot discover a relay that is never mentioned.
+        An unconfigured one says what it needs instead of being selectable, so
+        the menu never starts a connection that is known to be impossible.
 
         The protocol is chosen per run rather than per configuration, so
-        restarting the station is how an operator switches protocols.
+        restarting the station is how an operator switches.
 
         Args:
-            relays: The configured relay entries to offer
+            configured: The relay entries whose .env block is filled in
             prompt: Input function, injectable for testing
 
         Returns:
             list: The relay entries to start, empty for the direct stream only
         """
-        # "all" is only meaningful with more than one relay to combine
-        offer_all = len(relays) > 1
-        last = len(relays) + (2 if offer_all else 1)
+        # "all" is only meaningful with more than one usable relay to combine
+        offer_all = len(configured) > 1
+        last = len(self._RELAYS) + (2 if offer_all else 1)
 
         while True:
             try:
                 print("\n" + "=" * 50)
                 print("Choose your streaming protocol:")
                 print("1. Direct only (listeners connect to this server)")
-                for index, (relay_class, _, _) in enumerate(relays, start=2):
-                    label = self._relayLabel(relay_class)
-                    print(f"{index}. Direct + {label}")
+                # Pad the names so the notes line up under each other
+                width = max(len(self._relayLabel(entry[0])) for entry in self._RELAYS)
+                for index, entry in enumerate(self._RELAYS, start=2):
+                    label = self._relayLabel(entry[0])
+                    if entry in configured:
+                        print(f"{index}. Direct + {label}")
+                    else:
+                        print(f"{index}. Direct + {label:<{width}}"
+                              f"   [not configured: set {label.upper()}_ENABLED in .env]")
                 if offer_all:
                     print(f"{last}. Direct + all configured relays")
                 print("=" * 50)
@@ -225,13 +236,20 @@ class ApplicationController:
                     return []
                 if offer_all and choice == str(last):
                     Logger.info("User selected: direct streaming plus all configured relays")
-                    return list(relays)
+                    return list(configured)
 
                 index = int(choice) - 2
-                if 0 <= index < len(relays):
-                    selected = relays[index]
-                    Logger.info(f"User selected: direct streaming plus {self._relayLabel(selected[0])}")
-                    return [selected]
+                if 0 <= index < len(self._RELAYS):
+                    entry = self._RELAYS[index]
+                    label = self._relayLabel(entry[0])
+
+                    if entry not in configured:
+                        print(f"\n{label} is not configured. Copy the {label} block from")
+                        print(f".env.example into .env and set {label.upper()}_ENABLED=True.")
+                        continue
+
+                    Logger.info(f"User selected: direct streaming plus {label}")
+                    return [entry]
 
                 raise ValueError(choice)
 
@@ -245,26 +263,13 @@ class ApplicationController:
                 # unattended deployments behaving exactly as their .env says.
                 Logger.info("No protocol selected, using all configured relays")
                 print("\nNo console to choose on, using all configured relays.")
-                return list(relays)
+                return list(configured)
 
     def _startSelectedRelays(self):
         """Start the relays chosen at startup and publish their state."""
-        relays = self._configuredRelays()
+        configured = self._configuredRelays()
 
-        if not relays:
-            # Nothing is configured, so there is nothing to choose between and
-            # a direct-only station is never asked a question it cannot answer.
-            # It is still told what it is doing: skipping the menu silently
-            # leaves no way to tell the protocol choice exists at all.
-            Logger.info("No relay configured, streaming directly only")
-            self._printProtocolSummary(
-                "no relay is configured",
-                "Set ICECAST_ENABLED or SHOUTCAST_ENABLED in .env to relay to a server",
-                "(see .env.example for the full configuration block)",
-            )
-            return
-
-        for relay_class, attribute, setter in self._askForProtocol(relays):
+        for relay_class, attribute, setter in self._askForProtocol(configured):
             relay = self._startRelay(relay_class)
             setattr(self, attribute, relay)
             getattr(self.audioHttpFacade, setter)(relay)
@@ -274,7 +279,14 @@ class ApplicationController:
             if relay is not None:
                 self.protocols.append(self._relayLabel(relay_class).lower())
 
-        self._printProtocolSummary()
+        # With nothing configured the menu had nothing to offer, so the summary
+        # repeats what to change rather than leaving a bare "Direct" behind
+        notes = () if configured else (
+            "no relay is configured",
+            "Set ICECAST_ENABLED or SHOUTCAST_ENABLED in .env to relay to a server",
+            "(see .env.example for the full configuration block)",
+        )
+        self._printProtocolSummary(*notes)
 
     def _printProtocolSummary(self, *notes):
         """State the active streaming protocols on the console.
