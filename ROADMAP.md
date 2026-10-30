@@ -6,9 +6,6 @@ This document outlines the planned features and enhancements for the Audio Strea
 
 ## Planned Features
 
-### Multiple Bitrates
-Offer listeners the ability to choose streaming quality based on their connection speed. Support for different bitrates (128k, 192k, 320k) will allow users on slower connections to listen without buffering while high-quality audio remains available for those with fast connections.
-
 ### Icecast/Shoutcast Compatibility
 Enable integration with standard streaming servers like Icecast and Shoutcast. This will allow radio station owners to leverage existing streaming infrastructure and reach wider audiences through established streaming networks.
 
