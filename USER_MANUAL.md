@@ -535,6 +535,38 @@ keeps the menu from offering a server it has no host or password for:
 So `.env` decides what a protocol *can* be used, and the menu decides what is
 used *this run*.
 
+### What startup tells you
+
+Startup always states the protocols it came up with, whether or not it asked:
+
+```
+Streaming protocol: Direct + Icecast
+```
+
+With no relay configured it also says why there was nothing to choose between,
+and which keys change that:
+
+```
+Streaming protocol: Direct
+  no relay is configured
+  Set ICECAST_ENABLED or SHOUTCAST_ENABLED in .env to relay to a server
+  (see .env.example for the full configuration block)
+```
+
+A relay that was selected but could not connect is reported on the console as
+
+```
+WARNING: Icecast relay disabled: Could not connect to Icecast: Couldn't connect
+```
+
+and is left out of the summary line, so the summary only ever lists protocols
+that are actually running. These lines are printed rather than logged, because
+`AUDIO_STREAMER_DEBUG` suppresses log output — including errors.
+
+If your `.env` predates version 1.3.0 it has no `ICECAST_*` or `SHOUTCAST_*`
+block at all, and `install.sh` only seeds `.env` when the file is missing. Copy
+the blocks across from `.env.example` to enable a relay.
+
 ### Changing protocol
 
 Stop the station and start it again, then pick a different option. The relays
@@ -547,10 +579,10 @@ To add a protocol that is not offered, fill in its `.env` block, set its
 ### Unattended startup
 
 systemd units and containers run without a console, so there is nothing to
-answer the prompt. In that case the station logs
+answer the prompt. In that case the station reports
 
 ```
-No protocol selected, using all configured relays
+No console to choose on, using all configured relays.
 ```
 
 and starts every configured relay — exactly what the `.env` file describes. An

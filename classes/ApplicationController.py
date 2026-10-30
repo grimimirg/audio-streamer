@@ -244,6 +244,7 @@ class ApplicationController:
                 # without stdin. Falling back to every configured relay keeps
                 # unattended deployments behaving exactly as their .env says.
                 Logger.info("No protocol selected, using all configured relays")
+                print("\nNo console to choose on, using all configured relays.")
                 return list(relays)
 
     def _startSelectedRelays(self):
@@ -252,8 +253,15 @@ class ApplicationController:
 
         if not relays:
             # Nothing is configured, so there is nothing to choose between and
-            # a direct-only station is never asked a question it cannot answer
+            # a direct-only station is never asked a question it cannot answer.
+            # It is still told what it is doing: skipping the menu silently
+            # leaves no way to tell the protocol choice exists at all.
             Logger.info("No relay configured, streaming directly only")
+            self._printProtocolSummary(
+                "no relay is configured",
+                "Set ICECAST_ENABLED or SHOUTCAST_ENABLED in .env to relay to a server",
+                "(see .env.example for the full configuration block)",
+            )
             return
 
         for relay_class, attribute, setter in self._askForProtocol(relays):
@@ -265,6 +273,24 @@ class ApplicationController:
             # dashboard does not claim the station is relaying to it
             if relay is not None:
                 self.protocols.append(self._relayLabel(relay_class).lower())
+
+        self._printProtocolSummary()
+
+    def _printProtocolSummary(self, *notes):
+        """State the active streaming protocols on the console.
+
+        Logger output is suppressed unless AUDIO_STREAMER_DEBUG is set, so the
+        summary is printed: the operator has to be able to see which protocols
+        the station came up with without turning on debug logging.
+
+        Args:
+            *notes: Extra lines to print under the summary, e.g. how to enable
+                a relay when none is configured
+        """
+        active = ' + '.join(name.capitalize() for name in self.protocols)
+        print(f"\nStreaming protocol: {active}")
+        for note in notes:
+            print(f"  {note}")
 
     @staticmethod
     def _relayLabel(relay_class) -> str:
@@ -302,7 +328,10 @@ class ApplicationController:
             relay.start()
             return relay
         except RuntimeError as e:
+            # Logger is silent unless AUDIO_STREAMER_DEBUG is on, and losing a
+            # relay is something the operator has to be told about either way
             Logger.error(f"{label} relay disabled: {e}")
+            print(f"WARNING: {label} relay disabled: {e}")
             return None
 
     def _askForDeviceIndex(self) -> Optional[List[int]]:

@@ -213,3 +213,79 @@ def test_a_relay_that_cannot_start_is_published_as_absent(controller, relays):
 def test_relay_labels_read_the_way_the_manual_does():
     assert ApplicationController._relayLabel(IcecastStreamer) == 'Icecast'
     assert ApplicationController._relayLabel(ShoutcastStreamer) == 'Shoutcast'
+
+
+# -- startup visibility (#61) --
+#
+# Logger suppresses every level, errors included, unless AUDIO_STREAMER_DEBUG is
+# set, so anything the operator must see at startup has to be printed.
+
+def test_a_direct_only_station_is_told_it_is_direct_only(controller, capsys, monkeypatch):
+    monkeypatch.setattr(application_controller_module, 'ICECAST_ENABLED', False)
+    monkeypatch.setattr(application_controller_module, 'SHOUTCAST_ENABLED', False)
+
+    controller._startSelectedRelays()
+
+    output = capsys.readouterr().out
+    assert 'Streaming protocol: Direct' in output
+    assert 'no relay is configured' in output
+
+
+def test_a_direct_only_station_is_told_how_to_enable_a_relay(controller, capsys, monkeypatch):
+    monkeypatch.setattr(application_controller_module, 'ICECAST_ENABLED', False)
+    monkeypatch.setattr(application_controller_module, 'SHOUTCAST_ENABLED', False)
+
+    controller._startSelectedRelays()
+
+    output = capsys.readouterr().out
+    assert 'ICECAST_ENABLED' in output
+    assert 'SHOUTCAST_ENABLED' in output
+    assert '.env.example' in output
+
+
+def test_the_active_protocols_are_printed_after_the_relays_start(controller, relays, capsys):
+    controller._askForProtocol = lambda entries, **kwargs: [entries[0]]
+
+    controller._startSelectedRelays()
+
+    assert 'Streaming protocol: Direct + Icecast' in capsys.readouterr().out
+
+
+def test_every_active_protocol_is_printed(controller, relays, capsys):
+    controller._askForProtocol = lambda entries, **kwargs: list(entries)
+
+    controller._startSelectedRelays()
+
+    assert 'Streaming protocol: Direct + Icecast + Shoutcast' in capsys.readouterr().out
+
+
+def test_a_dropped_relay_is_not_printed_as_active(controller, relays, capsys):
+    controller._startRelay = lambda relay_class: None
+    controller._askForProtocol = lambda entries, **kwargs: [entries[0]]
+
+    controller._startSelectedRelays()
+
+    output = capsys.readouterr().out
+    assert 'Streaming protocol: Direct' in output
+    assert 'Icecast' not in output.split('Streaming protocol:')[1]
+
+
+def test_a_relay_that_cannot_start_is_reported_on_the_console(capsys, mocker):
+    # The Logger line alone is invisible without debug logging, which is how a
+    # station could silently fall back to direct-only
+    controller = ApplicationController()
+    controller.audioStreamer = object()
+    mocker.patch.object(IcecastStreamer, 'test_connection')
+    mocker.patch.object(IcecastStreamer, '__init__',
+                        side_effect=RuntimeError('Could not connect to Icecast'))
+
+    assert controller._startRelay(IcecastStreamer) is None
+
+    output = capsys.readouterr().out
+    assert 'WARNING: Icecast relay disabled: Could not connect to Icecast' in output
+
+
+def test_the_unattended_fallback_says_why_it_chose(controller, relays, capsys):
+    controller._askForProtocol(relays, prompt=FakePrompt([EOFError()]))
+
+    assert 'No console to choose on' in capsys.readouterr().out
