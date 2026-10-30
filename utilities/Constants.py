@@ -5,14 +5,16 @@ from pathlib import Path
 import pyaudio
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables from .env file.
+# The file is optional when the configuration is already present in the process
+# environment (systemd units, containers, test runs); it is required otherwise.
 env_path = Path('.env')
-if not env_path.exists():
+if env_path.exists():
+    load_dotenv()
+elif not any(key.startswith('AUDIO_') for key in os.environ):
     print("\nERROR: .env file not found!")
     print("Please create a .env file from .env.example")
     sys.exit(1)
-
-load_dotenv()
 
 # Audio configuration
 try:
@@ -45,6 +47,10 @@ try:
     ]
     FFMPEG_OUTPUT_QUEUE_SIZE = int(os.getenv('FFMPEG_OUTPUT_QUEUE_SIZE', '50'))
     FFMPEG_QUEUE_TIMEOUT = float(os.getenv('FFMPEG_QUEUE_TIMEOUT', '0.1'))
+    FFMPEG_THREADS = int(os.getenv('FFMPEG_THREADS', '0'))
+
+    if FFMPEG_THREADS < 0:
+        raise ValueError(f"FFMPEG_THREADS {FFMPEG_THREADS} cannot be negative")
 
     for bitrate in STREAM_BITRATES:
         if bitrate < 64 or bitrate > 320:
@@ -53,5 +59,23 @@ try:
             )
 except ValueError as e:
     print(f"\nERROR: Invalid streaming configuration in .env file: {e}")
-    print("Please check AUDIO_STREAMER_MAX_CLIENTS, AUDIO_STREAMER_QUEUE_SIZE, AUDIO_STREAM_BITRATES, FFMPEG_OUTPUT_QUEUE_SIZE, and FFMPEG_QUEUE_TIMEOUT values.")
+    print("Please check AUDIO_STREAMER_MAX_CLIENTS, AUDIO_STREAMER_QUEUE_SIZE, AUDIO_STREAM_BITRATES, FFMPEG_OUTPUT_QUEUE_SIZE, FFMPEG_QUEUE_TIMEOUT, and FFMPEG_THREADS values.")
+    sys.exit(1)
+
+# CPU monitoring configuration
+try:
+    CPU_WARNING_THRESHOLD = float(os.getenv('CPU_WARNING_THRESHOLD', '80'))
+    CPU_MONITOR_INTERVAL = float(os.getenv('CPU_MONITOR_INTERVAL', '5.0'))
+
+    if not 0 < CPU_WARNING_THRESHOLD <= 100:
+        raise ValueError(
+            f"CPU_WARNING_THRESHOLD {CPU_WARNING_THRESHOLD} is out of valid range (0-100)"
+        )
+    if CPU_MONITOR_INTERVAL <= 0:
+        raise ValueError(
+            f"CPU_MONITOR_INTERVAL {CPU_MONITOR_INTERVAL} must be greater than zero"
+        )
+except ValueError as e:
+    print(f"\nERROR: Invalid CPU monitoring configuration in .env file: {e}")
+    print("Please check CPU_WARNING_THRESHOLD and CPU_MONITOR_INTERVAL values.")
     sys.exit(1)

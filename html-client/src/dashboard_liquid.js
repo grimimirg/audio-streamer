@@ -150,6 +150,8 @@ function updateUI(stats) {
     document.getElementById('streamStatus').textContent = stats.on_air ? i18n.t('dashboard.active') : i18n.t('dashboard.inactive');
     document.getElementById('currentTrack').textContent = stats.current_track || '---';
 
+    updateCpuCard(stats);
+
     // Playback state
     let stateText = '---';
     if (stats.is_playing && !stats.is_paused) {
@@ -595,4 +597,20 @@ async function setLocalPath() {
         status.textContent = 'Error setting path';
         status.style.color = '#facc15'; // Yellow for error
     }
+}
+
+// Update the CPU usage card
+function updateCpuCard(stats) {
+    const cpuElement = document.getElementById('cpuPercent');
+    if (!cpuElement) return;
+
+    if (stats.cpu_percent === null || stats.cpu_percent === undefined) {
+        cpuElement.textContent = '--';
+        cpuElement.title = i18n.t('dashboard.cpu_unavailable');
+    } else {
+        cpuElement.textContent = stats.cpu_percent.toFixed(1) + '%';
+        cpuElement.title = stats.cpu_warning ? i18n.t('dashboard.cpu_high') : '';
+    }
+    cpuElement.classList.toggle('metric-warning', Boolean(stats.cpu_warning));
+    document.getElementById('activeEncoders').textContent = stats.active_encoders || 0;
 }

@@ -665,6 +665,10 @@ body.light .history-card-cover-placeholder {
     opacity: 0.8;
 }
 
+.dashboard-page .metric-value.metric-warning {
+    color: #ffb4b4;
+}
+
 .dashboard-page .chart-container {
     background: var(--container-bg);
     backdrop-filter: blur(10px);
