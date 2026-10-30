@@ -1,14 +1,14 @@
-import queue
 import socket
 import subprocess
-import threading
 import time
 
-from utilities.AudioFormat import build_wav_header
+from classes.streamer.LibshoutRelay import (
+    LibshoutRelay,
+    RelaySettings,
+    default_shout_factory,
+    probe_server,
+)
 from utilities.Constants import (
-    CHANNELS,
-    CLIENT_QUEUE_SIZE,
-    FFMPEG_QUEUE_TIMEOUT,
     ICECAST_BITRATE,
     ICECAST_HOST,
     ICECAST_MOUNT,
@@ -20,53 +20,42 @@ from utilities.Constants import (
     ICECAST_TEST_TIMEOUT,
     ICECAST_USER,
     RADIO_STATION_NAME,
-    RATE,
 )
-from utilities.FfmpegCommand import build_mp3_command
-from utilities.Logger import Logger
 
 
-def _default_shout_factory():
-    """Build a libshout handle.
-
-    The import is deferred so a station that never streams to Icecast can run
-    without libshout installed: nothing imports python-shout until the relay is
-    actually started.
+def icecast_settings() -> RelaySettings:
+    """Build the relay settings for the configured Icecast server.
 
     Returns:
-        shout.Shout: A fresh libshout handle
-
-    Raises:
-        RuntimeError: If python-shout or libshout is unavailable
+        RelaySettings: Where this station publishes to Icecast
     """
-    try:
-        import shout
-    except ImportError as e:
-        Logger.error(
-            "python-shout is not available. Install libshout and its development "
-            "headers, then reinstall the requirements, to stream to Icecast."
-        )
-        raise RuntimeError("python-shout is required for Icecast streaming") from e
+    return RelaySettings(
+        label='Icecast',
+        scheme='icecast',
+        host=ICECAST_HOST,
+        port=ICECAST_PORT,
+        mount=ICECAST_MOUNT,
+        user=ICECAST_USER,
+        password=ICECAST_PASSWORD,
+        protocol=ICECAST_PROTOCOL,
+        bitrate=ICECAST_BITRATE,
+        station_name=RADIO_STATION_NAME,
+        reconnect_delay=ICECAST_RECONNECT_DELAY,
+        reconnect_max_delay=ICECAST_RECONNECT_MAX_DELAY,
+        test_timeout=ICECAST_TEST_TIMEOUT,
+        config_prefix='ICECAST',
+    )
 
-    return shout.Shout()
 
-
-class IcecastStreamer:
+class IcecastStreamer(LibshoutRelay):
     """Relays the live audio to an Icecast server as a source client.
 
-    Unlike its neighbours in this package this is a sink, not a source. It does
-    not capture audio and must never be registered in AudioStreamerFactory:
-    instead it attaches to whichever streamer is already capturing - the same
-    seam BitrateEncoder uses, `addClient` on a queue - encodes that PCM to MP3
-    with ffmpeg, and pushes the result to an Icecast mount point via libshout.
-
-    The protocol itself is libshout's business. This class owns the plumbing:
-    the ffmpeg process, the two pump threads, and reconnecting when the server
-    drops the connection.
+    See LibshoutRelay for how the relay attaches to the capturing streamer; this
+    subclass only supplies the Icecast configuration.
     """
 
-    def __init__(self, audio_streamer, popen=subprocess.Popen, shout_factory=_default_shout_factory,
-                 sleep=time.sleep):
+    def __init__(self, audio_streamer, popen=subprocess.Popen,
+                 shout_factory=default_shout_factory, sleep=time.sleep):
         """Initialize the relay.
 
         Args:
@@ -75,29 +64,17 @@ class IcecastStreamer:
             shout_factory: Callable returning a libshout handle, injectable for testing
             sleep: Sleep function used for reconnect backoff, injectable for testing
         """
-        self.audio_streamer = audio_streamer
-        self.popen = popen
-        self.shout_factory = shout_factory
-        self.sleep = sleep
-
-        self.process = None
-        self.shout = None
-        self.running = False
-        self.connected = False
-
-        self._stopped = False
-        self._lock = threading.Lock()
-        self._source_queue = queue.Queue(maxsize=CLIENT_QUEUE_SIZE)
-        self._threads = []
+        super().__init__(
+            audio_streamer,
+            icecast_settings(),
+            popen=popen,
+            shout_factory=shout_factory,
+            sleep=sleep,
+        )
 
     @staticmethod
     def test_connection(connect=socket.create_connection) -> bool:
         """Check that the configured Icecast server is reachable.
-
-        This answers "is the server there?" only. Whether the credentials and
-        mount point are accepted is decided when the mount is opened in start(),
-        because opening a second connection as a dry run would collide with the
-        relay's own mount.
 
         Args:
             connect: Connection factory, injectable for testing
@@ -105,325 +82,4 @@ class IcecastStreamer:
         Returns:
             bool: True if the server accepted a TCP connection
         """
-        try:
-            connection = connect((ICECAST_HOST, ICECAST_PORT), ICECAST_TEST_TIMEOUT)
-        except (OSError, socket.timeout) as e:
-            Logger.warning(
-                f"Icecast server at {ICECAST_HOST}:{ICECAST_PORT} is not reachable: {e}. "
-                "Check ICECAST_HOST and ICECAST_PORT, and that the server is running."
-            )
-            return False
-
-        try:
-            connection.close()
-        except OSError:
-            pass
-
-        Logger.info(f"Icecast server reachable at {ICECAST_HOST}:{ICECAST_PORT}")
-        return True
-
-    def start(self):
-        """Connect to Icecast, start encoding, and begin relaying audio.
-
-        Raises:
-            RuntimeError: If ffmpeg or python-shout is unavailable, or the mount
-                          point cannot be opened
-        """
-        self.shout = self._open_connection()
-        self.process = self._start_process()
-        self.running = True
-        self._stopped = False
-        self.audio_streamer.addClient(self._source_queue)
-
-        self._threads = [
-            threading.Thread(target=self._pump_source, name='icecast-source', daemon=True),
-            threading.Thread(target=self._pump_output, name='icecast-output', daemon=True),
-            threading.Thread(target=self._monitor_errors, name='icecast-stderr', daemon=True),
-        ]
-        for thread in self._threads:
-            thread.start()
-
-        Logger.info(
-            f"Relaying to icecast://{ICECAST_HOST}:{ICECAST_PORT}{ICECAST_MOUNT} "
-            f"at {ICECAST_BITRATE}kbps"
-        )
-
-    def stop(self):
-        """Stop relaying, release the source client and close the mount point.
-
-        Safe to call more than once, and callable after the relay has already
-        wound itself down.
-        """
-        with self._lock:
-            if self._stopped:
-                return
-            self._stopped = True
-
-        self.running = False
-
-        try:
-            self.audio_streamer.removeClient(self._source_queue)
-        except Exception as e:
-            Logger.error(f"Error removing Icecast source client: {e}")
-
-        # Unblock the source thread if it is waiting on an empty queue
-        try:
-            self._source_queue.put_nowait(None)
-        except queue.Full:
-            pass
-
-        for thread in self._threads:
-            if thread.is_alive():
-                thread.join(timeout=1.0)
-        self._threads = []
-
-        if self.process:
-            self._cleanup_process(self.process)
-            self.process = None
-
-        self._close_connection()
-        Logger.info("Stopped Icecast relay")
-
-    @property
-    def is_connected(self) -> bool:
-        """Whether the mount point is currently open."""
-        return self.connected
-
-    def getStats(self) -> dict:
-        """Get the relay's current state.
-
-        Returns:
-            dict: Connection state and mount details
-        """
-        return {
-            'enabled': True,
-            'connected': self.connected,
-            'host': ICECAST_HOST,
-            'port': ICECAST_PORT,
-            'mount': ICECAST_MOUNT,
-            'bitrate': ICECAST_BITRATE,
-            'protocol': ICECAST_PROTOCOL,
-        }
-
-    # -- PRIVATES --
-
-    def _open_connection(self):
-        """Open the Icecast mount point.
-
-        Returns:
-            The connected libshout handle
-
-        Raises:
-            RuntimeError: If the mount point cannot be opened
-        """
-        handle = self.shout_factory()
-        self._configure(handle)
-
-        try:
-            handle.open()
-        except Exception as e:
-            Logger.error(
-                f"Could not open icecast://{ICECAST_HOST}:{ICECAST_PORT}{ICECAST_MOUNT}: {e}. "
-                "Check that the server is running and that ICECAST_USER, ICECAST_PASSWORD "
-                "and ICECAST_MOUNT are correct."
-            )
-            raise RuntimeError(f"Could not connect to Icecast: {e}") from e
-
-        self.connected = True
-        Logger.info(f"Connected to Icecast mount {ICECAST_MOUNT}")
-        return handle
-
-    def _configure(self, handle):
-        """Apply the configured connection and metadata settings to a handle.
-
-        Args:
-            handle: The libshout handle to configure
-        """
-        handle.host = ICECAST_HOST
-        handle.port = ICECAST_PORT
-        handle.user = ICECAST_USER
-        handle.password = ICECAST_PASSWORD
-        handle.mount = ICECAST_MOUNT
-        handle.protocol = ICECAST_PROTOCOL
-        handle.format = 'mp3'
-        handle.name = RADIO_STATION_NAME
-        handle.audio_info = {
-            'bitrate': str(ICECAST_BITRATE),
-            'samplerate': str(RATE),
-            'channels': str(CHANNELS),
-        }
-
-    def _close_connection(self):
-        """Close the mount point, ignoring a connection that is already gone."""
-        self.connected = False
-        if not self.shout:
-            return
-        try:
-            self.shout.close()
-        except Exception as e:
-            Logger.error(f"Error closing Icecast connection: {e}")
-        self.shout = None
-
-    def _start_process(self):
-        """Start the ffmpeg process encoding the relay's MP3 stream.
-
-        Returns:
-            The ffmpeg process
-
-        Raises:
-            RuntimeError: If ffmpeg is not found
-        """
-        try:
-            return self.popen(
-                build_mp3_command(ICECAST_BITRATE),
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-        except FileNotFoundError:
-            Logger.error("ffmpeg not found. Please install ffmpeg to stream to Icecast.")
-            raise RuntimeError("ffmpeg is required for Icecast streaming")
-
-    def _pump_source(self):
-        """Feed source audio into ffmpeg's stdin until the stream ends."""
-        try:
-            self.process.stdin.write(build_wav_header(RATE, CHANNELS))
-            self.process.stdin.flush()
-
-            while self.running:
-                try:
-                    chunk = self._source_queue.get(timeout=FFMPEG_QUEUE_TIMEOUT)
-                except queue.Empty:
-                    if not self.audio_streamer.onAir:
-                        Logger.info("Audio streaming stopped, closing Icecast relay encoder")
-                        break
-                    continue
-
-                if chunk is None:
-                    break
-
-                self.process.stdin.write(chunk)
-                self.process.stdin.flush()
-        except BrokenPipeError:
-            Logger.error("ffmpeg broken pipe on the Icecast relay")
-        except (IOError, ValueError) as e:
-            Logger.error(f"Error writing to ffmpeg (Icecast relay): {e}")
-        except Exception as e:
-            Logger.error(f"Unexpected error in Icecast source thread: {type(e).__name__}: {str(e)}")
-        finally:
-            self.running = False
-            self._close_stdin()
-
-    def _pump_output(self):
-        """Send encoded output to Icecast, reconnecting if the server drops us."""
-        delay = ICECAST_RECONNECT_DELAY
-        try:
-            while self.running:
-                chunk = self.process.stdout.read(8192)
-                if not chunk:
-                    break
-
-                if self._send(chunk):
-                    delay = ICECAST_RECONNECT_DELAY
-                    continue
-
-                # The send failed: drop the connection and try to get it back,
-                # backing off so a server that stays down is not hammered.
-                self._close_connection()
-                if not self.running:
-                    break
-
-                Logger.warning(f"Icecast connection lost, reconnecting in {delay:.0f}s")
-                self.sleep(delay)
-                delay = min(delay * 2, ICECAST_RECONNECT_MAX_DELAY)
-
-                if not self._reconnect():
-                    continue
-
-                # The chunk that failed is deliberately dropped: it is now older
-                # than the backoff, and a listener is better served by live audio.
-        except Exception as e:
-            Logger.error(f"Error relaying to Icecast: {e}")
-        finally:
-            self.running = False
-
-    def _send(self, chunk: bytes) -> bool:
-        """Send one encoded chunk to Icecast.
-
-        Args:
-            chunk: Encoded MP3 chunk
-
-        Returns:
-            bool: True if the chunk was accepted, False if the connection failed
-        """
-        if not self.shout:
-            return False
-        try:
-            self.shout.send(chunk)
-            # libshout paces the sender to real time; without this the relay
-            # would race ahead of the stream and the server would drop it.
-            self.shout.sync()
-            return True
-        except Exception as e:
-            Logger.error(f"Error sending audio to Icecast: {e}")
-            return False
-
-    def _reconnect(self) -> bool:
-        """Try to reopen the mount point.
-
-        Returns:
-            bool: True once reconnected, False if the attempt failed
-        """
-        try:
-            self.shout = self._open_connection()
-            return True
-        except RuntimeError:
-            return False
-
-    def _close_stdin(self):
-        """Close ffmpeg's stdin to signal end of input."""
-        try:
-            if self.process and self.process.stdin and not self.process.stdin.closed:
-                self.process.stdin.close()
-        except Exception as e:
-            Logger.error(f"Error closing ffmpeg stdin: {e}")
-
-    def _monitor_errors(self):
-        """Monitor ffmpeg stderr and log anything it reports."""
-        try:
-            while True:
-                error_line = self.process.stderr.readline()
-                if not error_line:
-                    break
-                error_line = error_line.decode('utf-8', errors='ignore').strip()
-                if not error_line:
-                    continue
-                if 'error' in error_line.lower() or 'fatal' in error_line.lower():
-                    Logger.error(f"FFmpeg error (Icecast relay): {error_line}")
-                elif 'warning' in error_line.lower():
-                    Logger.warning(f"FFmpeg warning (Icecast relay): {error_line}")
-        except Exception as e:
-            Logger.error(f"Error in ffmpeg error monitor thread: {e}")
-
-    def _cleanup_process(self, process):
-        """Clean up ffmpeg process resources.
-
-        Args:
-            process: The ffmpeg subprocess to cleanup
-        """
-        try:
-            self._close_stdin()
-            if process.stdout and not process.stdout.closed:
-                process.stdout.close()
-            if process.stderr and not process.stderr.closed:
-                process.stderr.close()
-            if process.poll() is None:
-                process.terminate()
-                try:
-                    process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    Logger.warning("ffmpeg process did not terminate, killing it")
-                    process.kill()
-                    process.wait()
-        except Exception as e:
-            Logger.error(f"Error cleaning up ffmpeg process: {e}")
+        return probe_server(icecast_settings(), connect=connect)

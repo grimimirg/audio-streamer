@@ -12,6 +12,7 @@ Welcome to Audio Streamer! This manual will guide you through everything you nee
   - [Bitrate-Based Streaming](#4-bitrate-based-streaming)
 - [Configuration](#configuration)
 - [Icecast Streaming](#icecast-streaming)
+- [Shoutcast Streaming](#shoutcast-streaming)
 - [Audio Engine Details](#audio-engine-details)
 - [Liquid Music Mode](#liquid-music-mode)
 - [Security Implementation](#security-implementation)
@@ -429,6 +430,72 @@ Common failures:
 | `Could not open icecast://...` with an auth error | Wrong `ICECAST_USER` or `ICECAST_PASSWORD` |
 | `Could not open icecast://...` mentioning the mount | Mount already in use by another source |
 | `python-shout is not available` | libshout headers missing when the requirements were installed |
+
+---
+
+## Shoutcast Streaming
+
+Audio Streamer can also relay to a Shoutcast server. The mechanics are the same
+as for [Icecast](#icecast-streaming) - it attaches to the capturing streamer,
+encodes to MP3 with ffmpeg, and publishes to a mount point - so only the
+differences are described here.
+
+Both relays may run at the same time. Each one costs an extra ffmpeg encoder
+process, so expect roughly double the encoding CPU of a single relay.
+
+### Protocol support: v1 only
+
+**This relay speaks the ICY source protocol, which is Shoutcast v1. Shoutcast v2
+(Ultravox) is not supported.**
+
+The relay goes through libshout, which implements four protocols - HTTP,
+XAudioCast (deprecated), ICY and RoarAudio - and none of them is Ultravox. ICY is
+what Shoutcast v1 servers speak, and DNAS 2 servers continue to accept v1 source
+connections on their legacy source port, so a modern Shoutcast server will still
+take this stream. If you need the v2 protocol itself, it would have to be
+implemented by hand; that work is tracked separately.
+
+In practice this means `SHOUTCAST_PORT` is usually your server's **source** port,
+which on DNAS 2 is not the same as the port listeners connect to. Check your
+server's configuration if the handshake is refused.
+
+### Configuration
+
+| Setting | Meaning |
+| --- | --- |
+| `SHOUTCAST_ENABLED` | Set to `True` to start the relay at startup |
+| `SHOUTCAST_HOST` | Hostname or IP of the Shoutcast server |
+| `SHOUTCAST_PORT` | Source port the server accepts source connections on |
+| `SHOUTCAST_MOUNT` | Mount point to publish on, including the leading slash |
+| `SHOUTCAST_USER` | Source user, normally `source` |
+| `SHOUTCAST_PASSWORD` | The source password |
+| `SHOUTCAST_BITRATE` | Bitrate in kbps for the relayed stream (64-320) |
+| `SHOUTCAST_RECONNECT_DELAY` | Seconds before the first reconnection attempt |
+| `SHOUTCAST_RECONNECT_MAX_DELAY` | Longest wait between reconnection attempts |
+| `SHOUTCAST_TEST_TIMEOUT` | Timeout for the startup reachability check |
+
+Startup validation, reconnection behaviour and the "failure does not take the
+station off the air" guarantee are identical to Icecast.
+
+### Track metadata
+
+When you update the track information from the dashboard, the new "now playing"
+line is published to every active relay as `Artist - Title`, falling back to
+whichever of the two is known. Metadata is cosmetic: a server that rejects an
+update is logged and otherwise ignored, and the audio is never interrupted.
+
+Metadata is only sent while a relay is genuinely connected. This is checked
+rather than assumed, because libshout crashes the process if asked to set
+metadata on a connection that is not open - so a track change during a
+reconnection is skipped rather than risking the application.
+
+### Dashboard status
+
+With the relay enabled the dashboard shows a **Shoutcast Relay** card, alongside
+the Icecast one, reporting `Connected` or `Disconnected` with the mount and
+bitrate. The card is hidden when `SHOUTCAST_ENABLED` is false. The same state is
+available from the statistics API as `shoutcast_enabled`, `shoutcast_connected`,
+`shoutcast_mount` and `shoutcast_bitrate`.
 
 ---
 

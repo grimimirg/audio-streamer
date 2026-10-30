@@ -151,7 +151,8 @@ function updateUI(stats) {
     document.getElementById('bitrate').textContent = calculateBitrate(stats.sample_rate, stats.channels);
 
     updateCpuCard(stats);
-    updateIcecastCard(stats);
+    updateRelayCard('icecast', stats);
+    updateRelayCard('shoutcast', stats);
 }
 
 // Calculate bitrate
@@ -291,27 +292,27 @@ function updateCpuCard(stats) {
     document.getElementById('activeEncoders').textContent = stats.active_encoders || 0;
 }
 
-// Update the Icecast relay card, hidden entirely when the relay is disabled
-function updateIcecastCard(stats) {
-    const card = document.getElementById('icecastCard');
+// Update one relay card, hidden entirely when that relay is disabled
+function updateRelayCard(prefix, stats) {
+    const card = document.getElementById(`${prefix}Card`);
     if (!card) return;
 
-    if (!stats.icecast_enabled) {
+    if (!stats[`${prefix}_enabled`]) {
         card.style.display = 'none';
         return;
     }
 
     card.style.display = '';
 
-    const stateElement = document.getElementById('icecastState');
-    const connected = Boolean(stats.icecast_connected);
+    const stateElement = document.getElementById(`${prefix}State`);
+    const connected = Boolean(stats[`${prefix}_connected`]);
     stateElement.textContent = connected
-        ? i18n.t('dashboard.icecast_connected')
-        : i18n.t('dashboard.icecast_disconnected');
+        ? i18n.t(`dashboard.${prefix}_connected`)
+        : i18n.t(`dashboard.${prefix}_disconnected`);
     stateElement.classList.toggle('metric-warning', !connected);
 
-    const mount = stats.icecast_mount || '--';
-    const bitrate = stats.icecast_bitrate;
-    document.getElementById('icecastMount').textContent =
+    const mount = stats[`${prefix}_mount`] || '--';
+    const bitrate = stats[`${prefix}_bitrate`];
+    document.getElementById(`${prefix}Mount`).textContent =
         bitrate ? `${mount} (${bitrate} kbps)` : mount;
 }
