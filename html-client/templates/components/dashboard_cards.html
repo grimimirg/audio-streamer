@@ -57,5 +57,16 @@
             <span data-i18n="dashboard.icecast_mount"></span>: <span id="icecastMount">--</span>
         </div>
     </div>
+
+    <!-- Revealed by the dashboard script only when the Shoutcast relay is enabled -->
+    <div class="card" id="shoutcastCard" style="display: none;">
+        <div class="card-title">
+            <span>📻</span> <span data-i18n="dashboard.shoutcast_status"></span>
+        </div>
+        <div class="metric-value" id="shoutcastState">--</div>
+        <div class="metric-label">
+            <span data-i18n="dashboard.shoutcast_mount"></span>: <span id="shoutcastMount">--</span>
+        </div>
+    </div>
 </div>
 {% endmacro %}

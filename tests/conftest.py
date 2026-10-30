@@ -29,6 +29,16 @@ os.environ.setdefault('ICECAST_PROTOCOL', 'http')
 os.environ.setdefault('ICECAST_RECONNECT_DELAY', '0.01')
 os.environ.setdefault('ICECAST_RECONNECT_MAX_DELAY', '0.04')
 os.environ.setdefault('RADIO_STATION_NAME', 'Test Station')
+os.environ.setdefault('SHOUTCAST_ENABLED', 'False')
+os.environ.setdefault('SHOUTCAST_HOST', 'shoutcast.test')
+os.environ.setdefault('SHOUTCAST_PORT', '8100')
+os.environ.setdefault('SHOUTCAST_MOUNT', '/live')
+os.environ.setdefault('SHOUTCAST_USER', 'source')
+os.environ.setdefault('SHOUTCAST_PASSWORD', 'sc-secret')
+os.environ.setdefault('SHOUTCAST_BITRATE', '192')
+os.environ.setdefault('SHOUTCAST_RECONNECT_DELAY', '0.01')
+os.environ.setdefault('SHOUTCAST_RECONNECT_MAX_DELAY', '0.04')
+os.environ.setdefault('SHOUTCAST_TEST_TIMEOUT', '5.0')
 
 import pytest  # noqa: E402  (must follow the environment setup above)
 
@@ -132,16 +142,23 @@ class FakeShout:
     open/send/sync/close raise on failure.
     """
 
-    def __init__(self, open_error=None, send_errors=0):
+    def __init__(self, open_error=None, send_errors=0, connected_code=0,
+                 metadata_error=None):
         """Initialize the handle.
 
         Args:
             open_error: Exception to raise from open(), or None to succeed
             send_errors: Number of initial send() calls that should fail
+            connected_code: What get_connected() reports; 0 means connected,
+                            as libshout's SHOUTERR_SUCCESS does
+            metadata_error: Exception to raise from set_metadata(), or None
         """
         self.open_error = open_error
         self.send_errors = send_errors
+        self.connected_code = connected_code
+        self.metadata_error = metadata_error
         self.sent = b''
+        self.metadata = []
         self.opens = 0
         self.closes = 0
         self.syncs = 0
@@ -149,7 +166,8 @@ class FakeShout:
 
     def __setattr__(self, name, value):
         # Record the libshout settings without shadowing our own attributes
-        if name not in ('open_error', 'send_errors', 'sent', 'opens', 'closes', 'syncs', 'settings'):
+        if name not in ('open_error', 'send_errors', 'connected_code', 'metadata_error',
+                        'sent', 'metadata', 'opens', 'closes', 'syncs', 'settings'):
             self.settings[name] = value
         object.__setattr__(self, name, value)
 
@@ -166,6 +184,14 @@ class FakeShout:
 
     def sync(self):
         self.syncs += 1
+
+    def get_connected(self):
+        return self.connected_code
+
+    def set_metadata(self, metadata):
+        if self.metadata_error:
+            raise self.metadata_error
+        self.metadata.append(metadata)
 
     def close(self):
         self.closes += 1

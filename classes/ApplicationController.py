@@ -3,8 +3,9 @@ import time
 
 from classes.streamer.AudioStreamerFactory import AudioStreamerFactory
 from classes.streamer.streamers.IcecastStreamer import IcecastStreamer
+from classes.streamer.streamers.ShoutcastStreamer import ShoutcastStreamer
 from .AudioHttpFacade import AudioHttpFacade
-from utilities.Constants import ICECAST_ENABLED
+from utilities.Constants import ICECAST_ENABLED, SHOUTCAST_ENABLED
 from utilities.FfmpegCapabilities import log_encoding_capabilities
 from utilities.Logger import Logger
 
@@ -21,6 +22,7 @@ class ApplicationController:
         self.audioStreamer = None
         self.audioHttpFacade = None
         self.icecastStreamer = None
+        self.shoutcastStreamer = None
         self._setupSuccessful = False
         self.startTime = time.time()  # Application start time
 
@@ -104,7 +106,12 @@ class ApplicationController:
                     return None
 
             if ICECAST_ENABLED:
-                self._startIcecastRelay()
+                self.icecastStreamer = self._startRelay(IcecastStreamer)
+                self.audioHttpFacade.set_icecast_streamer(self.icecastStreamer)
+
+            if SHOUTCAST_ENABLED:
+                self.shoutcastStreamer = self._startRelay(ShoutcastStreamer)
+                self.audioHttpFacade.set_shoutcast_streamer(self.shoutcastStreamer)
 
             self._setupSuccessful = True
             Logger.info("Application setup completed successfully")
@@ -141,6 +148,8 @@ class ApplicationController:
         try:
             if self.icecastStreamer:
                 self.icecastStreamer.stop()
+            if self.shoutcastStreamer:
+                self.shoutcastStreamer.stop()
             if self.audioHttpFacade:
                 self.audioHttpFacade.shutdown()
             self.audioStreamer.stopAudioStream()
@@ -158,25 +167,33 @@ class ApplicationController:
 
     # -- PRIVATES --
 
-    def _startIcecastRelay(self):
-        """Start relaying the live audio to the configured Icecast mount point.
+    def _startRelay(self, relay_class):
+        """Start one relay, reporting rather than raising when it cannot run.
 
-        A failure here is logged but does not abort startup: the local stream is
-        the primary service, and losing the Icecast relay should not take the
-        station off the air.
+        A failure is logged but does not abort startup, and one relay failing
+        leaves the other untouched: the local stream is the primary service, and
+        losing a relay should not take the station off the air.
+
+        Args:
+            relay_class: The relay class to instantiate
+
+        Returns:
+            The started relay, or None if it could not be started
         """
         # Reachability is checked first so an unreachable server is reported as
         # such, rather than surfacing as an opaque mount failure.
-        IcecastStreamer.test_connection()
+        relay_class.test_connection()
+
+        # "IcecastStreamer" -> "Icecast", so the log reads the way the manual does
+        label = relay_class.__name__.removesuffix('Streamer')
 
         try:
-            self.icecastStreamer = IcecastStreamer(self.audioStreamer)
-            self.icecastStreamer.start()
+            relay = relay_class(self.audioStreamer)
+            relay.start()
+            return relay
         except RuntimeError as e:
-            Logger.error(f"Icecast relay disabled: {e}")
-            self.icecastStreamer = None
-
-        self.audioHttpFacade.set_icecast_streamer(self.icecastStreamer)
+            Logger.error(f"{label} relay disabled: {e}")
+            return None
 
     def _askForDeviceIndex(self) -> Optional[List[int]]:
         """Prompt user to select audio input device indexes.

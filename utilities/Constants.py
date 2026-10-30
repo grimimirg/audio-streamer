@@ -124,5 +124,47 @@ except ValueError as e:
           "ICECAST_RECONNECT_DELAY, and ICECAST_RECONNECT_MAX_DELAY values.")
     sys.exit(1)
 
-# Station identity, shared by the web interface and the Icecast mount metadata
+# Shoutcast source configuration
+# libshout speaks the ICY source protocol, which is Shoutcast v1; DNAS 2 servers
+# accept it on their legacy source port. Only validated when enabled.
+try:
+    SHOUTCAST_ENABLED = os.getenv('SHOUTCAST_ENABLED', 'False').lower() in ('true', '1', 'yes')
+    SHOUTCAST_HOST = os.getenv('SHOUTCAST_HOST', 'localhost')
+    SHOUTCAST_PORT = int(os.getenv('SHOUTCAST_PORT', '8000'))
+    SHOUTCAST_MOUNT = os.getenv('SHOUTCAST_MOUNT', '/stream')
+    SHOUTCAST_USER = os.getenv('SHOUTCAST_USER', 'source')
+    SHOUTCAST_PASSWORD = os.getenv('SHOUTCAST_PASSWORD', '')
+    SHOUTCAST_BITRATE = int(os.getenv('SHOUTCAST_BITRATE', '128'))
+    SHOUTCAST_RECONNECT_DELAY = float(os.getenv('SHOUTCAST_RECONNECT_DELAY', '2.0'))
+    SHOUTCAST_RECONNECT_MAX_DELAY = float(os.getenv('SHOUTCAST_RECONNECT_MAX_DELAY', '60.0'))
+    SHOUTCAST_TEST_TIMEOUT = float(os.getenv('SHOUTCAST_TEST_TIMEOUT', '5.0'))
+
+    if not SHOUTCAST_MOUNT.startswith('/'):
+        SHOUTCAST_MOUNT = f"/{SHOUTCAST_MOUNT}"
+
+    if SHOUTCAST_ENABLED:
+        if not 0 < SHOUTCAST_PORT < 65536:
+            raise ValueError(f"SHOUTCAST_PORT {SHOUTCAST_PORT} is out of valid range (1-65535)")
+        if not SHOUTCAST_PASSWORD:
+            raise ValueError("SHOUTCAST_PASSWORD is required when SHOUTCAST_ENABLED is true")
+        if SHOUTCAST_BITRATE < 64 or SHOUTCAST_BITRATE > 320:
+            raise ValueError(
+                f"SHOUTCAST_BITRATE {SHOUTCAST_BITRATE} is out of valid range (64-320)"
+            )
+        if SHOUTCAST_RECONNECT_DELAY <= 0:
+            raise ValueError("SHOUTCAST_RECONNECT_DELAY must be greater than zero")
+        if SHOUTCAST_RECONNECT_MAX_DELAY < SHOUTCAST_RECONNECT_DELAY:
+            raise ValueError(
+                "SHOUTCAST_RECONNECT_MAX_DELAY cannot be smaller than SHOUTCAST_RECONNECT_DELAY"
+            )
+        if SHOUTCAST_TEST_TIMEOUT <= 0:
+            raise ValueError("SHOUTCAST_TEST_TIMEOUT must be greater than zero")
+except ValueError as e:
+    print(f"\nERROR: Invalid Shoutcast configuration in .env file: {e}")
+    print("Please check SHOUTCAST_PORT, SHOUTCAST_PASSWORD, SHOUTCAST_BITRATE, "
+          "SHOUTCAST_RECONNECT_DELAY, SHOUTCAST_RECONNECT_MAX_DELAY, and "
+          "SHOUTCAST_TEST_TIMEOUT values.")
+    sys.exit(1)
+
+# Station identity, shared by the web interface and the relay mount metadata
 RADIO_STATION_NAME = os.getenv('RADIO_STATION_NAME', 'My Radio Station')

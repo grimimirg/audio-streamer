@@ -92,6 +92,14 @@ class AudioHttpFacade:
         """
         self.stream_handler.icecast_streamer = icecast_streamer
 
+    def set_shoutcast_streamer(self, shoutcast_streamer):
+        """Register the Shoutcast relay so its state appears in the statistics.
+
+        Args:
+            shoutcast_streamer: The running relay, or None when it is not active
+        """
+        self.stream_handler.shoutcast_streamer = shoutcast_streamer
+
     def shutdown(self):
         """Stop background workers owned by the HTTP layer."""
         self.cpu_monitor.stop()
@@ -245,8 +253,37 @@ class AudioHttpFacade:
             self.track_info['track_year'] = data.get('track_year', '')
             self.track_info['album_cover'] = data.get('album_cover', '')
             Logger.info(f"Track info updated: {self.track_info}")
+            self._publish_relay_metadata()
             # Broadcast updated stats to all WebSocket clients
             self.socketio.emit('stats', self._get_stats_with_track_info())
+
+    def _now_playing(self) -> str:
+        """Build the "now playing" string published to the streaming servers.
+
+        Returns:
+            str: "Artist - Title", or whichever of the two is known
+        """
+        artist = (self.track_info['artist'] or '').strip()
+        title = (self.track_info['track_title'] or '').strip()
+
+        if artist and title:
+            return f"{artist} - {title}"
+        return title or artist
+
+    def _publish_relay_metadata(self):
+        """Push the current track to every active relay.
+
+        Metadata is cosmetic, so a relay that rejects the update is logged by the
+        relay itself and otherwise ignored.
+        """
+        now_playing = self._now_playing()
+        if not now_playing:
+            return
+
+        for relay in (self.stream_handler.icecast_streamer,
+                      self.stream_handler.shoutcast_streamer):
+            if relay is not None:
+                relay.update_metadata(now_playing)
 
     def _get_stats_with_track_info(self):
         """Get audio stats combined with track info."""

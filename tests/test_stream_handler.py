@@ -166,6 +166,34 @@ def test_stats_report_a_relay_that_lost_its_connection(handler):
     assert stats['icecast_connected'] is False
 
 
+def test_stats_report_both_relays_as_disabled_when_none_are_running(handler):
+    stats = handler.stats()
+
+    assert stats['icecast_enabled'] is False
+    assert stats['shoutcast_enabled'] is False
+
+
+def test_stats_report_the_two_relays_independently(handler):
+    handler.icecast_streamer = FakeRelay(connected=True)
+    handler.shoutcast_streamer = FakeRelay(connected=False)
+
+    stats = handler.stats()
+
+    assert stats['icecast_connected'] is True
+    assert stats['shoutcast_connected'] is False
+    # Each relay keeps its own mount and bitrate, they must not be conflated
+    assert stats['icecast_mount'] == stats['shoutcast_mount'] == '/stream'
+
+
+def test_a_shoutcast_relay_alone_leaves_icecast_disabled(handler):
+    handler.shoutcast_streamer = FakeRelay()
+
+    stats = handler.stats()
+
+    assert stats['shoutcast_enabled'] is True
+    assert stats['icecast_enabled'] is False
+
+
 def test_icecast_status_does_not_displace_the_streamer_stats(handler):
     handler.icecast_streamer = FakeRelay()
 
