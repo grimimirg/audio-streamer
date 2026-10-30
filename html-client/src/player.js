@@ -7,6 +7,8 @@ const MAX_RECONNECT_ATTEMPTS = 3;
 let currentStatusKey = 'status.ready';
 let trackHistory = [];
 let historyVisible = false;
+let currentQuality = 'original';
+const QUALITY_STORAGE_KEY = 'audioStreamerBitrate';
 
 function updateStatus(messageKey, type = 'loading') {
     currentStatusKey = messageKey;
@@ -39,7 +41,7 @@ function startStreaming() {
     audio.addEventListener('error', onError);
     audio.addEventListener('stalled', onStalled);
 
-    audio.src = '/stream';
+    audio.src = getStreamUrl();
 
     // Load the audio before playing (Firefox compatibility)
     audio.load();
@@ -121,6 +123,59 @@ function onPlayError(error) {
 function changeVolume(value) {
     audio.volume = value / 100;
     document.getElementById('volumeValue').textContent = value;
+}
+
+/**
+ * Build the stream URL for the selected quality.
+ * 'original' streams unencoded WAV; any other value is a bitrate endpoint.
+ */
+function getStreamUrl() {
+    return currentQuality === 'original' ? '/stream' : `/stream/${currentQuality}`;
+}
+
+/**
+ * Switch stream quality, reconnecting if playback is in progress.
+ */
+function changeQuality(value) {
+    if (value === currentQuality) return;
+
+    currentQuality = value;
+    saveQuality(value);
+
+    if (!isPlaying) return;
+
+    // A deliberate switch is not a failure, so it must not spend the retry budget
+    reconnectAttempts = 0;
+    stopStreaming();
+    startStreaming();
+}
+
+function saveQuality(value) {
+    try {
+        localStorage.setItem(QUALITY_STORAGE_KEY, value);
+    } catch (e) {
+        console.warn('Could not persist quality preference:', e);
+    }
+}
+
+/**
+ * Restore the saved quality, falling back to original if the server no longer
+ * offers that bitrate.
+ */
+function restoreQuality() {
+    const select = document.getElementById('qualitySelect');
+    if (!select) return;
+
+    let saved = null;
+    try {
+        saved = localStorage.getItem(QUALITY_STORAGE_KEY);
+    } catch (e) {
+        console.warn('Could not read quality preference:', e);
+    }
+
+    const available = Array.from(select.options).map(option => option.value);
+    currentQuality = saved && available.includes(saved) ? saved : 'original';
+    select.value = currentQuality;
 }
 
 // History management functions
@@ -261,6 +316,8 @@ function updateStaticTexts() {
 document.addEventListener('DOMContentLoaded', async () => {
     await i18n.loadTranslations(i18n.getCurrentLang());
     updateStaticTexts();
+
+    restoreQuality();
 
     playBtn.textContent = i18n.t('controls.play');
     updateStatus('status.ready', 'loading');

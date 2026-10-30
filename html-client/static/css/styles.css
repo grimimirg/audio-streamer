@@ -263,6 +263,38 @@ body.light input[type="number"]:focus {
     font-size: 1.2em;
 }
 
+.quality-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--accent-color);
+    padding: 15px 25px;
+    border-radius: 50px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.quality-icon {
+    font-size: 1.2em;
+}
+
+.quality-select {
+    background: transparent;
+    color: inherit;
+    border: none;
+    font-size: 1em;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+}
+
+.quality-select option {
+    /* Native dropdown lists are painted by the OS, so they need opaque colours */
+    background: #2a2a3a;
+    color: #ffffff;
+}
+
 .volume-slider {
     -webkit-appearance: none;
     width: 150px;
