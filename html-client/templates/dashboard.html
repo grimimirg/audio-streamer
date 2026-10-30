@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "components/icons.html" as icons %}
 {% import "components/top_controls.html" as top_controls %}
 {% import "components/dashboard_cards.html" as dashboard_cards %}
 {% import "components/audio_info.html" as audio_info %}
@@ -22,63 +23,63 @@
     </header>
 
     <div class="chart-container">
-        <div class="chart-title">🎵 <span data-i18n="dashboard.now_playing"></span></div>
+        <div class="chart-title">{{ icons.icon('music') }} <span data-i18n="dashboard.now_playing"></span></div>
         <div class="now-playing-flex">
-            <div style="width: 250px; flex-shrink: 0;">
-                <div style="margin-bottom: 15px;">
+            <div class="track-form-side">
+                <div class="field-row">
                     <div class="info-label"><span data-i18n="dashboard.album_cover"></span></div>
                     <input type="url" id="albumCover" placeholder=""
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
+                           class="field-input">
                 </div>
-                <div style="margin-bottom: 15px;">
+                <div class="field-row">
                     <div class="info-label"><span data-i18n="dashboard.album_cover_upload"></span>
                     </div>
                     <input type="file" id="albumCoverFile" accept="image/*"
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
+                           class="field-input">
                 </div>
                 <div id="dashboardCoverPreview" style="display: none;">
-                    <div class="info-label" style="margin-bottom: 5px;"></div>
-                    <div style="width: 150px; height: 150px; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,0.1);">
+                    <div class="info-label label-tight"></div>
+                    <div class="cover-preview">
                         <img id="dashboardCoverImg" src="" alt="Cover Preview"
-                             style="width: 100%; height: 100%; object-fit: cover;">
+                             class="cover-img">
                     </div>
                 </div>
             </div>
-            <div style="flex: 1; min-width: 0;">
-                <div style="margin-bottom: 15px;">
+            <div class="track-form-main">
+                <div class="field-row">
                     <div class="info-label"><span data-i18n="dashboard.artist"></span></div>
                     <input type="text" id="artistName" placeholder=""
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
+                           class="field-input">
                 </div>
-                <div style="margin-bottom: 15px;">
+                <div class="field-row">
                     <div class="info-label"><span data-i18n="dashboard.track_title"></span></div>
                     <input type="text" id="trackTitle" placeholder=""
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
+                           class="field-input">
                 </div>
-                <div style="margin-bottom: 15px;">
+                <div class="field-row">
                     <div class="info-label"><span data-i18n="dashboard.album_name"></span></div>
                     <input type="text" id="albumName" placeholder=""
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
+                           class="field-input">
                 </div>
-                <div style="margin-bottom: 15px;">
+                <div class="field-row">
                     <div class="info-label"><span data-i18n="dashboard.track_year"></span></div>
                     <input type="number" id="trackYear" placeholder=""
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
+                           class="field-input">
                 </div>
             </div>
-            <div style="width: 300px; flex-shrink: 0;">
-                <div class="info-label" style="margin-bottom: 10px;"><span
+            <div class="track-form-aside">
+                <div class="info-label label-spaced"><span
                         data-i18n="dashboard.history"></span></div>
                 <div id="historyStack" class="history-stack">
                     <div class="history-empty" data-i18n="dashboard.history_empty"></div>
                 </div>
             </div>
         </div>
-        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 15px;">
-            <div id="confirmationMessage" style="display: none; color: #4ade80; font-weight: 600;">
-                ✓ <span data-i18n="dashboard.track_info_sent"></span>
+        <div class="form-footer">
+            <div id="confirmationMessage" class="status-note" style="display: none;">
+                {{ icons.icon('check') }} <span data-i18n="dashboard.track_info_sent"></span>
             </div>
-            <button class="btn" onclick="updateTrackInfo()">📤 <span
+            <button class="btn" onclick="updateTrackInfo()">{{ icons.icon('upload') }} <span
                     data-i18n="dashboard.send_to_player"></span></button>
         </div>
     </div>

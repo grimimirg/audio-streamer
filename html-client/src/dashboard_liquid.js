@@ -114,21 +114,6 @@ function formatUptime(seconds) {
     }
 }
 
-function toggleTheme() {
-    const body = document.body;
-    const themeIcon = document.getElementById('themeIcon');
-
-    if (body.classList.contains('light')) {
-        body.classList.remove('light');
-        themeIcon.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-    } else {
-        body.classList.add('light');
-        themeIcon.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-    }
-}
-
 function changeLanguage(lang) {
     i18n.loadTranslations(lang).then(() => {
         localStorage.setItem('language', lang);
@@ -189,14 +174,14 @@ async function uploadTracks() {
 
     if (files.length === 0) {
         const statusDiv = document.getElementById('uploadStatus');
-        statusDiv.textContent = 'Please select files';
-        statusDiv.style.color = '#facc15'; // Yellow warning color
+        setStatus(statusDiv, 'warning', 'Please select files');
+        statusDiv.classList.add('status-note-warn');
         return;
     }
 
     const statusDiv = document.getElementById('uploadStatus');
-    statusDiv.textContent = `Uploading ${files.length} file(s)...`;
-    statusDiv.style.color = '#4ade80'; // Green for success
+    setStatus(statusDiv, 'upload', `Uploading ${files.length} file(s)...`);
+    statusDiv.classList.remove('status-note-warn');
 
     for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
@@ -266,15 +251,15 @@ function renderPlaylist(currentIndex) {
         
         return `
                 <div class="history-card ${currentClass}">
-                    <div class="history-card-cover-placeholder">🎵</div>
+                    <div class="history-card-cover-placeholder">${icon('music', 'icon-lg')}</div>
                     <div class="history-card-info">
                         <div class="history-card-title">${displayTitle}</div>
                         <div class="history-card-artist">${displayArtist}</div>
                         ${displayAlbum ? `<div class="history-card-album">${displayAlbum}${displayYear ? ` (${displayYear})` : ''}</div>` : ''}
-                        ${isCurrent ? '<div class="history-card-album">▶️ Currently Playing</div>' : ''}
+                        ${isCurrent ? `<div class="history-card-album">${icon('play')} Currently Playing</div>` : ''}
                     </div>
-                    <button onclick="removeTrack(${index})" style="background: rgba(255,0,0,0.3); border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; float: right;">✕</button>
-                    <div style="clear: both;"></div>
+                    <button onclick="removeTrack(${index})" class="track-remove-btn" title="Remove">${icon('close')}</button>
+                    <div class="row-clear"></div>
                 </div>
             `;
     }).join('');
@@ -326,12 +311,12 @@ function renderPlaybackStack() {
 
     container.innerHTML = playbackStack.map(track => `
             <div class="history-card">
-                <div class="history-card-cover-placeholder">🎵</div>
+                <div class="history-card-cover-placeholder">${icon('music', 'icon-lg')}</div>
                 <div class="history-card-info">
                     <div class="history-card-title">${track.filename}</div>
                     <div class="history-card-artist">Played</div>
                 </div>
-                <div style="clear: both;"></div>
+                <div class="row-clear"></div>
             </div>
         `).join('');
 }
@@ -339,7 +324,7 @@ function renderPlaybackStack() {
 // Playback controls
 async function startPlayback() {
     if (playlist.length === 0) {
-        document.getElementById('playbackStatus').textContent = '⚠️ ' + i18n.t('dashboard.playlist_empty_warning');
+        setStatus(document.getElementById('playbackStatus'), 'warning', i18n.t('dashboard.playlist_empty_warning'));
         setTimeout(() => {
             document.getElementById('playbackStatus').textContent = '';
         }, 2000);
@@ -348,7 +333,7 @@ async function startPlayback() {
     try {
         const response = await fetch('/liquid/play', {method: 'POST'});
         if (response.ok) {
-            document.getElementById('playbackStatus').textContent = '▶️ Playing';
+            setStatus(document.getElementById('playbackStatus'), 'play', 'Playing');
             setTimeout(() => {
                 document.getElementById('playbackStatus').textContent = '';
             }, 2000);
@@ -365,7 +350,7 @@ async function stopPlayback() {
     try {
         const response = await fetch('/liquid/stop', {method: 'POST'});
         if (response.ok) {
-            document.getElementById('playbackStatus').textContent = '⏹️ Stopped';
+            setStatus(document.getElementById('playbackStatus'), 'stop', 'Stopped');
             setTimeout(() => {
                 document.getElementById('playbackStatus').textContent = '';
             }, 2000);
@@ -382,7 +367,7 @@ async function pausePlayback() {
     try {
         const response = await fetch('/liquid/pause', {method: 'POST'});
         if (response.ok) {
-            document.getElementById('playbackStatus').textContent = '⏸️ Paused';
+            setStatus(document.getElementById('playbackStatus'), 'pause', 'Paused');
             setTimeout(() => {
                 document.getElementById('playbackStatus').textContent = '';
             }, 2000);
@@ -399,7 +384,7 @@ async function resumePlayback() {
     try {
         const response = await fetch('/liquid/resume', {method: 'POST'});
         if (response.ok) {
-            document.getElementById('playbackStatus').textContent = '▶️ Resumed';
+            setStatus(document.getElementById('playbackStatus'), 'play', 'Resumed');
             setTimeout(() => {
                 document.getElementById('playbackStatus').textContent = '';
             }, 2000);
@@ -484,12 +469,12 @@ function renderDirectories(directories, currentPath) {
 
     // Update breadcrumb
     if (currentPath) {
-        breadcrumb.innerHTML = `<span style="cursor: pointer; color: #4ade80;" onclick="loadDirectories('')">Root</span>`;
+        breadcrumb.innerHTML = `<span class="crumb" onclick="loadDirectories('')">Root</span>`;
         const parts = currentPath.split('/').filter(p => p);
         let buildPath = '';
         parts.forEach((part, index) => {
             buildPath += '/' + part;
-            breadcrumb.innerHTML += ` / <span style="cursor: pointer; color: #4ade80;" onclick="loadDirectories('${buildPath}')">${part}</span>`;
+            breadcrumb.innerHTML += ` / <span class="crumb" onclick="loadDirectories('${buildPath}')">${part}</span>`;
         });
     } else {
         breadcrumb.innerHTML = 'Root';
@@ -497,18 +482,15 @@ function renderDirectories(directories, currentPath) {
 
     // Render directory list
     if (directories.length === 0) {
-        folderList.innerHTML = '<div style="color: #9ca3af; text-align: center; padding: 20px;">No directories found</div>';
+        folderList.innerHTML = '<div class="list-empty">No directories found</div>';
         return;
     }
 
     folderList.innerHTML = directories.map(dir => `
-            <div class="folder-item" style="padding: 12px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 10px; transition: background 0.2s;"
-                 onclick="navigateToDirectory('${dir.path}')"
-                 onmouseover="this.style.background='rgba(255,255,255,0.1)'"
-                 onmouseout="this.style.background='transparent'">
-                <span style="font-size: 1.2rem;">📁</span>
-                <span style="color: white; flex: 1;">${dir.name}</span>
-                ${dir.is_root ? '<span style="color: #9ca3af; font-size: 0.8rem;">Root</span>' : ''}
+            <div class="folder-item" onclick="navigateToDirectory('${dir.path}')">
+                ${icon('folder', 'icon-lg icon-accent')}
+                <span class="folder-item-name">${dir.name}</span>
+                ${dir.is_root ? '<span class="folder-item-tag">Root</span>' : ''}
             </div>
         `).join('');
 }
@@ -541,13 +523,13 @@ function updateScanningState(isScanning) {
         pathInput.disabled = true;
         loadBtn.disabled = true;
         stopBtn.style.display = 'inline-block';
-        status.textContent = '🔍 Scanning directory...';
+        setStatus(status, 'search', 'Scanning directory...');
     } else {
         pathInput.disabled = false;
         loadBtn.disabled = false;
         stopBtn.style.display = 'none';
         if (status.textContent.includes('Scanning')) {
-            status.textContent = '✅ Scan complete';
+            setStatus(status, 'check', 'Scan complete');
         }
     }
 }
@@ -557,7 +539,7 @@ async function stopScan() {
     try {
         const response = await fetch('/liquid/stop_scan', {method: 'POST'});
         if (response.ok) {
-            document.getElementById('localPathStatus').textContent = '🛑 Scan stopped';
+            setStatus(document.getElementById('localPathStatus'), 'stop', 'Scan stopped');
         }
     } catch (error) {
         console.error('Error stopping scan:', error);
@@ -571,8 +553,8 @@ async function setLocalPath() {
     const status = document.getElementById('localPathStatus');
 
     if (!path) {
-        status.textContent = 'Please enter a path';
-        status.style.color = '#facc15'; // Yellow warning color
+        setStatus(status, 'warning', 'Please enter a path');
+        status.classList.add('status-note-warn');
         return;
     }
 
@@ -584,21 +566,21 @@ async function setLocalPath() {
         });
 
         if (response.ok) {
-            status.textContent = `🔍 Scanning: ${path}`;
-            status.style.color = '#4ade80'; // Green for success
+            setStatus(status, 'search', `Scanning: ${path}`);
+            status.classList.remove('status-note-warn');
             // Clear playlist to prepare for new scanned files
             playlist = [];
             renderPlaylist(0);
             updatePlaylistCount();
         } else {
             const error = await response.json();
-            status.textContent = `Error: ${error.error}`;
-            status.style.color = '#facc15'; // Yellow for error
+            setStatus(status, 'warning', `Error: ${error.error}`);
+            status.classList.add('status-note-warn');
         }
     } catch (error) {
         console.error('Error setting local path:', error);
-        status.textContent = 'Error setting path';
-        status.style.color = '#facc15'; // Yellow for error
+        setStatus(status, 'warning', 'Error setting path');
+        status.classList.add('status-note-warn');
     }
 }
 

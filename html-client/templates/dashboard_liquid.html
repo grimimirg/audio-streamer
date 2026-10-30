@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "components/icons.html" as icons %}
 {% import "components/top_controls.html" as top_controls %}
 {% import "components/dashboard_cards.html" as dashboard_cards %}
 {% import "components/audio_info.html" as audio_info %}
@@ -25,27 +26,27 @@
     <div class="liquid-controls-row">
         <!-- Scheduler Section -->
         <div class="chart-container liquid-controls-container">
-            <div class="chart-title">📋 <span data-i18n="dashboard.scheduler"></span></div>
+            <div class="chart-title">{{ icons.icon('clipboard') }} <span data-i18n="dashboard.scheduler"></span></div>
 
             <div class="liquid-controls-content">
                 <!-- Upload Section -->
-                <div style="margin-bottom: 20px;">
+                <div class="field-row-wide">
                     <div class="info-label"><span data-i18n="dashboard.upload_tracks"></span></div>
                     <input type="file" id="trackUpload" accept=".mp3,.wav,.flac,.ogg,.m4a" multiple
-                           style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
-                    <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
-                        <button class="btn" onclick="uploadTracks()">📤 <span
+                           class="field-input">
+                    <div class="field-actions">
+                        <button class="btn" onclick="uploadTracks()">{{ icons.icon('upload') }} <span
                                 data-i18n="dashboard.upload"></span></button>
-                        <div id="uploadStatus" style="color: #4ade80; font-weight: 600; margin-left: auto;"></div>
+                        <div id="uploadStatus" class="status-note"></div>
                     </div>
                 </div>
 
                 <!-- Playlist Display -->
-                <div style="margin-bottom: 20px;">
+                <div class="field-row-wide">
                     <div class="info-label"><span data-i18n="dashboard.playlist"></span> (<span id="playlistCount">0</span>
                         tracks)
                     </div>
-                    <div id="playlistContainer" class="history-stack" style="max-height: 300px; overflow-y: auto;">
+                    <div id="playlistContainer" class="history-stack scroll-stack">
                         <div class="history-empty" data-i18n="dashboard.playlist_empty"></div>
                     </div>
                 </div>
@@ -53,60 +54,60 @@
 
             <!-- Playback Controls -->
             <div class="liquid-controls-footer">
-                <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
-                    <button class="btn" onclick="skipBackward()" title="Skip Backward">⏮️</button>
-                    <button class="btn" onclick="stopPlayback()" title="Stop">⏹️</button>
-                    <button class="btn" onclick="pausePlayback()" title="Pause">⏸️</button>
-                    <button class="btn" onclick="resumePlayback()" title="Resume">▶️</button>
-                    <button class="btn" onclick="startPlayback()" title="Play">▶️ Play</button>
-                    <button class="btn" onclick="skipForward()" title="Skip Forward">⏭️</button>
+                <div class="playback-row">
+                    <button class="btn" onclick="skipBackward()" title="Skip Backward">{{ icons.icon('prev') }}</button>
+                    <button class="btn btn-danger" onclick="stopPlayback()" title="Stop">{{ icons.icon('stop') }}</button>
+                    <button class="btn" onclick="pausePlayback()" title="Pause">{{ icons.icon('pause') }}</button>
+                    <button class="btn" onclick="resumePlayback()" title="Resume">{{ icons.icon('play') }}</button>
+                    <button class="btn" onclick="startPlayback()" title="Play">{{ icons.icon('play') }} Play</button>
+                    <button class="btn" onclick="skipForward()" title="Skip Forward">{{ icons.icon('next') }}</button>
                 </div>
-                <div id="playbackStatus" style="text-align: center; margin-top: 10px; color: #4ade80; font-weight: 600;"></div>
+                <div id="playbackStatus" class="status-note-centered"></div>
             </div>
         </div>
 
         <!-- Local Path Section -->
         <div class="chart-container liquid-controls-container">
-            <div class="chart-title">📁 <span data-i18n="dashboard.local_music"></span></div>
+            <div class="chart-title">{{ icons.icon('folder') }} <span data-i18n="dashboard.local_music"></span></div>
 
             <div class="liquid-controls-content">
-                <div style="margin-bottom: 20px;">
+                <div class="field-row-wide">
                     <div class="info-label"><span data-i18n="dashboard.local_path"></span></div>
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <div class="field-actions-inline">
                         <input type="text" id="localPathInput" placeholder="/path/to/music/directory"
-                               style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); font-size: 1rem;">
-                        <button class="btn" onclick="openFolderSelector()" title="Browse folders">📁</button>
+                               class="field-input">
+                        <button class="btn" onclick="openFolderSelector()" title="Browse folders">{{ icons.icon('folder') }}</button>
                     </div>
-                    <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
-                        <button class="btn" id="loadLocalBtn" onclick="setLocalPath()">📂 <span
+                    <div class="field-actions">
+                        <button class="btn" id="loadLocalBtn" onclick="setLocalPath()">{{ icons.icon('folder-open') }} <span
                                 data-i18n="dashboard.load_local"></span></button>
-                        <button class="btn" id="stopScanBtn" onclick="stopScan()" style="display: none; background: rgba(239, 68, 68, 0.3);">🛑 Stop Scan</button>
-                        <div id="localPathStatus" style="color: #4ade80; font-weight: 600; margin-left: auto;"></div>
+                        <button class="btn btn-danger" id="stopScanBtn" onclick="stopScan()" style="display: none;">{{ icons.icon('stop') }} Stop Scan</button>
+                        <div id="localPathStatus" class="status-note"></div>
                     </div>
                 </div>
 
                 <!-- Folder Selector Modal -->
-                <div id="folderSelectorModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-                    <div style="background: rgba(30, 30, 40, 0.95); padding: 30px; border-radius: 12px; width: 600px; max-height: 80vh; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h2 style="margin: 0; color: white;">📁 Select Folder</h2>
-                            <button onclick="closeFolderSelector()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+                <div id="folderSelectorModal" class="modal-backdrop" style="display: none;">
+                    <div class="modal-panel">
+                        <div class="modal-header">
+                            <h2 class="modal-title">{{ icons.icon('folder') }} Select Folder</h2>
+                            <button onclick="closeFolderSelector()" class="modal-close-btn" title="Close">{{ icons.icon('close') }}</button>
                         </div>
-                        <div id="folderBreadcrumb" style="margin-bottom: 15px; color: #9ca3af; font-size: 0.9rem;"></div>
-                        <div id="folderList" style="min-height: 300px; max-height: 400px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px; background: rgba(0,0,0,0.3);"></div>
-                        <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                            <button class="btn" onclick="closeFolderSelector()" style="background: rgba(255,255,255,0.1);">Cancel</button>
-                            <button class="btn" onclick="selectFolder()" style="background: rgba(74, 222, 128, 0.3);">Select</button>
+                        <div id="folderBreadcrumb" class="modal-breadcrumb"></div>
+                        <div id="folderList" class="modal-list"></div>
+                        <div class="modal-footer">
+                            <button class="btn" onclick="closeFolderSelector()">Cancel</button>
+                            <button class="btn" onclick="selectFolder()">{{ icons.icon('check') }} Select</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Playlist Display -->
-                <div style="margin-bottom: 20px;">
+                <div class="field-row-wide">
                     <div class="info-label"><span data-i18n="dashboard.playlist"></span> (<span id="playlistCountLocal">0</span>
                         tracks)
                     </div>
-                    <div id="playlistContainerLocal" class="history-stack" style="max-height: 300px; overflow-y: auto;">
+                    <div id="playlistContainerLocal" class="history-stack scroll-stack">
                         <div class="history-empty" data-i18n="dashboard.playlist_empty"></div>
                     </div>
                 </div>
@@ -114,13 +115,13 @@
 
             <!-- Local Path Playback Controls -->
             <div class="liquid-controls-footer">
-                <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
-                    <button class="btn" onclick="skipBackward()" title="Skip Backward">⏮️</button>
-                    <button class="btn" onclick="stopPlayback()" title="Stop">⏹️</button>
-                    <button class="btn" onclick="pausePlayback()" title="Pause">⏸️</button>
-                    <button class="btn" onclick="resumePlayback()" title="Resume">▶️</button>
-                    <button class="btn" onclick="startPlayback()" title="Play">▶️ Play</button>
-                    <button class="btn" onclick="skipForward()" title="Skip Forward">⏭️</button>
+                <div class="playback-row">
+                    <button class="btn" onclick="skipBackward()" title="Skip Backward">{{ icons.icon('prev') }}</button>
+                    <button class="btn btn-danger" onclick="stopPlayback()" title="Stop">{{ icons.icon('stop') }}</button>
+                    <button class="btn" onclick="pausePlayback()" title="Pause">{{ icons.icon('pause') }}</button>
+                    <button class="btn" onclick="resumePlayback()" title="Resume">{{ icons.icon('play') }}</button>
+                    <button class="btn" onclick="startPlayback()" title="Play">{{ icons.icon('play') }} Play</button>
+                    <button class="btn" onclick="skipForward()" title="Skip Forward">{{ icons.icon('next') }}</button>
                 </div>
             </div>
         </div>
@@ -128,8 +129,8 @@
 
     <!-- Playback Stack Section -->
     <div class="chart-container">
-        <div class="chart-title">📚 <span data-i18n="dashboard.playback_stack"></span></div>
-        <div id="playbackStackContainer" class="history-stack" style="max-height: 300px; overflow-y: auto;">
+        <div class="chart-title">{{ icons.icon('stack') }} <span data-i18n="dashboard.playback_stack"></span></div>
+        <div id="playbackStackContainer" class="history-stack scroll-stack">
             <div class="history-empty" data-i18n="dashboard.stack_empty"></div>
         </div>
     </div>
@@ -142,42 +143,4 @@
 
 {% block extra_scripts %}
 <script src="/js/dashboard_liquid.js"></script>
-
-<style>
-    .current-track {
-        background: rgba(74, 222, 128, 0.2) !important;
-        border-left: 3px solid #4ade80;
-    }
-
-    .liquid-controls-row {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-
-    .liquid-controls-row .chart-container {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .liquid-controls-container {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .liquid-controls-content {
-        flex: 1;
-    }
-
-    .liquid-controls-footer {
-        margin-top: auto;
-        padding-top: 20px;
-    }
-
-    @media (max-width: 768px) {
-        .liquid-controls-row {
-            flex-direction: column;
-        }
-    }
-</style>
 {% endblock %}

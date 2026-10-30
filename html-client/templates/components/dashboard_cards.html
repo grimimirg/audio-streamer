@@ -1,8 +1,9 @@
+{% import "components/icons.html" as icons %}
 {% macro dashboard_cards(show_peak=false, show_audio_format=true) %}
 <div class="dashboard-grid">
     <div class="card">
         <div class="card-title">
-            <span>👥</span> <span data-i18n="dashboard.listeners"></span>
+            {{ icons.icon('users') }} <span data-i18n="dashboard.listeners"></span>
         </div>
         <div class="metric-value" id="listenersCount">0</div>
         <div class="metric-label">
@@ -15,7 +16,7 @@
 
     <div class="card">
         <div class="card-title">
-            <span>🎧</span> <span data-i18n="dashboard.audio_quality"></span>
+            {{ icons.icon('headphones') }} <span data-i18n="dashboard.audio_quality"></span>
         </div>
         <div class="metric-value" id="sampleRate">44.1k</div>
         <div class="metric-label"><span data-i18n="dashboard.sample_rate"></span></div>
@@ -23,7 +24,7 @@
 
     <div class="card">
         <div class="card-title">
-            <span>🔊</span> <span data-i18n="dashboard.channels"></span>
+            {{ icons.icon('volume') }} <span data-i18n="dashboard.channels"></span>
         </div>
         <div class="metric-value" id="channels">2</div>
         <div class="metric-label"><span data-i18n="dashboard.stereo_mono"></span></div>
@@ -31,7 +32,7 @@
 
     <div class="card">
         <div class="card-title">
-            <span>⏱️</span> <span data-i18n="dashboard.uptime"></span>
+            {{ icons.icon('clock') }} <span data-i18n="dashboard.uptime"></span>
         </div>
         <div class="metric-value" id="uptime">00:00</div>
         <div class="metric-label"><span data-i18n="dashboard.on_air"></span></div>
@@ -39,7 +40,7 @@
 
     <div class="card">
         <div class="card-title">
-            <span>⚡</span> <span data-i18n="dashboard.cpu_usage"></span>
+            {{ icons.icon('bolt') }} <span data-i18n="dashboard.cpu_usage"></span>
         </div>
         <div class="metric-value" id="cpuPercent">--</div>
         <div class="metric-label">
@@ -50,7 +51,7 @@
     <!-- The protocols chosen at startup; changing them requires a restart -->
     <div class="card">
         <div class="card-title">
-            <span>🔀</span> <span data-i18n="dashboard.protocol_status"></span>
+            {{ icons.icon('shuffle') }} <span data-i18n="dashboard.protocol_status"></span>
         </div>
         <div class="metric-value" id="protocolMode">--</div>
         <div class="metric-label">
@@ -61,7 +62,7 @@
     <!-- Revealed by the dashboard script only when the Icecast relay is enabled -->
     <div class="card" id="icecastCard" style="display: none;">
         <div class="card-title">
-            <span>📡</span> <span data-i18n="dashboard.icecast_status"></span>
+            {{ icons.icon('signal') }} <span data-i18n="dashboard.icecast_status"></span>
         </div>
         <div class="metric-value" id="icecastState">--</div>
         <div class="metric-label">
@@ -72,7 +73,7 @@
     <!-- Revealed by the dashboard script only when the Shoutcast relay is enabled -->
     <div class="card" id="shoutcastCard" style="display: none;">
         <div class="card-title">
-            <span>📻</span> <span data-i18n="dashboard.shoutcast_status"></span>
+            {{ icons.icon('radio') }} <span data-i18n="dashboard.shoutcast_status"></span>
         </div>
         <div class="metric-value" id="shoutcastState">--</div>
         <div class="metric-label">

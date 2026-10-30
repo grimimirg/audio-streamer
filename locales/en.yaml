@@ -4,19 +4,19 @@ language:
   de: "🇩🇪"
 
 controls:
-  play: "▶️"
-  pause: "⏸️"
+  play: "Play"
+  pause: "Pause"
   connecting: "Connecting..."
 
 status:
-  ready: "🔄 Ready to connect"
-  connecting: "🔄 Connecting to stream..."
-  buffering: "🔄 Buffering..."
-  streaming: "🎵 Streaming"
-  connection_failed: "🔄 Connection failed, retrying..."
-  error: "❌ Connection failed. Check if server is running."
-  server_stopped: "⚠️ Server stopped streaming"
-  connection_lost: "⚠️ Connection to server lost"
+  ready: "Ready to connect"
+  connecting: "Connecting to stream..."
+  buffering: "Buffering..."
+  streaming: "Streaming"
+  connection_failed: "Connection failed, retrying..."
+  error: "Connection failed. Check if server is running."
+  server_stopped: "Server stopped streaming"
+  connection_lost: "Connection to server lost"
 
 dashboard:
   listeners: "Listeners"
@@ -54,8 +54,8 @@ dashboard:
   pause_auto: "Pause Auto"
   resume_auto: "Resume Auto"
   open_player: "Open Player"
-  active: "🟢 Active"
-  inactive: "🔴 Inactive"
+  active: "Active"
+  inactive: "Inactive"
   too_many_errors: "Too many failed connections. Auto-refresh disabled."
   connection_error: "Connection error"
   stats_error: "Error retrieving statistics"
