@@ -165,12 +165,18 @@ class ApplicationController:
         the primary service, and losing the Icecast relay should not take the
         station off the air.
         """
+        # Reachability is checked first so an unreachable server is reported as
+        # such, rather than surfacing as an opaque mount failure.
+        IcecastStreamer.test_connection()
+
         try:
             self.icecastStreamer = IcecastStreamer(self.audioStreamer)
             self.icecastStreamer.start()
         except RuntimeError as e:
             Logger.error(f"Icecast relay disabled: {e}")
             self.icecastStreamer = None
+
+        self.audioHttpFacade.set_icecast_streamer(self.icecastStreamer)
 
     def _askForDeviceIndex(self) -> Optional[List[int]]:
         """Prompt user to select audio input device indexes.

@@ -12,17 +12,20 @@ from utilities.Logger import Logger
 class StreamHandler:
     """Handles audio streaming and basic routes."""
 
-    def __init__(self, audio_streamer, radio_station_name: str, encoder_pool=None):
+    def __init__(self, audio_streamer, radio_station_name: str, encoder_pool=None,
+                 icecast_streamer=None):
         """Initialize the stream handler.
 
         Args:
             audio_streamer: Instance of the audio streamer
             radio_station_name: Name of the radio station
             encoder_pool: Shared bitrate encoder pool, injectable for testing
+            icecast_streamer: The Icecast relay, set once it has started
         """
         self.audio_streamer = audio_streamer
         self.radio_station_name = radio_station_name
         self.encoder_pool = encoder_pool or BitrateEncoderPool(audio_streamer, self._build_ffmpeg_command)
+        self.icecast_streamer = icecast_streamer
 
     def player(self):
         """Serve the main web player interface.
@@ -113,7 +116,9 @@ class StreamHandler:
         Returns:
             dict: Current streaming statistics as JSON
         """
-        return self.audio_streamer.getStats()
+        stats = self.audio_streamer.getStats()
+        stats.update(self._icecast_stats())
+        return stats
 
     def dashboard(self):
         """Serve the dashboard interface.
@@ -157,6 +162,23 @@ class StreamHandler:
             bytes: WAV header bytes
         """
         return build_wav_header(RATE, CHANNELS)
+
+    def _icecast_stats(self) -> dict:
+        """Describe the Icecast relay for the dashboard.
+
+        Returns:
+            dict: Relay state, reporting it as disabled when no relay is running
+        """
+        if self.icecast_streamer is None:
+            return {'icecast_enabled': False, 'icecast_connected': False}
+
+        relay = self.icecast_streamer.getStats()
+        return {
+            'icecast_enabled': relay['enabled'],
+            'icecast_connected': relay['connected'],
+            'icecast_mount': relay['mount'],
+            'icecast_bitrate': relay['bitrate'],
+        }
 
     def _build_ffmpeg_command(self, bitrate: int):
         """Build ffmpeg command for MP3 encoding.

@@ -94,6 +94,7 @@ try:
     ICECAST_PROTOCOL = os.getenv('ICECAST_PROTOCOL', 'http').strip().lower()
     ICECAST_RECONNECT_DELAY = float(os.getenv('ICECAST_RECONNECT_DELAY', '2.0'))
     ICECAST_RECONNECT_MAX_DELAY = float(os.getenv('ICECAST_RECONNECT_MAX_DELAY', '60.0'))
+    ICECAST_TEST_TIMEOUT = float(os.getenv('ICECAST_TEST_TIMEOUT', '5.0'))
 
     if not ICECAST_MOUNT.startswith('/'):
         ICECAST_MOUNT = f"/{ICECAST_MOUNT}"
@@ -115,6 +116,8 @@ try:
             raise ValueError(
                 "ICECAST_RECONNECT_MAX_DELAY cannot be smaller than ICECAST_RECONNECT_DELAY"
             )
+        if ICECAST_TEST_TIMEOUT <= 0:
+            raise ValueError("ICECAST_TEST_TIMEOUT must be greater than zero")
 except ValueError as e:
     print(f"\nERROR: Invalid Icecast configuration in .env file: {e}")
     print("Please check ICECAST_PORT, ICECAST_PASSWORD, ICECAST_BITRATE, ICECAST_PROTOCOL, "

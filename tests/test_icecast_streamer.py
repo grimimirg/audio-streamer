@@ -207,3 +207,36 @@ def test_the_source_thread_stops_when_the_streamer_goes_off_air():
     assert wait_for(lambda: relay.running is False)
 
     relay.stop()
+
+
+# -- Connection probe --
+
+def test_the_probe_reports_a_reachable_server():
+    attempts = []
+
+    class FakeConnection:
+        def close(self):
+            attempts.append('closed')
+
+    def connect(address, timeout):
+        attempts.append((address, timeout))
+        return FakeConnection()
+
+    assert IcecastStreamer.test_connection(connect=connect) is True
+    assert attempts[0] == (('icecast.test', 8000), 5.0)
+    # The probe must not leave the socket open, it only checks reachability
+    assert 'closed' in attempts
+
+
+def test_the_probe_reports_a_refused_server():
+    def connect(address, timeout):
+        raise ConnectionRefusedError('refused')
+
+    assert IcecastStreamer.test_connection(connect=connect) is False
+
+
+def test_the_probe_reports_a_timeout():
+    def connect(address, timeout):
+        raise TimeoutError('timed out')
+
+    assert IcecastStreamer.test_connection(connect=connect) is False

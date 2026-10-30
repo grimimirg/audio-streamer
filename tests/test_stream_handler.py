@@ -119,6 +119,63 @@ def test_consume_stops_when_the_encoder_is_no_longer_running(handler):
     assert list(handler._consume_subscription(subscription)) == []
 
 
+# -- Icecast status --
+
+class FakeRelay:
+    """Icecast relay stand-in reporting a fixed state."""
+
+    def __init__(self, connected=True):
+        self.connected = connected
+
+    def getStats(self):
+        return {
+            'enabled': True,
+            'connected': self.connected,
+            'host': 'icecast.test',
+            'port': 8000,
+            'mount': '/stream',
+            'bitrate': 128,
+            'protocol': 'http',
+        }
+
+
+def test_stats_report_the_relay_as_disabled_when_none_is_running(handler):
+    stats = handler.stats()
+
+    assert stats['icecast_enabled'] is False
+    assert stats['icecast_connected'] is False
+
+
+def test_stats_report_a_connected_relay(handler):
+    handler.icecast_streamer = FakeRelay()
+
+    stats = handler.stats()
+
+    assert stats['icecast_enabled'] is True
+    assert stats['icecast_connected'] is True
+    assert stats['icecast_mount'] == '/stream'
+    assert stats['icecast_bitrate'] == 128
+
+
+def test_stats_report_a_relay_that_lost_its_connection(handler):
+    handler.icecast_streamer = FakeRelay(connected=False)
+
+    stats = handler.stats()
+
+    assert stats['icecast_enabled'] is True
+    assert stats['icecast_connected'] is False
+
+
+def test_icecast_status_does_not_displace_the_streamer_stats(handler):
+    handler.icecast_streamer = FakeRelay()
+
+    stats = handler.stats()
+
+    # The audio streamer's own fields must survive the merge
+    assert 'listeners' in stats
+    assert 'on_air' in stats
+
+
 # -- FFmpeg command --
 
 def test_command_building_is_delegated_to_the_shared_builder(handler):
